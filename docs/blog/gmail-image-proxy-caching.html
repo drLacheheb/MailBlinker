@@ -82,19 +82,19 @@
 
   <div class="blog-wrapper">
     <nav class="blog-nav">
-      <a href="../index.html" class="nav-brand">
+      <a href="../" class="nav-brand">
         <img src="../assets/logo.png" alt="MailBlinker Logo" class="nav-logo" width="32" height="32">
         <span>MailBlinker</span>
       </a>
       <div class="nav-links">
-        <a href="../index.html" class="nav-link">Home</a>
-        <a href="index.html" class="nav-link">Guides</a>
+        <a href="../" class="nav-link">Home</a>
+        <a href="./" class="nav-link">Guides</a>
         <a href="https://github.com/drLacheheb/MailBlinker" class="nav-link" target="_blank" rel="noopener">GitHub</a>
       </div>
     </nav>
 
     <main class="article-content">
-      <a href="index.html" class="back-link">&larr; Back to Guides</a>
+      <a href="./" class="back-link">&larr; Back to Guides</a>
       <header class="article-header">
         <span class="badge">Technical Deep Dive</span>
         <h1 class="article-title">How Gmail and Apple Mail Image Proxies Work (And How to Bypass Caching)</h1>
@@ -130,7 +130,7 @@
 
       <h2>The Anti-Cache Defense Blueprint</h2>
       <p>
-        To force Google and Apple proxies to re-validate requests every single time the email is viewed, <a href="../index.html">MailBlinker</a> implements a multi-layer HTTP response header defense:
+        To force Google and Apple proxies to re-validate requests every single time the email is viewed, <a href="../">MailBlinker</a> implements a multi-layer HTTP response header defense:
       </p>
 
       <pre><code>Cache-Control: no-cache, no-store, must-revalidate, max-age=0, private, proxy-revalidate
@@ -180,7 +180,7 @@ ETag: "token-1786732984"</code></pre>
     </main>
 
     <footer>
-      <p><a href="../index.html">MailBlinker</a> — Open Source Email Tracker under BSL 1.1 License.</p>
+      <p><a href="../">MailBlinker</a> — Open Source Email Tracker under BSL 1.1 License.</p>
     </footer>
   </div>
 
