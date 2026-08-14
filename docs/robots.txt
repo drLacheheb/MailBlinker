@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://drLacheheb.github.io/mailblinker/sitemap.xml

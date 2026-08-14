@@ -1,0 +1,21 @@
+# MailBlinker
+> Free, unbranded, self-hosted email tracker and Mailtrack alternative with real-time Telegram open alerts and rich telemetry.
+
+## Overview
+MailBlinker is an open-source, self-hosted email tracking tool written in Python. It pairs a lightweight FastAPI tracking service with a Telegram bot for instant open notifications, anti-cache defense, and heuristic bot detection without watermarks, signatures, or subscription fees.
+
+## Key Features
+- Real-time Telegram push notifications upon email open
+- 100% unbranded with zero 'Sent with Mailtrack' signatures or footers
+- Dual-vector tracking: 1x1 invisible GIF pixel + inline CSS fallback
+- Anti-cache defense: Strict Cache-Control headers and dynamic ETag to bypass Gmail proxy caching
+- Heuristic bot detection: Integrates CrawlerDetect and user-agents to filter automated corporate security sandboxes (Mimecast, Proofpoint)
+- Rich telemetry: IP geolocation (City, Country), ISP/Network detection, device breakdown, OS version, and language detection via BCP 47
+- Multi-device divergence detection for email forwarding clues
+- Clean Architecture monorepo with FastAPI, async SQLAlchemy, Alembic migrations, and aiogram 3
+
+## Links
+- Website: https://drLacheheb.github.io/mailblinker/
+- GitHub Repository: https://github.com/drLacheheb/mailblinker
+- Telegram Bot: https://t.me/MailBlinkerBot
+- License: Business Source License 1.1 (BSL 1.1)

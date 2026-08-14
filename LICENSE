@@ -1,0 +1,44 @@
+Business Source License 1.1
+
+Parameters
+
+Licensor:                 MailBlinker (drLacheheb)
+Licensed Work:            MailBlinker software and source code
+Change Date:              2030-01-01
+Change License:           GNU Affero General Public License, Version 3 (AGPL-3.0)
+Additional Use Grant:     You may use the Licensed Work for personal, educational, non-commercial, 
+                          and internal testing purposes, including self-hosting for individual use. 
+                          You may NOT offer or provide the Licensed Work, in whole or in part, as a 
+                          hosted, managed, commercial, or paid service to third parties, nor incorporate 
+                          it into a commercial product or service, without a commercial license granted 
+                          by the Licensor.
+
+--------------------------------------------------------------------------------
+
+Terms
+
+The Licensor hereby grants you the right to copy, modify, create derivative works, redistribute, 
+and make non-production and non-commercial production use of the Licensed Work subject to the 
+terms hereof.
+
+1. Non-Commercial Use Grant
+You may use, copy, modify, and distribute the Licensed Work only in accordance with the Additional 
+Use Grant defined above. Any use of the Licensed Work for commercial purposes, including offering 
+it as a SaaS (Software as a Service) or paid service, requires a separate commercial license from 
+the Licensor.
+
+2. Notice Requirement
+If you distribute copies of the Licensed Work or derivative works, you must retain all copyright, 
+trademark, and author notices, and you must include a copy of this License with all distributed copies.
+
+3. Change to Open Source
+Effective on the Change Date, or the fourth anniversary of the first release of the Licensed Work 
+under this License (whichever is earlier), the Licensor hereby grants you rights under the terms of 
+the Change License specified above.
+
+4. Disclaimer of Warranty
+THE LICENSED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+NONINFRINGEMENT. IN NO EVENT SHALL THE LICENSOR OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE LICENSED WORK OR THE USE OR OTHER DEALINGS IN THE LICENSED WORK.

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Primary Search Engine Meta Tags -->
+  <title>MailBlinker — Free Self-Hosted Email Tracker & Telegram Alerts (Mailtrack Alternative)</title>
+  <meta name="title" content="MailBlinker — Free Self-Hosted Email Tracker & Telegram Alerts (Mailtrack Alternative)">
+  <meta name="description"
+    content="Free, unbranded, self-hosted email tracker and top Mailtrack alternative. Track Gmail and Outlook opens in real-time with instant Telegram alerts, anti-cache defense, and rich telemetry.">
+  <meta name="keywords"
+    content="email tracker, mailtrack alternative, mailsuite alternative, free email tracker, self hosted email tracker, open source email tracker, gmail read receipts, invisible email tracker, unbranded email tracker, telegram email tracker bot, track email opens, gmail open alerts, streak alternative, yesware alternative, mixmax alternative, email tracking pixel, email open telemetry, bypass gmail image proxy, apple mail privacy protection tracker, private email tracker">
+  <meta name="author" content="drLacheheb">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="theme-color" content="#0a0a0c">
+  <link rel="canonical" href="https://drLacheheb.github.io/mailblinker/">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="apple-touch-icon" href="assets/logo.png">
+
+  <!-- Open Graph / Facebook / LinkedIn / Discord -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://drLacheheb.github.io/mailblinker/">
+  <meta property="og:title" content="MailBlinker — Free Self-Hosted Email Tracker (Mailtrack Alternative)">
+  <meta property="og:description"
+    content="The best free, unbranded, self-hosted email tracker. Instant Telegram open alerts, device & location telemetry, and zero signatures.">
+  <meta property="og:image" content="https://drLacheheb.github.io/mailblinker/assets/logo.png">
+  <meta property="og:image:alt" content="MailBlinker - Self-Hosted Email Tracker Logo">
+  <meta property="og:site_name" content="MailBlinker">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://drLacheheb.github.io/mailblinker/">
+  <meta name="twitter:title" content="MailBlinker — Free Self-Hosted Email Tracker">
+  <meta name="twitter:description"
+    content="Unbranded Mailtrack alternative. Real-time Telegram email open alerts with rich telemetry.">
+  <meta name="twitter:image" content="https://drLacheheb.github.io/mailblinker/assets/logo.png">
+
+  <!-- JSON-LD Multi-Entity Structured Data (SoftwareApplication + FAQPage for Google AI Overviews & SGE) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://drLacheheb.github.io/mailblinker/#software",
+        "name": "MailBlinker",
+        "alternateName": ["MailBlinker Tracker", "MailBlinker Telegram Bot", "Mailtrack Open Source Alternative"],
+        "headline": "Free Self-Hosted Email Tracker & Real-Time Telegram Alerts",
+        "operatingSystem": "Linux, macOS, Windows, Cloud, Docker",
+        "applicationCategory": "BusinessApplication, CommunicationApplication, ProductivityApplication",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "MailBlinker is an unbranded, open-source, and self-hosted email tracking system that delivers real-time Telegram push notifications the exact second your email is opened. Features anti-cache dynamic ETag defense, heuristic bot and security scanner filtering, IP geolocation, and device telemetry without watermarks or subscription fees.",
+        "url": "https://drLacheheb.github.io/mailblinker/",
+        "image": "https://drLacheheb.github.io/mailblinker/assets/logo.png",
+        "softwareVersion": "1.0.0",
+        "author": {
+          "@type": "Person",
+          "name": "drLacheheb",
+          "url": "https://github.com/drLacheheb"
+        },
+        "keywords": "email tracker, mailtrack alternative, self hosted email tracker, gmail open tracker, telegram email tracker, email tracking pixel, free email tracking, unbranded email tracker, invisible email tracker",
+        "featureList": [
+          "Real-time Telegram email open push notifications",
+          "100% Unbranded with zero 'Sent with Mailtrack' watermarks",
+          "Dual-vector tracking: 1x1 transparent GIF + inline CSS fallback",
+          "Anti-cache header defense preventing Gmail image proxy caching",
+          "Heuristic bot scanner filtering with CrawlerDetect",
+          "Precise IP Geolocation and ISP/organization detection",
+          "Device model, OS version, and email client breakdown",
+          "Language and locale detection from Accept-Language",
+          "Multi-device email forwarding detection clues"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://drLacheheb.github.io/mailblinker/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is MailBlinker?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "MailBlinker is a free, self-hosted, unbranded email tracker that notifies you instantly via Telegram whenever your sent email is opened. It includes anti-cache protection against Gmail and Apple Mail image proxies, and provides device and location telemetry."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why is MailBlinker a better alternative to Mailtrack?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Unlike Mailtrack, MailBlinker is completely free, 100% self-hosted on your own infrastructure, adds zero 'Sent with Mailtrack' signatures or branding to your emails, and sends instant push alerts directly to your Telegram chat."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does MailBlinker prevent false opens from security bots?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "MailBlinker combines sub-3-second latency analysis with CrawlerDetect and user-agent parsing to identify and filter out automated corporate security sandboxes (such as Mimecast, Proofpoint, and Barracuda), ensuring you only get alerts for genuine human opens."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <!-- Performance & Typography Preconnect -->
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="page-wrapper">
+    <main class="hero">
+      <div class="logo-wrapper">
+        <img src="assets/logo.png" alt="MailBlinker Logo - Free Self-Hosted Email Tracker & Mailtrack Alternative" class="hero-logo" width="108" height="108">
+      </div>
+
+      <h1>MailBlinker</h1>
+      <p class="subtitle">
+        The unbranded, self-hosted email tracker. Know the second your email is opened with real-time Telegram alerts, anti-cache defense, and rich telemetry.
+      </p>
+
+      <div class="cta-group">
+        <a href="https://t.me/MailBlinkerBot" class="btn btn-primary" target="_blank" rel="noopener noreferrer" aria-label="Start tracking with MailBlinker Telegram Bot">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.12.03-1.99 1.27-5.62 3.72-.53.36-1.01.54-1.44.53-.47-.01-1.38-.27-2.05-.49-.83-.27-1.49-.42-1.43-.88.03-.24.37-.49 1.02-.75 3.99-1.74 6.66-2.88 8.01-3.44 3.81-1.59 4.6-1.87 5.12-1.88.11 0 .37.03.54.17.14.12.18.28.2.45-.02.07-.02.13-.03.22z" />
+          </svg>
+          <span>Use Telegram Bot</span>
+        </a>
+
+        <a href="https://github.com/drLacheheb/mailblinker" class="btn btn-secondary" target="_blank"
+          rel="noopener noreferrer" aria-label="View MailBlinker Open Source Code on GitHub">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+          </svg>
+          <span>View on GitHub</span>
+        </a>
+      </div>
+    </main>
+
+    <footer>
+      <p>MailBlinker | Free for Personal & Non-Commercial Use under BSL 1.1.</p>
+    </footer>
+  </div>
+
+</body>
+
+</html>
