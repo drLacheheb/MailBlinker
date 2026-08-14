@@ -14,6 +14,14 @@ MailBlinker is an open-source, self-hosted email tracking tool written in Python
 - Multi-device divergence detection for email forwarding clues
 - Clean Architecture monorepo with FastAPI, async SQLAlchemy, Alembic migrations, and aiogram 3
 
+## Technical Guides & Documentation
+- Blog & Guides Index: https://drLacheheb.github.io/MailBlinker/blog/
+- The Best Free Mailtrack Alternative in 2026: https://drLacheheb.github.io/MailBlinker/blog/mailtrack-alternative.html
+- How to Get Real-Time Email Open Alerts in Telegram: https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker.html
+- How Gmail and Apple Mail Image Proxies Work: https://drLacheheb.github.io/MailBlinker/blog/gmail-image-proxy-caching.html
+- Self-Hosted vs Cloud Email Tracking Privacy: https://drLacheheb.github.io/MailBlinker/blog/self-hosted-email-tracking.html
+- How to Filter Bot Scanners & Detect Forwarded Emails: https://drLacheheb.github.io/MailBlinker/blog/detect-email-forwarding-bots.html
+
 ## Links
 - Website: https://drLacheheb.github.io/MailBlinker/
 - GitHub Repository: https://github.com/drLacheheb/MailBlinker

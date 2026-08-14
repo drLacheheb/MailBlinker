@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary Meta Tags -->
+  <title>How to Filter Bot Scanners and Detect If Your Email Was Forwarded — MailBlinker</title>
+  <meta name="title" content="How to Filter Bot Scanners and Detect If Your Email Was Forwarded — MailBlinker">
+  <meta name="description"
+    content="Discover how rich telemetry (IP divergence, OS detection, latency heuristics) reveals when an email is forwarded to colleagues and eliminates false-positive bot opens.">
+  <meta name="keywords"
+    content="how to tell if email was forwarded, email forwarding detection, filter email bots, email tracking telemetry, detect forwarded email pixel, mailblinker">
+  <meta name="author" content="drLacheheb">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="https://drLacheheb.github.io/MailBlinker/blog/detect-email-forwarding-bots.html">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="../assets/logo.png">
+  <link rel="apple-touch-icon" href="../assets/logo.png">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://drLacheheb.github.io/MailBlinker/blog/detect-email-forwarding-bots.html">
+  <meta property="og:title" content="How to Filter Bot Scanners and Detect If Your Email Was Forwarded">
+  <meta property="og:description"
+    content="Use device telemetry and latency heuristics to know if your proposal was forwarded to decision-makers.">
+  <meta property="og:image" content="https://drLacheheb.github.io/MailBlinker/assets/logo.png">
+  <meta property="og:site_name" content="MailBlinker">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://drLacheheb.github.io/MailBlinker/blog/detect-email-forwarding-bots.html">
+  <meta name="twitter:title" content="How to Filter Bot Scanners and Detect If Your Email Was Forwarded">
+  <meta name="twitter:description"
+    content="Use device telemetry and latency heuristics to know if your proposal was forwarded to decision-makers.">
+  <meta name="twitter:image" content="https://drLacheheb.github.io/MailBlinker/assets/logo.png">
+
+  <!-- Schema.org JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "@id": "https://drLacheheb.github.io/MailBlinker/blog/detect-email-forwarding-bots.html#article",
+        "headline": "How to Filter Bot Scanners and Detect If Your Email Was Forwarded",
+        "description": "A guide on using device divergence, ISP network lookup, and CrawlerDetect heuristics to identify true human opens and forwarded threads.",
+        "image": "https://drLacheheb.github.io/MailBlinker/assets/logo.png",
+        "datePublished": "2026-08-14T00:00:00+00:00",
+        "dateModified": "2026-08-14T00:00:00+00:00",
+        "author": {
+          "@type": "Person",
+          "name": "drLacheheb",
+          "url": "https://github.com/drLacheheb"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "MailBlinker",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://drLacheheb.github.io/MailBlinker/assets/logo.png"
+          }
+        },
+        "mainEntityOfPage": "https://drLacheheb.github.io/MailBlinker/blog/detect-email-forwarding-bots.html"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Typography & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="blog-wrapper">
+    <nav class="blog-nav">
+      <a href="../" class="nav-brand">
+        <img src="../assets/logo.png" alt="MailBlinker Logo" class="nav-logo" width="32" height="32">
+        <span>MailBlinker</span>
+      </a>
+      <div class="nav-links">
+        <a href="../" class="nav-link">Home</a>
+        <a href="./" class="nav-link">Guides</a>
+        <a href="https://github.com/drLacheheb/MailBlinker" class="nav-link" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="article-content">
+      <header class="article-header">
+        <span class="badge">Analytics & Telemetry</span>
+        <h1 class="article-title">How to Filter Bot Scanners and Detect If Your Email Was Forwarded</h1>
+        <div class="article-meta">
+          <span>By <strong>drLacheheb</strong></span>
+          <span>•</span>
+          <span>Updated August 2026</span>
+          <span>•</span>
+          <span>6 min read</span>
+        </div>
+      </header>
+
+      <p>
+        In modern enterprise email environments, sending an email triggers automated security scanners (Mimecast, Proofpoint, Barracuda) that fetch links and images to inspect for phishing before delivering the message to the recipient's inbox.
+      </p>
+
+      <p>
+        Basic tracking tools record these automated crawler hits as "opens", causing senders to believe their email was read within 2 seconds of sending.
+      </p>
+
+      <p>
+        In this guide, we explore how <strong><a href="../">MailBlinker</a></strong> uses deep telemetry inspection and heuristic filtering to distinguish real human engagement and detect when an email is forwarded to internal team members.
+      </p>
+
+      <h2>How to Detect False Positive Bot Opens</h2>
+      <p>
+        MailBlinker runs every incoming pixel request through a multi-point verification engine:
+      </p>
+      <ul>
+        <li><strong>Sub-3-Second Latency Threshold:</strong> Humans take at least 5–10 seconds to receive, notice, and click open an email. A request arriving under 3.0 seconds after dispatch is flagged as an automated pre-delivery sandbox scanner.</li>
+        <li><strong>CrawlerDetect Engine:</strong> Matches user-agent signatures against a comprehensive database of security bots, web scrapers, and email gateways.</li>
+        <li><strong>Proxy Range Identification:</strong> Accurately categorizes requests originating from GoogleImageProxy and Apple Privacy relay nodes.</li>
+      </ul>
+
+      <h2>The Science of Email Forwarding Detection</h2>
+      <p>
+        When you send a single email to one person (e.g. <code>sarah@acme.corp</code>), you expect that email to be opened on Sarah's registered device.
+      </p>
+      <p>
+        However, if the email is forwarded to executives or engineers for review, new open events occur on completely different networks and devices:
+      </p>
+
+      <div class="callout">
+        <div class="callout-title">🔀 Multi-Device Divergence (Forwarding Clue)</div>
+        <p style="margin-bottom: 0.25rem;"><strong>Initial Open (10:15 AM):</strong> iPhone in San Francisco (Comcast WiFi)</p>
+        <p style="margin-bottom: 0;"><strong>Second Open (10:45 AM):</strong> Windows 11 PC in Austin, Texas (Dell Corporate Network)</p>
+      </div>
+
+      <p>
+        MailBlinker compares geographical coordinates, device form factors (iOS vs Windows), browser families, and primary language headers across sequential open events. When divergence is detected, your Telegram bot tags the open event with a <strong>Forwarding Clue</strong> badge.
+      </p>
+
+      <h2>Actionable Telemetry for High-Stakes Outreach</h2>
+      <p>
+        Knowing an email was forwarded gives you an unfair advantage in sales, fundraising, and job hunting:
+      </p>
+      <ul>
+        <li>You know your proposal was shared internally with decision-makers.</li>
+        <li>You can time your follow-up email precisely when the team is actively reviewing your deck.</li>
+        <li>You know which office location or department is evaluating your offer.</li>
+      </ul>
+
+      <div class="article-cta">
+        <h3>Get Smarter Email Telemetry Today</h3>
+        <p>MailBlinker pairs bot filtering with rich Telegram open cards.</p>
+        <div class="cta-buttons">
+          <a href="https://t.me/MailBlinkerBot" class="btn btn-primary" target="_blank" rel="noopener">Launch Telegram Bot</a>
+          <a href="./telegram-email-tracker.html" class="btn btn-secondary">Read Setup Guide</a>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p><a href="../">MailBlinker</a> — Open Source Email Tracker under BSL 1.1 License.</p>
+    </footer>
+  </div>
+
+</body>
+
+</html>

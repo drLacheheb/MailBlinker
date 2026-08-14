@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary Meta Tags -->
+  <title>How to Get Real-Time Email Open Alerts in Telegram (Step-by-Step) — MailBlinker</title>
+  <meta name="title" content="How to Get Real-Time Email Open Alerts in Telegram (Step-by-Step) — MailBlinker">
+  <meta name="description"
+    content="Learn how to track email opens and receive instant push notifications on your phone via Telegram. Complete tutorial using the free, self-hosted MailBlinker bot.">
+  <meta name="keywords"
+    content="telegram email tracker, telegram email bot, real time email alerts, email open notification telegram, track gmail opens telegram, mailblinker telegram bot, python telegram email tracker">
+  <meta name="author" content="drLacheheb">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker.html">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="../assets/logo.png">
+  <link rel="apple-touch-icon" href="../assets/logo.png">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker.html">
+  <meta property="og:title" content="How to Get Real-Time Email Open Alerts in Telegram (Step-by-Step)">
+  <meta property="og:description"
+    content="Turn Telegram into your personal email tracking command center. Get notified the exact second a client opens your email.">
+  <meta property="og:image" content="https://drLacheheb.github.io/MailBlinker/assets/logo.png">
+  <meta property="og:site_name" content="MailBlinker">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker.html">
+  <meta name="twitter:title" content="How to Get Real-Time Email Open Alerts in Telegram (Step-by-Step)">
+  <meta name="twitter:description"
+    content="Turn Telegram into your personal email tracking command center with MailBlinker.">
+  <meta name="twitter:image" content="https://drLacheheb.github.io/MailBlinker/assets/logo.png">
+
+  <!-- Schema.org JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "HowTo",
+        "@id": "https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker.html#howto",
+        "name": "How to Get Real-Time Email Open Alerts in Telegram",
+        "description": "Step-by-step instructions on setting up a self-hosted email tracker that sends push alerts to Telegram.",
+        "image": "https://drLacheheb.github.io/MailBlinker/assets/logo.png",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "name": "Start MailBlinker Bot",
+            "text": "Connect with @MailBlinkerBot on Telegram or deploy your own self-hosted instance using Docker.",
+            "url": "https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker.html#step1"
+          },
+          {
+            "@type": "HowToStep",
+            "name": "Generate a Tracked Email",
+            "text": "Use the /format or /new command in Telegram to create a formatted email template with an embedded tracking pixel.",
+            "url": "https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker.html#step2"
+          },
+          {
+            "@type": "HowToStep",
+            "name": "Send in Gmail or Outlook",
+            "text": "Copy the generated formatted email into your email composer and send to your recipient.",
+            "url": "https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker.html#step3"
+          },
+          {
+            "@type": "HowToStep",
+            "name": "Receive Telegram Push Notifications",
+            "text": "Receive an instant Telegram alert containing device, location, and open timestamp the moment the recipient views the message.",
+            "url": "https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker.html#step4"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <!-- Typography & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="blog-wrapper">
+    <nav class="blog-nav">
+      <a href="../" class="nav-brand">
+        <img src="../assets/logo.png" alt="MailBlinker Logo" class="nav-logo" width="32" height="32">
+        <span>MailBlinker</span>
+      </a>
+      <div class="nav-links">
+        <a href="../" class="nav-link">Home</a>
+        <a href="./" class="nav-link">Guides</a>
+        <a href="https://github.com/drLacheheb/MailBlinker" class="nav-link" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="article-content">
+      <header class="article-header">
+        <span class="badge">Tutorial & Guide</span>
+        <h1 class="article-title">How to Get Real-Time Email Open Alerts in Telegram (Step-by-Step)</h1>
+        <div class="article-meta">
+          <span>By <strong>drLacheheb</strong></span>
+          <span>•</span>
+          <span>Updated August 2026</span>
+          <span>•</span>
+          <span>5 min read</span>
+        </div>
+      </header>
+
+      <p>
+        Traditional email tracking tools notify you through noisy Chrome extension popups or cluttered web dashboards that you have to refresh constantly. If you are away from your desk, on a phone, or in a meeting, you miss the crucial window to follow up.
+      </p>
+
+      <p>
+        <strong>Telegram is the ideal notification channel for email tracking:</strong> it delivers instant push alerts to your phone, smartwatch, and desktop with zero delay.
+      </p>
+
+      <p>
+        In this tutorial, you will learn how to use <strong><a href="../">MailBlinker</a></strong> to generate tracked emails and receive instant Telegram alerts whenever your messages are read.
+      </p>
+
+      <h2 id="step1">Step 1: Open the MailBlinker Telegram Bot</h2>
+      <p>
+        You can either use the hosted public bot <a href="https://t.me/MailBlinkerBot" target="_blank" rel="noopener">@MailBlinkerBot</a> or launch your own private instance using the self-hosted Docker container.
+      </p>
+      <p>
+        Start the bot by sending the command:
+      </p>
+      <pre><code>/start</code></pre>
+
+      <h2 id="step2">Step 2: Generate a Tracked Email Link or Template</h2>
+      <p>
+        MailBlinker provides two ways to generate tracking tokens:
+      </p>
+
+      <h3>Method A: Quick Track Link (Command: <code>/new</code>)</h3>
+      <p>
+        If you want to track a quick message, send:
+      </p>
+      <pre><code>/new Project Proposal | client@company.com</code></pre>
+      <p>
+        The bot returns a tracking pixel URL that you can embed into any email client or CRM.
+      </p>
+
+      <h3>Method B: Interactive Email Formatter (Command: <code>/format</code>)</h3>
+      <p>
+        For professional outreach, send <code>/format</code>. The bot guides you through a 5-step wizard:
+      </p>
+      <ul>
+        <li><strong>Title:</strong> A reference name for your records (e.g. <em>Consulting Pitch Q3</em>).</li>
+        <li><strong>Recipient Details:</strong> Email address and name for personalized greeting.</li>
+        <li><strong>Body Text:</strong> Your pitch, proposal, or update.</li>
+        <li><strong>Call-to-Action Links:</strong> Add styled action buttons (e.g., <em>Book a Call</em> or <em>View Portfolio</em>).</li>
+      </ul>
+
+      <h2 id="step3">Step 3: Copy and Send from Gmail, Outlook, or Apple Mail</h2>
+      <p>
+        Once formatted, MailBlinker gives you clean, rendered HTML. Simply copy the rendered content and paste it directly into your Gmail or Outlook composer. The invisible 1x1 tracking pixel and anti-cache fallback tags are embedded automatically.
+      </p>
+
+      <h2 id="step4">Step 4: Receive Rich Push Notifications in Telegram</h2>
+      <p>
+        The exact second your recipient opens your email, your Telegram bot sends an alert card:
+      </p>
+
+      <div class="callout">
+        <div class="callout-title">📩 Email Opened Alert (Example)</div>
+        <p style="margin-bottom: 0.25rem;"><strong>Email:</strong> Consulting Proposal Q3</p>
+        <p style="margin-bottom: 0.25rem;"><strong>Recipient:</strong> sarah@client.com</p>
+        <p style="margin-bottom: 0.25rem;"><strong>Opened:</strong> 14 minutes after sending</p>
+        <p style="margin-bottom: 0.25rem;"><strong>Location:</strong> Paris, France (Orange ISP)</p>
+        <p style="margin-bottom: 0.25rem;"><strong>Device:</strong> Apple Mail on macOS Sonoma</p>
+        <p style="margin-bottom: 0;"><strong>Language:</strong> fr-FR (French)</p>
+      </div>
+
+      <h2>Checking Statistics on Demand</h2>
+      <p>
+        To see a list of recent emails, open counts, and timestamps at any time, simply type:
+      </p>
+      <pre><code>/stats</code></pre>
+
+      <div class="article-cta">
+        <h3>Start Tracking Emails with Telegram Alerts</h3>
+        <p>Set up your first tracked email in under 30 seconds with MailBlinker.</p>
+        <div class="cta-buttons">
+          <a href="https://t.me/MailBlinkerBot" class="btn btn-primary" target="_blank" rel="noopener">Open Telegram Bot</a>
+          <a href="./mailtrack-alternative.html" class="btn btn-secondary">Compare with Mailtrack</a>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p><a href="../">MailBlinker</a> — Open Source Email Tracker under BSL 1.1 License.</p>
+    </footer>
+  </div>
+
+</body>
+
+</html>

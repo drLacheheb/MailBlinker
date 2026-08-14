@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary Meta Tags -->
+  <title>How Gmail and Apple Mail Image Proxies Work (And How to Bypass Caching) — MailBlinker</title>
+  <meta name="title" content="How Gmail and Apple Mail Image Proxies Work (And How to Bypass Caching) — MailBlinker">
+  <meta name="description"
+    content="Understand GoogleImageProxy, Apple Mail Privacy Protection (MPP), and how modern tracking pixels bypass aggressive proxy caching using dynamic ETags and strict Cache-Control headers.">
+  <meta name="keywords"
+    content="gmail image proxy caching, googleimageproxy bypass, apple mail privacy protection tracker, email tracking pixel cache, bypass gmail proxy, email open tracking headers, etag email tracker">
+  <meta name="author" content="drLacheheb">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="https://drLacheheb.github.io/MailBlinker/blog/gmail-image-proxy-caching.html">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="../assets/logo.png">
+  <link rel="apple-touch-icon" href="../assets/logo.png">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://drLacheheb.github.io/MailBlinker/blog/gmail-image-proxy-caching.html">
+  <meta property="og:title" content="How Gmail and Apple Mail Image Proxies Work (And How to Bypass Caching)">
+  <meta property="og:description"
+    content="Technical deep-dive into email image proxies, privacy pre-fetching, and cache-busting architecture.">
+  <meta property="og:image" content="https://drLacheheb.github.io/MailBlinker/assets/logo.png">
+  <meta property="og:site_name" content="MailBlinker">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://drLacheheb.github.io/MailBlinker/blog/gmail-image-proxy-caching.html">
+  <meta name="twitter:title" content="How Gmail and Apple Mail Image Proxies Work (And How to Bypass Caching)">
+  <meta name="twitter:description"
+    content="Technical deep-dive into email image proxies, privacy pre-fetching, and cache-busting architecture.">
+  <meta name="twitter:image" content="https://drLacheheb.github.io/MailBlinker/assets/logo.png">
+
+  <!-- Schema.org JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "@id": "https://drLacheheb.github.io/MailBlinker/blog/gmail-image-proxy-caching.html#article",
+        "headline": "How Gmail and Apple Mail Image Proxies Work (And How to Bypass Caching)",
+        "description": "An engineering analysis of GoogleImageProxy, Apple MPP, and dynamic ETag anti-caching strategies for pixel tracking.",
+        "image": "https://drLacheheb.github.io/MailBlinker/assets/logo.png",
+        "datePublished": "2026-08-14T00:00:00+00:00",
+        "dateModified": "2026-08-14T00:00:00+00:00",
+        "author": {
+          "@type": "Person",
+          "name": "drLacheheb",
+          "url": "https://github.com/drLacheheb"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "MailBlinker",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://drLacheheb.github.io/MailBlinker/assets/logo.png"
+          }
+        },
+        "mainEntityOfPage": "https://drLacheheb.github.io/MailBlinker/blog/gmail-image-proxy-caching.html"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Typography & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="blog-wrapper">
+    <nav class="blog-nav">
+      <a href="../" class="nav-brand">
+        <img src="../assets/logo.png" alt="MailBlinker Logo" class="nav-logo" width="32" height="32">
+        <span>MailBlinker</span>
+      </a>
+      <div class="nav-links">
+        <a href="../" class="nav-link">Home</a>
+        <a href="./" class="nav-link">Guides</a>
+        <a href="https://github.com/drLacheheb/MailBlinker" class="nav-link" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="article-content">
+      <header class="article-header">
+        <span class="badge">Technical Deep Dive</span>
+        <h1 class="article-title">How Gmail and Apple Mail Image Proxies Work (And How to Bypass Caching)</h1>
+        <div class="article-meta">
+          <span>By <strong>drLacheheb</strong></span>
+          <span>•</span>
+          <span>Updated August 2026</span>
+          <span>•</span>
+          <span>7 min read</span>
+        </div>
+      </header>
+
+      <p>
+        Building a reliable email tracker in 2026 requires understanding the complex proxy and caching infrastructure operated by Google (<strong>GoogleImageProxy</strong>) and Apple (<strong>Mail Privacy Protection / MPP</strong>).
+      </p>
+
+      <p>
+        When an email recipient opens a message in Gmail or Apple Mail, their client does not request the tracking image directly from your server. Instead, Google or Apple servers request the image on behalf of the user and cache the response.
+      </p>
+
+      <p>
+        If your tracking endpoint returns standard or missing caching headers, the proxy will cache the 1x1 GIF for days or weeks. As a result, <strong>subsequent opens and re-reads will never hit your server</strong>.
+      </p>
+
+      <h2>How GoogleImageProxy Works</h2>
+      <p>
+        When Gmail loads an HTML email with an <code>&lt;img src="https://yourserver.com/track/token.gif" /&gt;</code>, the Gmail client transforms the URL into:
+      </p>
+      <pre><code>https://ci3.googleusercontent.com/proxy/abc123xyz...#https://yourserver.com/track/token.gif</code></pre>
+      <p>
+        The Google proxy server contacts your server, retrieves the image, and serves it to the browser.
+      </p>
+
+      <h2>The Anti-Cache Defense Blueprint</h2>
+      <p>
+        To force Google and Apple proxies to re-validate requests every single time the email is viewed, <a href="../">MailBlinker</a> implements a multi-layer HTTP response header defense:
+      </p>
+
+      <pre><code>Cache-Control: no-cache, no-store, must-revalidate, max-age=0, private, proxy-revalidate
+Pragma: no-cache
+Expires: 0
+ETag: "token-1786732984"</code></pre>
+
+      <h3>Key Header Mechanics:</h3>
+      <ul>
+        <li><code>no-store, no-cache</code>: Instructs the proxy never to store the response body in persistent edge memory.</li>
+        <li><code>proxy-revalidate</code>: Explicitly commands intermediate proxy caches (like Google's CDN nodes) to revalidate with the origin server on each request.</li>
+        <li><code>Dynamic ETag</code>: By generating a dynamic ETag containing the tracking token and UNIX timestamp, every request is treated as unique, forcing the proxy to fetch a fresh verification ping.</li>
+      </ul>
+
+      <h2>Handling Apple Mail Privacy Protection (MPP)</h2>
+      <p>
+        Since iOS 15, Apple Mail pre-fetches all email images in the background via Apple proxy servers whenever the device is connected to Wi-Fi, even before the recipient opens the email.
+      </p>
+      <p>
+        MailBlinker solves this false-positive challenge using <strong>Latency and User-Agent Heuristics</strong>:
+      </p>
+      <ul>
+        <li><strong>Sub-3-Second Filter:</strong> Requests received within milliseconds of sending from Apple proxy ranges are categorized as automated background pre-fetches.</li>
+        <li><strong>Device Divergence Clues:</strong> When a real human interaction occurs later (e.g. on macOS or an unproxied browser), MailBlinker triggers the verified open alert.</li>
+      </ul>
+
+      <div class="article-cta">
+        <h3>Deploy Production-Grade Anti-Cache Tracking</h3>
+        <p>MailBlinker handles proxy bypasses, bot heuristics, and instant Telegram delivery out of the box.</p>
+        <div class="cta-buttons">
+          <a href="https://github.com/drLacheheb/MailBlinker" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
+          <a href="./telegram-email-tracker.html" class="btn btn-secondary">Setup Telegram Alerts</a>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p><a href="../">MailBlinker</a> — Open Source Email Tracker under BSL 1.1 License.</p>
+    </footer>
+  </div>
+
+</body>
+
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary Meta Tags -->
+  <title>Self-Hosted vs Cloud Email Tracking: Privacy and Deliverability in 2026 — MailBlinker</title>
+  <meta name="title" content="Self-Hosted vs Cloud Email Tracking: Privacy and Deliverability in 2026 — MailBlinker">
+  <meta name="description"
+    content="Why developers and privacy-conscious teams are replacing SaaS email extensions with self-hosted tracking infrastructure. Learn the privacy and deliverability benefits.">
+  <meta name="keywords"
+    content="self hosted email tracking, private email tracker, open source email tracker, email deliverability tracking pixel, gdpr email tracking, mailblinker">
+  <meta name="author" content="drLacheheb">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="https://drLacheheb.github.io/MailBlinker/blog/self-hosted-email-tracking.html">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="../assets/logo.png">
+  <link rel="apple-touch-icon" href="../assets/logo.png">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://drLacheheb.github.io/MailBlinker/blog/self-hosted-email-tracking.html">
+  <meta property="og:title" content="Self-Hosted vs Cloud Email Tracking: Privacy and Deliverability in 2026">
+  <meta property="og:description"
+    content="Why self-hosting your email tracking infrastructure protects your inbox privacy and boosts email deliverability.">
+  <meta property="og:image" content="https://drLacheheb.github.io/MailBlinker/assets/logo.png">
+  <meta property="og:site_name" content="MailBlinker">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://drLacheheb.github.io/MailBlinker/blog/self-hosted-email-tracking.html">
+  <meta name="twitter:title" content="Self-Hosted vs Cloud Email Tracking: Privacy and Deliverability in 2026">
+  <meta name="twitter:description"
+    content="Why self-hosting your email tracking infrastructure protects your inbox privacy and boosts email deliverability.">
+  <meta name="twitter:image" content="https://drLacheheb.github.io/MailBlinker/assets/logo.png">
+
+  <!-- Schema.org JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "@id": "https://drLacheheb.github.io/MailBlinker/blog/self-hosted-email-tracking.html#article",
+        "headline": "Self-Hosted vs Cloud Email Tracking: Privacy and Deliverability in 2026",
+        "description": "An analysis of privacy, deliverability, and data ownership differences between SaaS email trackers and self-hosted tools.",
+        "image": "https://drLacheheb.github.io/MailBlinker/assets/logo.png",
+        "datePublished": "2026-08-14T00:00:00+00:00",
+        "dateModified": "2026-08-14T00:00:00+00:00",
+        "author": {
+          "@type": "Person",
+          "name": "drLacheheb",
+          "url": "https://github.com/drLacheheb"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "MailBlinker",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://drLacheheb.github.io/MailBlinker/assets/logo.png"
+          }
+        },
+        "mainEntityOfPage": "https://drLacheheb.github.io/MailBlinker/blog/self-hosted-email-tracking.html"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Typography & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="blog-wrapper">
+    <nav class="blog-nav">
+      <a href="../" class="nav-brand">
+        <img src="../assets/logo.png" alt="MailBlinker Logo" class="nav-logo" width="32" height="32">
+        <span>MailBlinker</span>
+      </a>
+      <div class="nav-links">
+        <a href="../" class="nav-link">Home</a>
+        <a href="./" class="nav-link">Guides</a>
+        <a href="https://github.com/drLacheheb/MailBlinker" class="nav-link" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="article-content">
+      <header class="article-header">
+        <span class="badge">Privacy & Architecture</span>
+        <h1 class="article-title">Self-Hosted vs Cloud Email Tracking: Privacy and Deliverability in 2026</h1>
+        <div class="article-meta">
+          <span>By <strong>drLacheheb</strong></span>
+          <span>•</span>
+          <span>Updated August 2026</span>
+          <span>•</span>
+          <span>6 min read</span>
+        </div>
+      </header>
+
+      <p>
+        When you install a third-party Chrome extension for email tracking, you grant that company access to read, parse, and analyze your entire inbox history.
+      </p>
+
+      <p>
+        In recent years, security breaches and aggressive data monetization by commercial extensions have led developers, freelancers, and privacy-conscious teams to choose <strong>self-hosted email tracking infrastructure</strong>.
+      </p>
+
+      <h2>The Privacy Risks of SaaS Chrome Extensions</h2>
+      <p>
+        Most commercial email tracking plugins require the <code>https://mail.google.com/*</code> permission. This allows the extension to:
+      </p>
+      <ul>
+        <li>Inspect recipient names, subjects, and private email bodies.</li>
+        <li>Upload relationship metadata to centralized company databases.</li>
+        <li>Monetize user engagement logs for lead generation or sales intelligence.</li>
+      </ul>
+
+      <h2>Why Self-Hosting on MailBlinker is Different</h2>
+      <p>
+        <strong><a href="../">MailBlinker</a></strong> requires zero browser extensions and zero access to your Gmail or Outlook account:
+      </p>
+      <ul>
+        <li><strong>Zero Inbox Access:</strong> You simply inject an invisible 1x1 image tag or use the Telegram bot wizard to create clean templates.</li>
+        <li><strong>Full Data Ownership:</strong> All tracking events, IP logs, and open timestamps are stored on your private SQLite database (`tracker.db`).</li>
+        <li><strong>Protected API:</strong> Admin routes are secured behind private master API keys and IP rate limiting.</li>
+      </ul>
+
+      <h2>Deliverability Benefits: Dedicated Domain vs Shared SaaS Domains</h2>
+      <p>
+        Spam filters (SpamAssassin, Barracuda, Proofpoint) score incoming emails based on the reputation of all embedded domains and images.
+      </p>
+      <p>
+        When you use commercial SaaS tools, your tracking pixel is served from shared domains (e.g. <code>mailtrack.io</code>) alongside millions of spam cold-callers. If other users abuse that domain, <strong>your emails risk landing in Spam or Promotions</strong>.
+      </p>
+      <p>
+        By self-hosting MailBlinker on your own clean domain or VPS, your emails contain only your domain name, ensuring maximum sender reputation and primary inbox placement.
+      </p>
+
+      <div class="article-cta">
+        <h3>Take Back Control of Your Email Privacy</h3>
+        <p>Deploy MailBlinker on your own server or Docker container in 60 seconds.</p>
+        <div class="cta-buttons">
+          <a href="https://github.com/drLacheheb/MailBlinker" class="btn btn-primary" target="_blank" rel="noopener">Deploy with Docker</a>
+          <a href="./mailtrack-alternative.html" class="btn btn-secondary">Explore Features</a>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p><a href="../">MailBlinker</a> — Open Source Email Tracker under BSL 1.1 License.</p>
+    </footer>
+  </div>
+
+</body>
+
+</html>
