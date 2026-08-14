@@ -1,0 +1,12 @@
+[project]
+name = "formatter"
+version = "0.1.0"
+description = "Email Formatter & Dual-Vector Tracking Tag Injector"
+requires-python = ">=3.11"
+dependencies = [
+    "jinja2>=3.1.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
