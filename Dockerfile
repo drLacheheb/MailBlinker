@@ -19,7 +19,7 @@ COPY pyproject.toml ./
 COPY packages/ ./packages/
 COPY services/ ./services/
 
-RUN uv sync --no-cache
+RUN uv sync --no-cache --compile-bytecode
 
 COPY alembic.ini ./
 COPY alembic/ ./alembic/
@@ -32,6 +32,6 @@ USER appuser
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["sh", "-c", "uv run alembic upgrade head && uv run python run.py"]
+CMD ["sh", "-c", "uv run alembic upgrade head && exec uv run python run.py"]

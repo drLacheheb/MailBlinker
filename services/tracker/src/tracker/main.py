@@ -4,7 +4,7 @@ from core import get_logger, init_db, settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routes import router
+from .routes import close_webhook_bot, router, setup_webhook
 from .security import SecurityHeadersMiddleware
 
 logger = get_logger("tracker.main")
@@ -14,7 +14,15 @@ logger = get_logger("tracker.main")
 async def lifespan(app: FastAPI):
     await init_db()
     logger.success(f"Tracker API ready on {settings.BASE_URL}")
+
+    if settings.is_webhook_mode:
+        await setup_webhook()
+
     yield
+
+    if settings.is_webhook_mode:
+        await close_webhook_bot()
+
     logger.info("Tracker API shutting down...")
 
 
