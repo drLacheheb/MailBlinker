@@ -15,7 +15,7 @@ MailBlinker is an open-source, self-hosted email tracking tool written in Python
 - Clean Architecture monorepo with FastAPI, async SQLAlchemy, Alembic migrations, and aiogram 3
 
 ## Links
-- Website: https://drLacheheb.github.io/mailblinker/
-- GitHub Repository: https://github.com/drLacheheb/mailblinker
+- Website: https://drLacheheb.github.io/MailBlinker/
+- GitHub Repository: https://github.com/drLacheheb/MailBlinker
 - Telegram Bot: https://t.me/MailBlinkerBot
 - License: Business Source License 1.1 (BSL 1.1)

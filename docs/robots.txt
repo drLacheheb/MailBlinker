@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://drLacheheb.github.io/mailblinker/sitemap.xml
+Sitemap: https://drLacheheb.github.io/MailBlinker/sitemap.xml
