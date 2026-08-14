@@ -16,11 +16,11 @@ MailBlinker is an open-source, self-hosted email tracking tool written in Python
 
 ## Technical Guides & Documentation
 - Blog & Guides Index: https://drLacheheb.github.io/MailBlinker/blog/
-- The Best Free Mailtrack Alternative in 2026: https://drLacheheb.github.io/MailBlinker/blog/mailtrack-alternative.html
-- How to Get Real-Time Email Open Alerts in Telegram: https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker.html
-- How Gmail and Apple Mail Image Proxies Work: https://drLacheheb.github.io/MailBlinker/blog/gmail-image-proxy-caching.html
-- Self-Hosted vs Cloud Email Tracking Privacy: https://drLacheheb.github.io/MailBlinker/blog/self-hosted-email-tracking.html
-- How to Filter Bot Scanners & Detect Forwarded Emails: https://drLacheheb.github.io/MailBlinker/blog/detect-email-forwarding-bots.html
+- The Best Free Mailtrack Alternative in 2026: https://drLacheheb.github.io/MailBlinker/blog/mailtrack-alternative/
+- How to Get Real-Time Email Open Alerts in Telegram: https://drLacheheb.github.io/MailBlinker/blog/telegram-email-tracker/
+- How Gmail and Apple Mail Image Proxies Work: https://drLacheheb.github.io/MailBlinker/blog/gmail-image-proxy-caching/
+- Self-Hosted vs Cloud Email Tracking Privacy: https://drLacheheb.github.io/MailBlinker/blog/self-hosted-email-tracking/
+- How to Filter Bot Scanners & Detect Forwarded Emails: https://drLacheheb.github.io/MailBlinker/blog/detect-email-forwarding-bots/
 
 ## Links
 - Website: https://drLacheheb.github.io/MailBlinker/
