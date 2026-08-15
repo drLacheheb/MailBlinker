@@ -135,6 +135,8 @@ async def test_dns_deliverability_inspector():
     assert res_gmail.domain == "gmail.com"
     assert res_gmail.score >= 50
     assert res_gmail.mx_valid is True
+    assert hasattr(res_gmail, "dkim_valid")
+    assert hasattr(res_gmail, "dkim_status")
 
 
 def test_off_hours_telemetry_heuristics():

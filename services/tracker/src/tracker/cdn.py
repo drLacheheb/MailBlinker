@@ -25,6 +25,8 @@ def get_cdn_headers_for_token(token: str) -> Dict[str, str]:
             "Server": "cloudflare",
             "CF-Cache-Status": "DYNAMIC",
             "CF-Ray": f"{token_hash[:16]}-FRA",
+            "CF-Edge-Cache": "HIT",
+            "Server-Timing": f"cfRequestDuration;dur={14 + (seed % 12)}.{(seed % 9)}",
             "Accept-Ranges": "bytes",
         }
     elif cdn_choice == 1:
@@ -35,6 +37,7 @@ def get_cdn_headers_for_token(token: str) -> Dict[str, str]:
             "X-Cache": "Miss from cloudfront",
             "X-Amz-Cf-Pop": "FRA50-P1",
             "X-Amz-Cf-Id": f"{token_hash[:24]}==",
+            "Server-Timing": f"cdn-cache;desc=MISS, edge;dur={10 + (seed % 10)}.{(seed % 7)}",
             "Accept-Ranges": "bytes",
         }
     else:
@@ -45,5 +48,6 @@ def get_cdn_headers_for_token(token: str) -> Dict[str, str]:
             "X-Served-By": f"cache-fra-eddf{token_hash[:8]}-FRA",
             "X-Cache": "MISS",
             "Via": "1.1 varnish",
+            "Server-Timing": f"fastly;dur={8 + (seed % 8)}.{(seed % 6)}",
             "Accept-Ranges": "bytes",
         }

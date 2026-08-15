@@ -138,3 +138,41 @@ def test_email_density_optimizer():
     report_normal = EmailDensityOptimizer.analyze(normal_html)
     assert report_normal.score >= 80
     assert report_normal.is_balanced is True
+
+
+def test_mime_boundary_generator():
+    from formatter import generate_mime_boundary
+
+    apple_b = generate_mime_boundary("apple_mail")
+    assert apple_b.startswith("----=_Part_")
+
+    outlook_b = generate_mime_boundary("outlook")
+    assert outlook_b.startswith("--_000_")
+
+    tb_b = generate_mime_boundary("thunderbird")
+    assert tb_b.startswith("------------")
+
+
+def test_naturalize_text_entropy():
+    from formatter import naturalize_text_entropy
+
+    raw = "Here is the confidential invoice and project proposal."
+    shielded = naturalize_text_entropy(raw)
+    assert shielded != raw
+    assert "in&#8205;voice" in shielded
+    assert "pro&shy;posal" in shielded
+    assert "con&shy;fidential" in shielded
+
+
+def test_document_preview_card():
+    from formatter import generate_document_preview_card
+
+    card = generate_document_preview_card(
+        filename="Q3_Financial_Audit.pdf",
+        target_url="https://acme.com/docs/q3.pdf",
+        token="tok_pdf_111",
+        base_url="https://track.acme.com",
+    )
+    assert "Q3_Financial_Audit.pdf" in card
+    assert "PDF Document" in card
+    assert "/cdn/go/" in card

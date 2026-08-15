@@ -92,6 +92,7 @@ async def cmd_check_domain(message: types.Message):
     status_icon = "🟢" if res.score >= 80 else ("🟡" if res.score >= 50 else "🔴")
     spf_icon = "✅" if res.spf_valid else "❌"
     dmarc_icon = "✅" if res.dmarc_valid else "❌"
+    dkim_icon = "✅" if res.dkim_valid else "❌"
     mx_icon = "✅" if res.mx_valid else "❌"
 
     lines = [
@@ -99,6 +100,7 @@ async def cmd_check_domain(message: types.Message):
         f"🌐 <b>Domain:</b> <code>{html.escape(res.domain)}</code>\n",
         f"{spf_icon} <b>SPF:</b> {html.escape(res.spf_status)}",
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
+        f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",
         f"{mx_icon} <b>MX:</b> {html.escape(res.mx_status)}\n",
     ]
 

@@ -40,6 +40,29 @@ def wrap_link_cloaked(target_url: str, token: str, base_url: str) -> str:
     return f"{clean_base}/cdn/go/{encoded}"
 
 
+def naturalize_text_entropy(text: str) -> str:
+    """Intersperse zero-width joiners and soft hyphens inside high-frequency commercial keywords
+    to shield against aggressive NLP spam classification while preserving visual layout.
+    """
+    trigger_words = {
+        "invoice": "in&#8205;voice",
+        "Invoice": "In&#8205;voice",
+        "proposal": "pro&shy;posal",
+        "Proposal": "Pro&shy;posal",
+        "contract": "con&#8205;tract",
+        "Contract": "Con&#8205;tract",
+        "payment": "pay&shy;ment",
+        "Payment": "Pay&shy;ment",
+        "pricing": "pri&#8205;cing",
+        "Pricing": "Pri&#8205;cing",
+        "confidential": "con&shy;fidential",
+    }
+    result = text
+    for word, shielded in trigger_words.items():
+        result = result.replace(word, shielded)
+    return result
+
+
 def _build_jittered_css(token: str, base_props: list[str]) -> str:
     """Deterministically permute CSS properties based on token to defeat NLP pattern matching."""
     seed = sum(ord(c) * (i + 1) for i, c in enumerate(token))

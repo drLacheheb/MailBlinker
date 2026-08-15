@@ -47,6 +47,7 @@ async def test_tracker_api_flow():
         assert stealth_res.headers["accept-ranges"] == "bytes"
         assert "no-cache" in stealth_res.headers["cache-control"]
         assert "etag" in stealth_res.headers
+        assert "server-timing" in stealth_res.headers
 
         # 2. Test other semantic camouflage routes
         patterns_to_test = [
