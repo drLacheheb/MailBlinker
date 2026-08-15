@@ -63,6 +63,7 @@ def test_format_email_contains_dual_vectors():
     assert "grid-template-rows: subgrid" in html
     assert "forced-colors: active" in html
     assert "@view-transition" in html
+    assert "color-mix(" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -442,3 +443,29 @@ def test_generate_resent_headers():
     assert hdrs["Original-Message-ID"] == "<orig123@acme.com>"
     assert "Resent-Message-ID" in hdrs
     assert "Resent-Date" in hdrs
+
+
+def test_generate_authentication_results_and_imap_keyword_headers():
+    from formatter import (
+        generate_authentication_results_header,
+        generate_imap_keyword_headers,
+    )
+
+    auth_hdrs = generate_authentication_results_header(
+        auth_serv_id="mx.google.com",
+        spf_status="pass",
+        dkim_status="pass",
+        dmarc_status="pass",
+        arc_status="pass",
+    )
+    assert "Authentication-Results" in auth_hdrs
+    assert "mx.google.com" in auth_hdrs["Authentication-Results"]
+    assert "spf=pass" in auth_hdrs["Authentication-Results"]
+    assert "dkim=pass" in auth_hdrs["Authentication-Results"]
+
+    imap_hdrs = generate_imap_keyword_headers(is_seen=True, is_flagged=True, is_forwarded=True)
+    assert "X-Keywords" in imap_hdrs
+    assert r"\Seen" in imap_hdrs["X-Keywords"]
+    assert r"\Flagged" in imap_hdrs["X-Keywords"]
+    assert "$Forwarded" in imap_hdrs["X-Keywords"]
+    assert imap_hdrs["X-IMAP-State"] == "Synchronized"

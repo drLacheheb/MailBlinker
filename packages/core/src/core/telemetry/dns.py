@@ -65,6 +65,9 @@ class DnsInspectionResult:
     dmarc_tree_walk_status: str
     dns_any_hardened: bool
     dns_any_status: str
+    dname_valid: bool
+    dname_target: Optional[str]
+    dname_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -271,6 +274,9 @@ class DnsDeliverabilityInspector:
                 dmarc_tree_walk_status="Invalid domain format",
                 dns_any_hardened=False,
                 dns_any_status="Invalid domain format",
+                dname_valid=False,
+                dname_target=None,
+                dname_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -635,6 +641,21 @@ class DnsDeliverabilityInspector:
             dns_any_hardened = False
             dns_any_status = "Standard ANY response"
 
+        # 18. Inspect RFC 6672 DNAME Subtree Delegation
+        dname_records = await self._query_doh(clean_d, "DNAME")
+        if not dname_records:
+            dname_records = await self._query_doh(f"_domainkey.{clean_d}", "DNAME")
+
+        if dname_records:
+            dname_valid = True
+            dname_target = dname_records[0].strip().rstrip(".")
+            dname_status = f"Active -> {dname_target}"
+            score += 5
+        else:
+            dname_valid = False
+            dname_target = None
+            dname_status = "No DNAME delegation"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -697,5 +718,8 @@ class DnsDeliverabilityInspector:
             dmarc_tree_walk_status=dmarc_tree_walk_status,
             dns_any_hardened=dns_any_hardened,
             dns_any_status=dns_any_status,
+            dname_valid=dname_valid,
+            dname_target=dname_target,
+            dname_status=dname_status,
             recommendations=recommendations,
         )

@@ -112,6 +112,7 @@ async def cmd_check_domain(message: types.Message):
     openpgpkey_icon = "✅" if res.openpgpkey_valid else "ℹ️"
     tree_walk_icon = "✅" if res.dmarc_tree_walk_valid else "ℹ️"
     any_icon = "✅" if res.dns_any_hardened else "ℹ️"
+    dname_icon = "✅" if res.dname_valid else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -142,6 +143,7 @@ async def cmd_check_domain(message: types.Message):
         f"{dmarc_fo_icon} <b>DMARC Forensic (ruf):</b> {html.escape(res.dmarc_forensic_status)}",
         f"{dnssec_icon} <b>DNSSEC Zone Signing:</b> {html.escape(res.dnssec_status)}",
         f"{any_icon} <b>RFC 8482 ANY Hardening:</b> {html.escape(res.dns_any_status)}",
+        f"{dname_icon} <b>RFC 6672 DNAME:</b> {html.escape(res.dname_status)}",
         f"{ns_icon} <b>Nameservers (NS):</b> {html.escape(res.ns_status)}\n",
     ]
 

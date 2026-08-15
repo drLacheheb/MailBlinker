@@ -320,3 +320,47 @@ def generate_resent_headers(
         headers["Original-Message-ID"] = f"<{clean_orig}>"
 
     return headers
+
+
+def generate_authentication_results_header(
+    auth_serv_id: str = "mx.google.com",
+    spf_status: str = "pass",
+    dkim_status: str = "pass",
+    dmarc_status: str = "pass",
+    arc_status: str = "pass",
+) -> dict[str, str]:
+    """Generate an RFC 8601 Authentication-Results header to simulate and validate
+    MTA authentication verification tokens across staging and relay pipelines.
+    """
+    parts = [
+        auth_serv_id.strip(),
+        f"spf={spf_status.strip()}",
+        f"dkim={dkim_status.strip()}",
+        f"dmarc={dmarc_status.strip()}",
+        f"arc={arc_status.strip()}",
+    ]
+    return {
+        "Authentication-Results": "; ".join(parts),
+    }
+
+
+def generate_imap_keyword_headers(
+    is_seen: bool = True,
+    is_flagged: bool = False,
+    is_forwarded: bool = False,
+) -> dict[str, str]:
+    """Generate RFC 3501 / RFC 9051 IMAP mailbox keyword and flag headers
+    to synchronize read/forward telemetry states with desktop IMAP clients.
+    """
+    keywords = []
+    if is_seen:
+        keywords.append(r"\Seen")
+    if is_flagged:
+        keywords.append(r"\Flagged")
+    if is_forwarded:
+        keywords.append("$Forwarded")
+
+    return {
+        "X-Keywords": ", ".join(keywords) if keywords else r"\Seen",
+        "X-IMAP-State": "Synchronized",
+    }

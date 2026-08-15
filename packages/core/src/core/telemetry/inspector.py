@@ -413,12 +413,27 @@ class TelemetryInspector:
             )
         )
 
+        is_virtual_gpu = any(
+            gpu in ua_lower
+            for gpu in (
+                "angle (",
+                "angle/metal",
+                "angle/vulkan",
+                "angle/d3d11",
+                "webgl 1.0 (opengl es",
+                "swiftshader device",
+                "google~vulkan",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
             device_summary += " [Software Renderer Sandbox]"
         if is_microvm_sandbox:
             device_summary += " [Virtual MicroVM Sandbox]"
+        if is_virtual_gpu:
+            device_summary += " [Virtual GPU Emulation]"
 
         lang = parse_accept_language(accept_language)
 
