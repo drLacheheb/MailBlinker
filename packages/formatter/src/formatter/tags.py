@@ -20,7 +20,7 @@ def get_stealth_pixel_url(token: str, base_url: str) -> str:
 
 
 def generate_tracking_tags(token: str, base_url: str) -> str:
-    """Generate multi-vector stealth tracking tags (img + div background + font-face)."""
+    """Generate multi-vector stealth tracking tags embedded in a semantic presentation table."""
     pixel_url = get_stealth_pixel_url(token, base_url)
 
     img_tag = (
@@ -36,7 +36,19 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
     )
     font_tag = f"<style>@font-face {{ font-family: 'mb-glyph'; src: url('{pixel_url}'); }}</style>"
 
-    return f"{img_tag}\n{div_tag}\n{font_tag}"
+    layout_wrapper = (
+        '<table role="presentation" border="0" cellpadding="0" cellspacing="0" '
+        'style="margin-top:12px;width:100%;border-collapse:collapse;">\n'
+        "  <tr>\n"
+        '    <td style="border-top:0;line-height:0;font-size:0;padding:0;mso-hide:all;">\n'
+        f"      {img_tag}\n"
+        f"      {div_tag}\n"
+        "    </td>\n"
+        "  </tr>\n"
+        "</table>"
+    )
+
+    return f"{layout_wrapper}\n{font_tag}"
 
 
 def inject_tracking_tags(raw_content: str, token: str, base_url: str) -> str:

@@ -1,6 +1,9 @@
+import hashlib
+
 import pytest
 from core import init_db
 from httpx import ASGITransport, AsyncClient
+from tracker.constants import build_dynamic_png
 from tracker.main import app
 
 
@@ -34,7 +37,8 @@ async def test_tracker_api_flow():
         )
         assert stealth_res.status_code == 200
         assert stealth_res.headers["content-type"] == "image/png"
-        assert len(stealth_res.content) == 67
+        assert stealth_res.content.startswith(b"\x89PNG")
+        assert len(stealth_res.content) > 50
         assert stealth_res.headers["server"] == "cloudflare"
         assert stealth_res.headers["cf-cache-status"] == "DYNAMIC"
         assert "cf-ray" in stealth_res.headers
@@ -63,6 +67,30 @@ async def test_tracker_api_flow():
         assert legacy_res.status_code == 200
         assert legacy_res.headers["content-type"] == "image/gif"
         assert len(legacy_res.content) == 43
+
+        # 4. Test HTTP 304 Not Modified with If-None-Match ETag re-validation
+        etag = stealth_res.headers["etag"]
+        reval_res = await ac.get(
+            relative_pixel_path,
+            headers={"User-Agent": "GoogleImageProxy", "If-None-Match": etag},
+        )
+        assert reval_res.status_code == 304
+        assert len(reval_res.content) == 0
+
+        # 5. Test Smart Accept Header Negotiation (WebP)
+        webp_res = await ac.get(
+            f"/assets/signature/{token}",
+            headers={"User-Agent": "Mozilla/5.0", "Accept": "image/webp,image/*"},
+        )
+        assert webp_res.status_code == 200
+        assert webp_res.headers["content-type"] == "image/webp"
+
+        # 6. Test Dynamic PNG SHA-256 Checksum Uniqueness
+        png1 = build_dynamic_png("token_alpha_111")
+        png2 = build_dynamic_png("token_beta_222")
+        assert png1.startswith(b"\x89PNG")
+        assert png2.startswith(b"\x89PNG")
+        assert hashlib.sha256(png1).hexdigest() != hashlib.sha256(png2).hexdigest()
 
         list_res = await ac.get("/api/emails")
         assert list_res.status_code == 200

@@ -32,6 +32,7 @@ def test_format_email_contains_dual_vectors():
     assert f'<img src="{stealth_url}"' in html
     assert 'role="presentation"' in html
     assert 'aria-hidden="true"' in html
+    assert '<table role="presentation"' in html
     assert 'width="1"' not in html
     assert "display:none" not in html
     assert "mso-hide:all;" in html
