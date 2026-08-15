@@ -9,9 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from ..cdn import get_cdn_headers_for_token
 from ..constants import (
     TRANSPARENT_1X1_GIF,
-    TRANSPARENT_1X1_WEBP,
     build_dynamic_png,
     build_dynamic_svg,
+    build_dynamic_webp,
 )
 from ..dependencies import get_record_open_use_case
 from ..throttle import token_burst_shield
@@ -60,7 +60,7 @@ def _extract_token_and_format(
         content = build_dynamic_svg(clean_token)
     elif ext == "webp":
         media_type = "image/webp"
-        content = TRANSPARENT_1X1_WEBP
+        content = build_dynamic_webp(clean_token)
     else:
         media_type = "image/png"
         content = build_dynamic_png(clean_token)

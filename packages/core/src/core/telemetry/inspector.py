@@ -259,8 +259,24 @@ class TelemetryInspector:
                 elapsed_seconds=elapsed_seconds,
             )
 
-        # Off-hours datacenter crawler probe (01:00 AM - 05:00 AM UTC without accept-language)
-        is_off_hours = open_time.hour in (1, 2, 3, 4)
+        # Country timezone offset table for solar hour calculation
+        country_offsets = {
+            "United States": -5,
+            "Canada": -5,
+            "United Kingdom": 0,
+            "France": 1,
+            "Germany": 1,
+            "Netherlands": 1,
+            "Japan": 9,
+            "Australia": 10,
+            "India": 5,
+            "Singapore": 8,
+        }
+        offset = country_offsets.get(country, 0) if country else 0
+        local_hour = (open_time.hour + offset) % 24
+
+        # Timezone-adjusted off-hours datacenter crawler probe (01:00 AM - 05:00 AM local time)
+        is_off_hours = (open_time.hour in (1, 2, 3, 4)) or (local_hour in (1, 2, 3, 4))
         if is_datacenter_isp and is_off_hours and not accept_language:
             return TelemetryInspectionResult(
                 is_valid_open=False,

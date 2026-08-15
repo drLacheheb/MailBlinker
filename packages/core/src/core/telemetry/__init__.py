@@ -1,4 +1,5 @@
 from .constants import KNOWN_PROXIES, KNOWN_SECURITY_BOTS
+from .dmarc import DmarcRecordEntry, DmarcReportSummary, parse_dmarc_rua_xml
 from .dns import DnsDeliverabilityInspector, DnsInspectionResult
 from .inspector import (
     TelemetryInspectionResult,
@@ -15,6 +16,9 @@ __all__ = [
     "TelemetryInspectionResult",
     "DnsDeliverabilityInspector",
     "DnsInspectionResult",
+    "DmarcRecordEntry",
+    "DmarcReportSummary",
+    "parse_dmarc_rua_xml",
     "format_elapsed_time",
     "parse_accept_language",
     "detect_forwarding_clues",

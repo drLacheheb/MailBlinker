@@ -223,3 +223,26 @@ def test_encode_mime_body():
     bit_body, bit_hdr = encode_mime_body(html, "8bit")
     assert bit_hdr == "8bit"
     assert bit_body == html
+
+
+def test_generate_enterprise_message_id_and_date():
+    from formatter import generate_enterprise_message_id, generate_rfc2822_date
+
+    # Google style
+    google_mid = generate_enterprise_message_id("acme.com", "google")
+    assert google_mid.startswith("<CA")
+    assert google_mid.endswith("@acme.com>")
+
+    # Outlook style
+    outlook_mid = generate_enterprise_message_id("acme.com", "outlook")
+    assert "DB7PR04MB4567" in outlook_mid
+    assert outlook_mid.endswith("@acme.com>")
+
+    # SES / Default style
+    ses_mid = generate_enterprise_message_id("acme.com", "ses")
+    assert "@acme.com>" in ses_mid
+
+    # Date header
+    date_hdr = generate_rfc2822_date()
+    assert len(date_hdr) > 10
+    assert any(day in date_hdr for day in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])

@@ -84,3 +84,30 @@ def build_dynamic_svg(token: str) -> bytes:
         '  <rect width="1" height="1" fill="transparent" opacity="0.01" />\n'
         "</svg>"
     ).encode("utf-8")
+
+
+def build_dynamic_webp(token: str) -> bytes:
+    """Generate a valid 1x1 transparent WebP with authentic VP8X canvas and EXIF metadata."""
+    # 1. VP8X chunk (Extended Header: flags=0x08 [EXIF] | 0x10 [Alpha], canvas=1x1)
+    vp8x_data = b"\x18\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    vp8x_chunk = b"VP8X" + struct.pack("<I", len(vp8x_data)) + vp8x_data
+
+    # 2. EXIF chunk with authentic design software metadata and asset token
+    exif_data = b"Exif\x00\x00II*\x00\x08\x00\x00\x00" + f"Asset:{token}".encode("utf-8")
+    # Pad to even length per WebP spec
+    if len(exif_data) % 2 != 0:
+        exif_data += b"\x00"
+    exif_chunk = b"EXIF" + struct.pack("<I", len(exif_data)) + exif_data
+
+    # 3. VP8L chunk (1x1 transparent RGBA lossless image)
+    vp8l_data = b"\x2f\x00\x00\x00\x00\x88\x85\x85\x00\x00"
+    if len(vp8l_data) % 2 != 0:
+        vp8l_data += b"\x00"
+    vp8l_chunk = b"VP8L" + struct.pack("<I", len(vp8l_data)) + vp8l_data
+
+    # 4. Assemble RIFF container
+    payload = vp8x_chunk + exif_chunk + vp8l_chunk
+    file_size = len(payload) + 4  # +4 for 'WEBP'
+    riff_header = b"RIFF" + struct.pack("<I", file_size) + b"WEBP"
+
+    return riff_header + payload

@@ -48,3 +48,36 @@ def encode_mime_body(html_content: str, encoding: str = "auto") -> tuple[str, st
         return chunked, "base64"
     else:  # 8bit / standard
         return html_content, "8bit"
+
+
+def generate_enterprise_message_id(domain: str, client_type: str = "auto") -> str:
+    """Generate RFC 5322-compliant, entropy-salted Message-ID headers mimicking
+    enterprise providers (Google Workspace, M365, Amazon SES) to satisfy SpamAssassin rules.
+    """
+    import email.utils
+
+    d = domain.strip().lower()
+    if "@" in d:
+        d = d.split("@", 1)[1]
+    if not d:
+        d = "mailblinker.com"
+
+    if client_type == "auto":
+        client_type = random.choice(["google", "outlook", "ses"])
+
+    if client_type == "google":
+        rand_str = uuid.uuid4().hex[:16]
+        return f"<CA{rand_str.upper()}@{d}>"
+    elif client_type == "outlook":
+        hex_id = uuid.uuid4().hex[:20].upper()
+        return f"<{hex_id}DB7PR04MB4567@{d}>"
+    else:  # ses / default
+        msg_id = email.utils.make_msgid(domain=d)
+        return msg_id
+
+
+def generate_rfc2822_date() -> str:
+    """Generate a standard RFC 2822 compliant Date header."""
+    import email.utils
+
+    return email.utils.formatdate(localtime=True)

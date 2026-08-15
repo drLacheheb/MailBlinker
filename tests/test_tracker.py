@@ -50,6 +50,8 @@ async def test_tracker_api_flow():
         assert "stale-while-revalidate" in stealth_res.headers["cache-control"]
         assert "etag" in stealth_res.headers
         assert "server-timing" in stealth_res.headers
+        assert "content-security-policy" in stealth_res.headers
+        assert stealth_res.headers["referrer-policy"] == "no-referrer"
 
         # 2. Test other semantic camouflage routes
         patterns_to_test = [
@@ -228,3 +230,14 @@ def test_dynamic_png_forensics():
     assert b"Software" in png_bytes
     assert b"Figma Asset Exporter" in png_bytes
     assert b"Asset-ID" in png_bytes
+
+
+def test_dynamic_webp_forensics():
+    from tracker.constants import build_dynamic_webp
+
+    webp_bytes = build_dynamic_webp("tok_webp_forensics_456")
+    assert webp_bytes.startswith(b"RIFF")
+    assert b"WEBP" in webp_bytes
+    assert b"VP8X" in webp_bytes
+    assert b"EXIF" in webp_bytes
+    assert b"Asset:tok_webp_forensics_456" in webp_bytes

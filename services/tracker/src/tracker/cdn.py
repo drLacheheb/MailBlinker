@@ -17,6 +17,11 @@ def get_cdn_headers_for_token(token: str) -> Dict[str, str]:
         "Expires": "0",
         "ETag": f'"{token}"',
         "Vary": "Accept-Encoding, Accept",
+        "Content-Security-Policy": (
+            "default-src 'none'; img-src 'self' data:; frame-ancestors 'none'"
+        ),
+        "Referrer-Policy": "no-referrer",
+        "Permissions-Policy": "interest-cohort=()",
     }
 
     if cdn_choice == 0:
