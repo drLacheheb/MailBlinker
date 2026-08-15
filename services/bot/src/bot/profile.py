@@ -25,7 +25,7 @@ async def setup_bot_profile(bot: Bot) -> None:
                 "• Geolocation & ISP breakdown (City, Country)\n"
                 "• Forwarding & multi-device detection\n"
                 "• 100% Private (No 'Sent with MailBlinker' branding)\n\n"
-                "👉 Press 'Start' below to begin!"
+                "👉 Tap /start to begin!"
             )
         )
 
