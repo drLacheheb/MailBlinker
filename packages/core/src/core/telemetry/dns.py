@@ -20,12 +20,17 @@ class DnsInspectionResult:
     mx_valid: bool
     mx_records: List[str]
     mx_status: str
+    mx_ipv6_valid: bool
     ptr_valid: bool
     ptr_record: Optional[str]
     ptr_status: str
     bimi_valid: bool
     bimi_record: Optional[str]
     bimi_status: str
+    mta_sts_valid: bool
+    mta_sts_status: str
+    tls_rpt_valid: bool
+    tls_rpt_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -115,12 +120,17 @@ class DnsDeliverabilityInspector:
                 mx_valid=False,
                 mx_records=[],
                 mx_status="Invalid domain format",
+                mx_ipv6_valid=False,
                 ptr_valid=False,
                 ptr_record=None,
                 ptr_status="Invalid domain format",
                 bimi_valid=False,
                 bimi_record=None,
                 bimi_status="Invalid domain format",
+                mta_sts_valid=False,
+                mta_sts_status="Invalid domain format",
+                tls_rpt_valid=False,
+                tls_rpt_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -198,13 +208,19 @@ class DnsDeliverabilityInspector:
                 "Ensure your email provider DKIM selector (e.g. google._domainkey) is published."
             )
 
-        # 4. Inspect MX Records
+        # 4. Inspect MX Records & IPv6 Dual-Stack Reachability
         mx_records = await self._query_doh(clean_d, "MX")
+        mx_ipv6_valid = False
         if mx_records:
             mx_valid = True
             server_word = "servers" if len(mx_records) > 1 else "server"
             mx_status = f"Active ({len(mx_records)} mail exchange {server_word})"
-            score += 15
+            score += 10
+
+            first_mx_host = mx_records[0].split()[-1].rstrip(".")
+            aaaa_records = await self._query_doh(first_mx_host, "AAAA")
+            if aaaa_records:
+                mx_ipv6_valid = True
         else:
             mx_valid = False
             mx_status = "No MX records found"
@@ -225,7 +241,7 @@ class DnsDeliverabilityInspector:
                     ptr_valid = True
                     ptr_record = ptr_records[0].rstrip(".")
                     ptr_status = f"Configured ({ptr_record})"
-                    score += 10
+                    score += 5
                 else:
                     ptr_status = f"No PTR for {ip}"
             else:
@@ -241,6 +257,28 @@ class DnsDeliverabilityInspector:
         else:
             bimi_valid = False
             bimi_status = "No BIMI record (Optional for brand avatar)"
+
+        # 7. Inspect MTA-STS (RFC 8461 SMTP Strict Transport Security)
+        mta_sts_txt = await self._query_doh(f"_mta-sts.{clean_d}", "TXT")
+        mta_sts_record = next((r for r in mta_sts_txt if r.startswith("v=STSv1")), None)
+        if mta_sts_record:
+            mta_sts_valid = True
+            mta_sts_status = "Active (STSv1 Enforced)"
+            score += 5
+        else:
+            mta_sts_valid = False
+            mta_sts_status = "No MTA-STS record (Optional for SMTP TLS enforcement)"
+
+        # 8. Inspect TLS-RPT (RFC 8460 SMTP TLS Reporting)
+        tls_rpt_txt = await self._query_doh(f"_smtp._tlsrpt.{clean_d}", "TXT")
+        tls_rpt_record = next((r for r in tls_rpt_txt if r.startswith("v=TLSRPTv1")), None)
+        if tls_rpt_record:
+            tls_rpt_valid = True
+            tls_rpt_status = "Active (TLSRPTv1 Configured)"
+            score += 5
+        else:
+            tls_rpt_valid = False
+            tls_rpt_status = "No TLS-RPT record (Optional for TLS reporting)"
 
         score = min(100, score)
 
@@ -259,11 +297,16 @@ class DnsDeliverabilityInspector:
             mx_valid=mx_valid,
             mx_records=mx_records,
             mx_status=mx_status,
+            mx_ipv6_valid=mx_ipv6_valid,
             ptr_valid=ptr_valid,
             ptr_record=ptr_record,
             ptr_status=ptr_status,
             bimi_valid=bimi_valid,
             bimi_record=bimi_record,
             bimi_status=bimi_status,
+            mta_sts_valid=mta_sts_valid,
+            mta_sts_status=mta_sts_status,
+            tls_rpt_valid=tls_rpt_valid,
+            tls_rpt_status=tls_rpt_status,
             recommendations=recommendations,
         )

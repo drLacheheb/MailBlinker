@@ -141,6 +141,11 @@ async def test_dns_deliverability_inspector():
     assert hasattr(res_gmail, "ptr_status")
     assert hasattr(res_gmail, "bimi_valid")
     assert hasattr(res_gmail, "bimi_status")
+    assert hasattr(res_gmail, "mta_sts_valid")
+    assert hasattr(res_gmail, "mta_sts_status")
+    assert hasattr(res_gmail, "tls_rpt_valid")
+    assert hasattr(res_gmail, "tls_rpt_status")
+    assert hasattr(res_gmail, "mx_ipv6_valid")
 
 
 def test_headless_probe_telemetry():

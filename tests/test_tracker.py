@@ -216,3 +216,15 @@ async def test_tracker_api_flow():
         assert portal_res.status_code == 200
         assert "CloudEdge" in portal_res.text
         assert "Operational" in portal_res.text
+
+
+def test_dynamic_png_forensics():
+    from tracker.constants import build_dynamic_png
+
+    png_bytes = build_dynamic_png("tok_png_forensics_123")
+    assert png_bytes.startswith(b"\x89PNG\r\n\x1a\n")
+    assert b"sRGB" in png_bytes
+    assert b"gAMA" in png_bytes
+    assert b"Software" in png_bytes
+    assert b"Figma Asset Exporter" in png_bytes
+    assert b"Asset-ID" in png_bytes

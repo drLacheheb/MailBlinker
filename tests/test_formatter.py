@@ -45,6 +45,7 @@ def test_format_email_contains_dual_vectors():
     assert "@font-face" in html
     assert "font-" in html
     assert "<!--[if mso]>" in html
+    assert "@media only screen and (max-width: 600px)" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -139,6 +140,16 @@ def test_email_density_optimizer():
     report_normal = EmailDensityOptimizer.analyze(normal_html)
     assert report_normal.score >= 80
     assert report_normal.is_balanced is True
+    assert report_normal.caps_ratio <= 0.35
+    assert len(report_normal.spam_triggers_found) == 0
+    assert hasattr(report_normal, "lexical_spam_score")
+
+    # Test heavy spam penalty detection
+    spam_html = "<p>100% FREE! ACT NOW! CLAIM YOUR CASH BONUS TODAY AND MAKE MONEY FAST!!!</p>"
+    report_spam = EmailDensityOptimizer.analyze(spam_html)
+    assert len(report_spam.spam_triggers_found) >= 3
+    assert report_spam.score < 70
+    assert report_spam.is_balanced is False
 
 
 def test_mime_boundary_generator():

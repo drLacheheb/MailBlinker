@@ -25,13 +25,24 @@ def _make_png_chunk(chunk_type: bytes, data: bytes) -> bytes:
 
 
 def build_dynamic_png(token: str) -> bytes:
-    """Generate a valid 1x1 transparent PNG with a unique cryptographic checksum."""
+    """Generate a valid 1x1 transparent PNG with authentic sRGB/gAMA color space
+    and asset metadata.
+    """
     header = b"\x89PNG\r\n\x1a\n"
     # IHDR: 1x1, 8-bit, RGBA (color_type=6)
     ihdr_data = struct.pack(">IIBBBBB", 1, 1, 8, 6, 0, 0, 0)
     ihdr_chunk = _make_png_chunk(b"IHDR", ihdr_data)
 
-    # tEXt chunk: keyword\0text (embeds unique token metadata for unique SHA-256)
+    # sRGB chunk (Perceptual rendering intent)
+    srgb_chunk = _make_png_chunk(b"sRGB", b"\x00")
+
+    # gAMA chunk (standard 45455 = 1/2.2 gamma)
+    gama_chunk = _make_png_chunk(b"gAMA", struct.pack(">I", 45455))
+
+    # Software metadata chunk (Figma / Adobe UI asset signature)
+    software_chunk = _make_png_chunk(b"tEXt", b"Software\0Figma Asset Exporter v12")
+
+    # tEXt chunk: Asset-ID
     text_data = b"Asset-ID\0" + token.encode("utf-8")
     text_chunk = _make_png_chunk(b"tEXt", text_data)
 
@@ -43,7 +54,16 @@ def build_dynamic_png(token: str) -> bytes:
     # IEND
     iend_chunk = _make_png_chunk(b"IEND", b"")
 
-    return header + ihdr_chunk + text_chunk + idat_chunk + iend_chunk
+    return (
+        header
+        + ihdr_chunk
+        + srgb_chunk
+        + gama_chunk
+        + software_chunk
+        + text_chunk
+        + idat_chunk
+        + iend_chunk
+    )
 
 
 TRANSPARENT_1X1_SVG = (

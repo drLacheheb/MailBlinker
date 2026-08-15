@@ -133,16 +133,21 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
     cls_name = f"{cls_prefix}-{token_hash[:6]}"
     font_name = f"font-{token_hash[:6]}"
 
+    margin_top = 10 + (sum(ord(c) for c in token) % 6)
+    mobile_margin = max(4, margin_top - 4)
     font_tag = (
         f"<style>\n"
         f"  @font-face {{ font-family: '{font_name}'; src: url('{pixel_url}'); }}\n"
         f"  @supports (display: flex) {{\n"
         f"    .{cls_name} {{ display: flex; flex-direction: row; min-height: 0; }}\n"
         f"  }}\n"
+        f"  @media only screen and (max-width: 600px) {{\n"
+        f"    .{cls_name} {{\n"
+        f"      width: 100% !important; margin-top: {mobile_margin}px !important;\n"
+        f"    }}\n"
+        f"  }}\n"
         f"</style>"
     )
-
-    margin_top = 10 + (sum(ord(c) for c in token) % 6)
     layout_wrapper = (
         f'<table class="{cls_name}" role="presentation" border="0" '
         'cellpadding="0" cellspacing="0" '
