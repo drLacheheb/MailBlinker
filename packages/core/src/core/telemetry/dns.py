@@ -56,6 +56,10 @@ class DnsInspectionResult:
     ns_valid: bool
     ns_records: List[str]
     ns_status: str
+    dkim_ed25519_valid: bool
+    dkim_ed25519_status: str
+    openpgpkey_valid: bool
+    openpgpkey_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -253,6 +257,10 @@ class DnsDeliverabilityInspector:
                 ns_valid=False,
                 ns_records=[],
                 ns_status="Invalid domain format",
+                dkim_ed25519_valid=False,
+                dkim_ed25519_status="Invalid domain format",
+                openpgpkey_valid=False,
+                openpgpkey_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -328,11 +336,15 @@ class DnsDeliverabilityInspector:
                 "'v=DMARC1; p=quarantine; sp=quarantine;'"
             )
 
-        # 3. Inspect DKIM Records (Probe common selectors)
+        # 3. Inspect DKIM Records (Probe common selectors & RFC 8463 Ed25519)
         dkim_found: List[str] = []
+        dkim_ed25519_valid = False
         for sel in self.COMMON_DKIM_SELECTORS:
             dkim_res = await self._query_doh(f"{sel}._domainkey.{clean_d}", "TXT")
-            if any("k=rsa" in r or "p=" in r or "v=DKIM1" in r for r in dkim_res):
+            if any("k=ed25519" in r.lower() for r in dkim_res):
+                dkim_ed25519_valid = True
+                dkim_found.append(f"{sel} (Ed25519)")
+            elif any("k=rsa" in r or "p=" in r or "v=DKIM1" in r for r in dkim_res):
                 dkim_found.append(sel)
 
         if dkim_found:
@@ -345,6 +357,12 @@ class DnsDeliverabilityInspector:
             recommendations.append(
                 "Ensure your email provider DKIM selector (e.g. google._domainkey) is published."
             )
+
+        if dkim_ed25519_valid:
+            dkim_ed25519_status = "RFC 8463 Ed25519 Active (Edwards-Curve Public Key)"
+            score += 5
+        else:
+            dkim_ed25519_status = "RSA (Standard 2048-bit / 1024-bit)"
 
         # 4. Inspect MX Records & IPv6 Dual-Stack Reachability
         mx_records = await self._query_doh(clean_d, "MX")
@@ -564,6 +582,18 @@ class DnsDeliverabilityInspector:
             ns_valid = False
             ns_status = "No NS records found"
 
+        # 16. Inspect RFC 7929 OPENPGPKEY (DANE for OpenPGP)
+        openpgp_rr = await self._query_doh(f"_openpgpkey.{clean_d}", "OPENPGPKEY")
+        if not openpgp_rr:
+            openpgp_rr = await self._query_doh(f"_openpgpkey.{clean_d}", "TXT")
+        if openpgp_rr:
+            openpgpkey_valid = True
+            openpgpkey_status = "Active (RFC 7929 OPENPGPKEY Key Published)"
+            score += 5
+        else:
+            openpgpkey_valid = False
+            openpgpkey_status = "No RFC 7929 OPENPGPKEY record"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -617,5 +647,9 @@ class DnsDeliverabilityInspector:
             ns_valid=ns_valid,
             ns_records=ns_records,
             ns_status=ns_status,
+            dkim_ed25519_valid=dkim_ed25519_valid,
+            dkim_ed25519_status=dkim_ed25519_status,
+            openpgpkey_valid=openpgpkey_valid,
+            openpgpkey_status=openpgpkey_status,
             recommendations=recommendations,
         )

@@ -20,6 +20,7 @@ from .mime import (
     generate_mime_boundary,
     generate_reply_thread_headers,
     generate_rfc2822_date,
+    generate_webhook_signature_headers,
 )
 from .tags import (
     CAMOUFLAGE_PATTERNS,
@@ -55,6 +56,7 @@ __all__ = [
     "generate_arf_feedback_report",
     "generate_cid_asset_headers",
     "generate_auto_submitted_headers",
+    "generate_webhook_signature_headers",
     "naturalize_text_entropy",
     "generate_unsubscribe_headers",
     "generate_rfc2369_headers",

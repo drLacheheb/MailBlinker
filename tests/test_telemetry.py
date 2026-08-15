@@ -163,6 +163,8 @@ async def test_dns_deliverability_inspector():
     assert hasattr(res_gmail, "fcrdns_aligned")
     assert hasattr(res_gmail, "ns_valid")
     assert hasattr(res_gmail, "ns_records")
+    assert hasattr(res_gmail, "dkim_ed25519_valid")
+    assert hasattr(res_gmail, "openpgpkey_valid")
 
 
 def test_headless_probe_telemetry():

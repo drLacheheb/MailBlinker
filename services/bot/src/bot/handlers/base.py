@@ -108,6 +108,8 @@ async def cmd_check_domain(message: types.Message):
     fcrdns_icon = "✅" if res.fcrdns_aligned else "ℹ️"
     dane_smtp_icon = "✅" if res.dane_smtp_valid else "ℹ️"
     ns_icon = "✅" if res.ns_valid else "ℹ️"
+    ed25519_icon = "✅" if res.dkim_ed25519_valid else "ℹ️"
+    openpgpkey_icon = "✅" if res.openpgpkey_valid else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -120,6 +122,7 @@ async def cmd_check_domain(message: types.Message):
         f"{spf_icon} <b>SPF:</b> {html.escape(res.spf_status)}{spf_depth}",
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
         f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",
+        f"{ed25519_icon} <b>Ed25519 DKIM:</b> {html.escape(res.dkim_ed25519_status)}",
         f"{mx_icon} <b>MX:</b> {html.escape(res.mx_status)}",
         f"{ptr_icon} <b>Reverse DNS (rDNS/PTR):</b> {html.escape(res.ptr_status)}",
         f"{fcrdns_icon} <b>FCrDNS (Bidirectional):</b> {html.escape(res.fcrdns_status)}",
@@ -131,6 +134,7 @@ async def cmd_check_domain(message: types.Message):
         f"{arc_icon} <b>ARC (Relay Chain):</b> {html.escape(res.arc_status)}",
         f"{dnsbl_icon} <b>DNSBL IP Reputation:</b> {html.escape(res.dnsbl_status)}",
         f"{crypto_icon} <b>S/MIME & OpenPGP:</b> {html.escape(res.crypto_discovery_status)}",
+        f"{openpgpkey_icon} <b>OPENPGPKEY (DANE PGP):</b> {html.escape(res.openpgpkey_status)}",
         f"{caa_icon} <b>CAA (TLS CA Pinning):</b> {html.escape(res.caa_status)}",
         f"{dmarc_fo_icon} <b>DMARC Forensic (ruf):</b> {html.escape(res.dmarc_forensic_status)}",
         f"{dnssec_icon} <b>DNSSEC Zone Signing:</b> {html.escape(res.dnssec_status)}",

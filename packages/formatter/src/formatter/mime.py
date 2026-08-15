@@ -264,3 +264,31 @@ def generate_auto_submitted_headers(
         "Auto-Submitted": clean_mode,
         "X-Auto-Response-Suppress": "All",
     }
+
+
+def generate_webhook_signature_headers(
+    payload: str,
+    secret_key: str,
+    token: str = "",
+) -> dict[str, str]:
+    """Generate RFC 6750 Bearer and HMAC-SHA256 signature headers for secure,
+    tamper-proof telemetry and webhook event delivery.
+    """
+    import hashlib
+    import hmac
+
+    ts = int(time.time())
+    signed_data = f"{ts}.{payload}"
+    sig = hmac.new(
+        secret_key.encode("utf-8"),
+        signed_data.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+    headers = {
+        "X-MailBlinker-Signature": f"t={ts},v1={sig}",
+        "Content-Type": "application/json",
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token.strip()}"
+    return headers

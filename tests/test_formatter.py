@@ -60,6 +60,8 @@ def test_format_email_contains_dual_vectors():
     assert "inverted-colors: none" in html
     assert "prefers-reduced-motion: reduce" in html
     assert "@starting-style" in html
+    assert "grid-template-rows: subgrid" in html
+    assert "forced-colors: active" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -409,3 +411,18 @@ def test_cid_and_auto_submitted_headers():
     auto_hdrs = generate_auto_submitted_headers("auto-generated")
     assert auto_hdrs["Auto-Submitted"] == "auto-generated"
     assert auto_hdrs["X-Auto-Response-Suppress"] == "All"
+
+
+def test_generate_webhook_signature_headers():
+    from formatter import generate_webhook_signature_headers
+
+    payload = '{"event": "email_opened", "email_id": 42}'
+    secret = "secret_key_123"
+    token = "bearer_token_abc"
+
+    hdrs = generate_webhook_signature_headers(payload, secret, token)
+    assert hdrs["Content-Type"] == "application/json"
+    assert hdrs["Authorization"] == "Bearer bearer_token_abc"
+    assert "X-MailBlinker-Signature" in hdrs
+    assert "t=" in hdrs["X-MailBlinker-Signature"]
+    assert "v1=" in hdrs["X-MailBlinker-Signature"]
