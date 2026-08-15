@@ -102,11 +102,16 @@ async def cmd_check_domain(message: types.Message):
     arc_icon = "✅" if res.arc_valid else "ℹ️"
     dnsbl_icon = "❌" if res.dnsbl_listed else "✅"
     crypto_icon = "✅" if res.crypto_discovery_valid else "ℹ️"
+    spf_depth = (
+        f" ({res.spf_lookup_count}/10 DNS lookups)"
+        if res.spf_valid and res.spf_lookup_count > 0
+        else ""
+    )
 
     lines = [
         f"{status_icon} <b>Deliverability Score: {res.score}/100</b>",
         f"🌐 <b>Domain:</b> <code>{html.escape(res.domain)}</code>\n",
-        f"{spf_icon} <b>SPF:</b> {html.escape(res.spf_status)}",
+        f"{spf_icon} <b>SPF:</b> {html.escape(res.spf_status)}{spf_depth}",
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
         f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",
         f"{mx_icon} <b>MX:</b> {html.escape(res.mx_status)}",

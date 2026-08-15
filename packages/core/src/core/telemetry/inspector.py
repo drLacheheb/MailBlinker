@@ -389,6 +389,9 @@ class TelemetryInspector:
         else:
             device_summary = browser_full
 
+        if is_datacenter_isp:
+            device_summary += " [Datacenter ASN]"
+
         lang = parse_accept_language(accept_language)
 
         event = OpenEventEntity(

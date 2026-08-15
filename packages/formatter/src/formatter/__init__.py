@@ -7,6 +7,7 @@ from .engine import (
 from .mime import (
     encode_mime_body,
     encode_rfc2047_header,
+    generate_autocrypt_headers,
     generate_enterprise_message_id,
     generate_feedback_id_headers,
     generate_mime_boundary,
@@ -35,6 +36,7 @@ __all__ = [
     "generate_mime_boundary",
     "encode_mime_body",
     "encode_rfc2047_header",
+    "generate_autocrypt_headers",
     "generate_enterprise_message_id",
     "generate_rfc2822_date",
     "generate_feedback_id_headers",

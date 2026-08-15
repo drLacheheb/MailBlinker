@@ -48,6 +48,8 @@ def test_format_email_contains_dual_vectors():
     assert "@media only screen and (max-width: 600px)" in html
     assert "@supports not" in html
     assert "@container" in html
+    assert "<picture>" in html
+    assert "@property" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -320,3 +322,13 @@ def test_encode_rfc2047_header():
     encoded_q = encode_rfc2047_header("Über uns", encoding="Q")
     assert encoded_q.startswith("=?utf-8?Q?")
     assert encoded_q.endswith("?=")
+
+
+def test_generate_autocrypt_headers():
+    from formatter import generate_autocrypt_headers
+
+    ac = generate_autocrypt_headers("sarah@example.com")
+    assert "Autocrypt" in ac
+    assert "addr=sarah@example.com" in ac["Autocrypt"]
+    assert "prefer-encrypt=mutual" in ac["Autocrypt"]
+    assert "keydata=" in ac["Autocrypt"]

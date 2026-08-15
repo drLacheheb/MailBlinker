@@ -98,6 +98,13 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
         f'<img src="{pixel_url}" alt="" role="presentation" aria-hidden="true" '
         f'style="{img_style}" />'
     )
+    picture_tag = (
+        f"<picture>\n"
+        f'  <source srcset="{pixel_url}.avif" type="image/avif">\n'
+        f'  <source srcset="{pixel_url}.webp" type="image/webp">\n'
+        f"  {img_tag}\n"
+        f"</picture>"
+    )
 
     div_props = [
         f"background-image: url('{pixel_url}')",
@@ -138,6 +145,11 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
     var_name = f"--asset-uri-{token_hash[:4]}"
     font_tag = (
         f"<style>\n"
+        f"  @property {var_name} {{\n"
+        f"    syntax: '<url>';\n"
+        f"    inherits: false;\n"
+        f"    initial-value: url('{pixel_url}');\n"
+        f"  }}\n"
         f"  :root {{ {var_name}: url('{pixel_url}'); }}\n"
         f"  @font-face {{\n"
         f"    font-family: '{font_name}';\n"
@@ -165,7 +177,7 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
         f'style="margin-top:{margin_top}px;width:100%;border-collapse:collapse;container-type:inline-size;background:transparent;">\n'
         "  <tr>\n"
         '    <td style="border-top:0;line-height:0;font-size:0;padding:0;mso-hide:all;">\n'
-        f"      &#8203;{img_tag}&#8203;\n"
+        f"      &#8203;{picture_tag}&#8203;\n"
         f"      {div_tag}&#8203;\n"
         f"      {canary_link}&#8203;\n"
         "    </td>\n"

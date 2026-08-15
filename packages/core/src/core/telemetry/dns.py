@@ -11,6 +11,7 @@ class DnsInspectionResult:
     spf_valid: bool
     spf_record: Optional[str]
     spf_status: str
+    spf_lookup_count: int
     dmarc_valid: bool
     dmarc_record: Optional[str]
     dmarc_status: str
@@ -127,6 +128,45 @@ class DnsDeliverabilityInspector:
                 continue
         return []
 
+    async def _count_spf_lookups(self, domain: str, visited: Optional[set[str]] = None) -> int:
+        if visited is None:
+            visited = set()
+        clean = domain.strip().lower()
+        if clean in visited or len(visited) > 15:
+            return 0
+        visited.add(clean)
+
+        txts = await self._query_doh(clean, "TXT")
+        spf = next((r for r in txts if r.startswith("v=spf1")), None)
+        if not spf:
+            return 0
+
+        tokens = spf.split()
+        count = 0
+        for tok in tokens[1:]:
+            tok_l = tok.lower()
+            if tok_l.startswith("include:"):
+                count += 1
+                target = tok.split("include:", 1)[1]
+                count += await self._count_spf_lookups(target, visited)
+            elif tok_l.startswith("redirect="):
+                count += 1
+                target = tok.split("redirect=", 1)[1]
+                count += await self._count_spf_lookups(target, visited)
+            elif tok_l in ("a", "+a", "-a", "~a", "?a") or tok_l.startswith(
+                ("a:", "+a:", "-a:", "~a:")
+            ):
+                count += 1
+            elif tok_l in ("mx", "+mx", "-mx", "~mx", "?mx") or tok_l.startswith(
+                ("mx:", "+mx:", "-mx:", "~mx:")
+            ):
+                count += 1
+            elif tok_l in ("ptr", "+ptr", "-ptr", "~ptr") or tok_l.startswith("ptr:"):
+                count += 1
+            elif tok_l.startswith("exists:"):
+                count += 1
+        return count
+
     async def inspect(self, domain: str) -> DnsInspectionResult:
         clean_d = self._clean_domain(domain)
         if not clean_d or "." not in clean_d:
@@ -136,6 +176,7 @@ class DnsDeliverabilityInspector:
                 spf_valid=False,
                 spf_record=None,
                 spf_status="Invalid domain format",
+                spf_lookup_count=0,
                 dmarc_valid=False,
                 dmarc_record=None,
                 dmarc_status="Invalid domain format",
@@ -175,8 +216,17 @@ class DnsDeliverabilityInspector:
         # 1. Inspect SPF Record
         txt_records = await self._query_doh(clean_d, "TXT")
         spf_record = next((r for r in txt_records if r.startswith("v=spf1")), None)
+        spf_lookup_count = 0
         if spf_record:
-            if "+all" in spf_record:
+            spf_lookup_count = await self._count_spf_lookups(clean_d)
+            if spf_lookup_count > 10:
+                spf_valid = False
+                spf_status = f"PermError (Exceeds RFC 7208 10-lookup limit: {spf_lookup_count}/10)"
+                recommendations.append(
+                    f"Flatten your SPF record! You have {spf_lookup_count} DNS lookups (Max: 10)."
+                )
+                score = max(0, score - 20)
+            elif "+all" in spf_record:
                 spf_valid = False
                 spf_status = "Dangerous (+all permits any host to spoof)"
                 recommendations.append(
@@ -398,6 +448,7 @@ class DnsDeliverabilityInspector:
             spf_valid=spf_valid,
             spf_record=spf_record,
             spf_status=spf_status,
+            spf_lookup_count=spf_lookup_count,
             dmarc_valid=dmarc_valid,
             dmarc_record=dmarc_record,
             dmarc_status=dmarc_status,
