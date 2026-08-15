@@ -402,10 +402,23 @@ class TelemetryInspector:
             )
         )
 
+        is_microvm_sandbox = any(
+            vm in ua_lower
+            for vm in (
+                "firecracker",
+                "gvisor",
+                "qemu",
+                "cloud-hypervisor",
+                "microvm",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
             device_summary += " [Software Renderer Sandbox]"
+        if is_microvm_sandbox:
+            device_summary += " [Virtual MicroVM Sandbox]"
 
         lang = parse_accept_language(accept_language)
 

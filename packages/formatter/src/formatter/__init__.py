@@ -19,6 +19,7 @@ from .mime import (
     generate_internationalized_headers,
     generate_mime_boundary,
     generate_reply_thread_headers,
+    generate_resent_headers,
     generate_rfc2822_date,
     generate_webhook_signature_headers,
 )
@@ -52,6 +53,7 @@ __all__ = [
     "generate_rfc2822_date",
     "generate_feedback_id_headers",
     "generate_reply_thread_headers",
+    "generate_resent_headers",
     "generate_internationalized_headers",
     "generate_arf_feedback_report",
     "generate_cid_asset_headers",

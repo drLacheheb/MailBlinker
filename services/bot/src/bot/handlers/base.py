@@ -110,6 +110,8 @@ async def cmd_check_domain(message: types.Message):
     ns_icon = "✅" if res.ns_valid else "ℹ️"
     ed25519_icon = "✅" if res.dkim_ed25519_valid else "ℹ️"
     openpgpkey_icon = "✅" if res.openpgpkey_valid else "ℹ️"
+    tree_walk_icon = "✅" if res.dmarc_tree_walk_valid else "ℹ️"
+    any_icon = "✅" if res.dns_any_hardened else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -121,6 +123,7 @@ async def cmd_check_domain(message: types.Message):
         f"🌐 <b>Domain:</b> <code>{html.escape(res.domain)}</code>\n",
         f"{spf_icon} <b>SPF:</b> {html.escape(res.spf_status)}{spf_depth}",
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
+        f"{tree_walk_icon} <b>DMARC Tree-Walk:</b> {html.escape(res.dmarc_tree_walk_status)}",
         f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",
         f"{ed25519_icon} <b>Ed25519 DKIM:</b> {html.escape(res.dkim_ed25519_status)}",
         f"{mx_icon} <b>MX:</b> {html.escape(res.mx_status)}",
@@ -138,6 +141,7 @@ async def cmd_check_domain(message: types.Message):
         f"{caa_icon} <b>CAA (TLS CA Pinning):</b> {html.escape(res.caa_status)}",
         f"{dmarc_fo_icon} <b>DMARC Forensic (ruf):</b> {html.escape(res.dmarc_forensic_status)}",
         f"{dnssec_icon} <b>DNSSEC Zone Signing:</b> {html.escape(res.dnssec_status)}",
+        f"{any_icon} <b>RFC 8482 ANY Hardening:</b> {html.escape(res.dns_any_status)}",
         f"{ns_icon} <b>Nameservers (NS):</b> {html.escape(res.ns_status)}\n",
     ]
 

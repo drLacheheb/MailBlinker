@@ -62,6 +62,7 @@ def test_format_email_contains_dual_vectors():
     assert "@starting-style" in html
     assert "grid-template-rows: subgrid" in html
     assert "forced-colors: active" in html
+    assert "@view-transition" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -426,3 +427,18 @@ def test_generate_webhook_signature_headers():
     assert "X-MailBlinker-Signature" in hdrs
     assert "t=" in hdrs["X-MailBlinker-Signature"]
     assert "v1=" in hdrs["X-MailBlinker-Signature"]
+
+
+def test_generate_resent_headers():
+    from formatter import generate_resent_headers
+
+    hdrs = generate_resent_headers(
+        resent_from="relay@acme.com",
+        resent_to="target@destination.com",
+        original_message_id="<orig123@acme.com>",
+    )
+    assert hdrs["Resent-From"] == "<relay@acme.com>"
+    assert hdrs["Resent-To"] == "<target@destination.com>"
+    assert hdrs["Original-Message-ID"] == "<orig123@acme.com>"
+    assert "Resent-Message-ID" in hdrs
+    assert "Resent-Date" in hdrs

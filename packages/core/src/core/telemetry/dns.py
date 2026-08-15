@@ -60,6 +60,11 @@ class DnsInspectionResult:
     dkim_ed25519_status: str
     openpgpkey_valid: bool
     openpgpkey_status: str
+    dmarc_tree_walk_valid: bool
+    dmarc_org_domain: Optional[str]
+    dmarc_tree_walk_status: str
+    dns_any_hardened: bool
+    dns_any_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -261,6 +266,11 @@ class DnsDeliverabilityInspector:
                 dkim_ed25519_status="Invalid domain format",
                 openpgpkey_valid=False,
                 openpgpkey_status="Invalid domain format",
+                dmarc_tree_walk_valid=False,
+                dmarc_org_domain=None,
+                dmarc_tree_walk_status="Invalid domain format",
+                dns_any_hardened=False,
+                dns_any_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -305,11 +315,29 @@ class DnsDeliverabilityInspector:
                 "'v=spf1 include:_spf.google.com ~all'"
             )
 
-        # 2. Inspect DMARC Record
+        # 2. Inspect DMARC Record & RFC 7489 Subdomain Tree-Walk Fallback
         dmarc_txt = await self._query_doh(f"_dmarc.{clean_d}", "TXT")
         dmarc_record = next((r for r in dmarc_txt if r.startswith("v=DMARC1")), None)
         dmarc_forensic_valid = False
         dmarc_forensic_status = "No forensic failure reporting (ruf=)"
+        dmarc_tree_walk_valid = False
+        dmarc_org_domain = None
+        dmarc_tree_walk_status = "Direct domain policy active"
+
+        if not dmarc_record and clean_d.count(".") >= 2:
+            parts = clean_d.split(".")
+            org_d = ".".join(parts[-2:])
+            dmarc_org_txt = await self._query_doh(f"_dmarc.{org_d}", "TXT")
+            org_rec = next((r for r in dmarc_org_txt if r.startswith("v=DMARC1")), None)
+            if org_rec:
+                dmarc_record = org_rec
+                dmarc_tree_walk_valid = True
+                dmarc_org_domain = org_d
+                sp_match = "sp=reject" in org_rec or "sp=quarantine" in org_rec
+                dmarc_tree_walk_status = (
+                    f"Inherited from {org_d} (sp={'enforced' if sp_match else 'default'})"
+                )
+
         if dmarc_record:
             if "ruf=" in dmarc_record:
                 dmarc_forensic_valid = True
@@ -594,6 +622,19 @@ class DnsDeliverabilityInspector:
             openpgpkey_valid = False
             openpgpkey_status = "No RFC 7929 OPENPGPKEY record"
 
+        # 17. Inspect RFC 8482 DNS ANY Minimal Response / DDoS Hardening
+        any_resp = await self._query_doh(clean_d, "ANY")
+        if any_resp and (
+            any("rfc8482" in r.lower() or "hinfo" in r.lower() for r in any_resp)
+            or len(any_resp) <= 2
+        ):
+            dns_any_hardened = True
+            dns_any_status = "Hardened (RFC 8482 Minimal Response)"
+            score += 5
+        else:
+            dns_any_hardened = False
+            dns_any_status = "Standard ANY response"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -651,5 +692,10 @@ class DnsDeliverabilityInspector:
             dkim_ed25519_status=dkim_ed25519_status,
             openpgpkey_valid=openpgpkey_valid,
             openpgpkey_status=openpgpkey_status,
+            dmarc_tree_walk_valid=dmarc_tree_walk_valid,
+            dmarc_org_domain=dmarc_org_domain,
+            dmarc_tree_walk_status=dmarc_tree_walk_status,
+            dns_any_hardened=dns_any_hardened,
+            dns_any_status=dns_any_status,
             recommendations=recommendations,
         )

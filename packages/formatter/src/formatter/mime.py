@@ -292,3 +292,31 @@ def generate_webhook_signature_headers(
     if token:
         headers["Authorization"] = f"Bearer {token.strip()}"
     return headers
+
+
+def generate_resent_headers(
+    resent_from: str,
+    resent_to: str = "",
+    original_message_id: str = "",
+) -> dict[str, str]:
+    """Generate RFC 5322 Resent header block (Resent-From, Resent-Date, Resent-Message-ID)
+    to preserve origin authenticity when re-dispatching transactional messages across relays.
+    """
+    clean_from = resent_from.strip("<>").strip()
+    domain = clean_from.split("@", 1)[1] if "@" in clean_from else "mailblinker.internal"
+    resent_msg_id = generate_enterprise_message_id(domain)
+    resent_date = generate_rfc2822_date()
+
+    headers = {
+        "Resent-From": f"<{clean_from}>",
+        "Resent-Date": resent_date,
+        "Resent-Message-ID": resent_msg_id,
+    }
+    if resent_to:
+        clean_to = resent_to.strip("<>").strip()
+        headers["Resent-To"] = f"<{clean_to}>"
+    if original_message_id:
+        clean_orig = original_message_id.strip("<>").strip()
+        headers["Original-Message-ID"] = f"<{clean_orig}>"
+
+    return headers
