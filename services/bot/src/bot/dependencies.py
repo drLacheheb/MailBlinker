@@ -5,9 +5,13 @@ from core import (
     AsyncSessionLocal,
     CreateEmailUseCase,
     DeleteEmailUseCase,
+    GetUserProfileUseCase,
     ListEmailsUseCase,
     SqlAlchemyEmailRepository,
+    SqlAlchemyUserRepository,
     UpdateNotifySettingsUseCase,
+    UpdateUserPreferencesUseCase,
+    UpsertUserUseCase,
 )
 
 
@@ -46,3 +50,34 @@ async def get_email_repo() -> AsyncGenerator[SqlAlchemyEmailRepository, None]:
     async with AsyncSessionLocal() as session:
         repo = SqlAlchemyEmailRepository(session)
         yield repo
+
+
+@asynccontextmanager
+async def get_user_repo() -> AsyncGenerator[SqlAlchemyUserRepository, None]:
+    async with AsyncSessionLocal() as session:
+        repo = SqlAlchemyUserRepository(session)
+        yield repo
+
+
+@asynccontextmanager
+async def get_upsert_user_use_case() -> AsyncGenerator[UpsertUserUseCase, None]:
+    async with AsyncSessionLocal() as session:
+        repo = SqlAlchemyUserRepository(session)
+        yield UpsertUserUseCase(repository=repo)
+
+
+@asynccontextmanager
+async def get_user_profile_use_case() -> AsyncGenerator[GetUserProfileUseCase, None]:
+    async with AsyncSessionLocal() as session:
+        u_repo = SqlAlchemyUserRepository(session)
+        e_repo = SqlAlchemyEmailRepository(session)
+        yield GetUserProfileUseCase(user_repository=u_repo, email_repository=e_repo)
+
+
+@asynccontextmanager
+async def get_update_user_preferences_use_case() -> AsyncGenerator[
+    UpdateUserPreferencesUseCase, None
+]:
+    async with AsyncSessionLocal() as session:
+        repo = SqlAlchemyUserRepository(session)
+        yield UpdateUserPreferencesUseCase(repository=repo)

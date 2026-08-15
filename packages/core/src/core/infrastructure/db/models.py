@@ -14,11 +14,66 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from ...domain.entities import (
     OpenEventEntity,
     TrackedEmailEntity,
+    UserEntity,
 )
 
 
 class Base(DeclarativeBase):
     pass
+
+
+class UserModel(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    telegram_chat_id: Mapped[str] = mapped_column(
+        String(64), unique=True, index=True, nullable=False
+    )
+    telegram_username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    first_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    last_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    language_code: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+
+    default_notify_limit: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True, default=None
+    )
+    default_notify_forwarding: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    timezone: Mapped[str] = mapped_column(String(64), default="UTC", nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    last_active_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    emails: Mapped[List["TrackedEmailModel"]] = relationship(
+        "TrackedEmailModel",
+        back_populates="user",
+        lazy="selectin",
+        order_by="desc(TrackedEmailModel.created_at)",
+    )
+
+    def to_entity(self) -> UserEntity:
+        return UserEntity(
+            id=self.id,
+            telegram_chat_id=self.telegram_chat_id,
+            telegram_username=self.telegram_username,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            language_code=self.language_code,
+            default_notify_limit=self.default_notify_limit,
+            default_notify_forwarding=self.default_notify_forwarding,
+            timezone=self.timezone,
+            is_active=self.is_active,
+            created_at=self.created_at,
+            last_active_at=self.last_active_at,
+        )
 
 
 class TrackedEmailModel(Base):
@@ -31,6 +86,9 @@ class TrackedEmailModel(Base):
     recipient_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     subject: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     telegram_chat_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -48,6 +106,8 @@ class TrackedEmailModel(Base):
     open_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     notify_limit: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=None)
     notify_forwarding: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    user: Mapped[Optional["UserModel"]] = relationship("UserModel", back_populates="emails")
 
     events: Mapped[List["OpenEventModel"]] = relationship(
         "OpenEventModel",
@@ -70,6 +130,7 @@ class TrackedEmailModel(Base):
             recipient_name=self.recipient_name,
             subject=self.subject,
             telegram_chat_id=self.telegram_chat_id,
+            user_id=self.user_id,
             created_at=self.created_at,
             first_opened_at=self.first_opened_at,
             last_opened_at=self.last_opened_at,

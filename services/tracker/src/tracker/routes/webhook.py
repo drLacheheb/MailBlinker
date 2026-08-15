@@ -25,6 +25,10 @@ def get_dispatcher() -> Dispatcher:
     global dp_instance
     if dp_instance is None:
         dp_instance = Dispatcher()
+        from bot.middlewares import UserSyncMiddleware
+
+        dp_instance.message.outer_middleware(UserSyncMiddleware())
+        dp_instance.callback_query.outer_middleware(UserSyncMiddleware())
         dp_instance.include_router(bot_router)
     return dp_instance
 

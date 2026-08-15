@@ -17,6 +17,12 @@ async def main():
 
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
     dp = Dispatcher()
+
+    from .middlewares import UserSyncMiddleware
+
+    dp.message.outer_middleware(UserSyncMiddleware())
+    dp.callback_query.outer_middleware(UserSyncMiddleware())
+
     dp.include_router(router)
 
     from .profile import setup_bot_profile

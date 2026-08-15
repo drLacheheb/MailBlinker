@@ -22,6 +22,22 @@ class OpenEventEntity:
 
 
 @dataclass
+class UserEntity:
+    id: Optional[int]
+    telegram_chat_id: str
+    telegram_username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    language_code: Optional[str] = None
+    default_notify_limit: Optional[int] = None
+    default_notify_forwarding: bool = True
+    timezone: str = "UTC"
+    is_active: bool = True
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    last_active_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
 class TrackedEmailEntity:
     id: Optional[int]
     token: str
@@ -30,6 +46,7 @@ class TrackedEmailEntity:
     recipient_name: Optional[str] = None
     subject: Optional[str] = None
     telegram_chat_id: Optional[str] = None
+    user_id: Optional[int] = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     first_opened_at: Optional[datetime] = None
     last_opened_at: Optional[datetime] = None

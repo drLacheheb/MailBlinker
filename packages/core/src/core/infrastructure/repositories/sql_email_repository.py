@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from ...domain.entities import OpenEventEntity, TrackedEmailEntity
 from ...domain.interfaces import EmailRepositoryInterface
-from ..db.models import OpenEventModel, TrackedEmailModel
+from ..db.models import OpenEventModel, TrackedEmailModel, UserModel
 
 
 class SqlAlchemyEmailRepository(EmailRepositoryInterface):
@@ -14,6 +14,23 @@ class SqlAlchemyEmailRepository(EmailRepositoryInterface):
         self._session = session
 
     async def create(self, email: TrackedEmailEntity) -> TrackedEmailEntity:
+        user_id = email.user_id
+        notify_limit = email.notify_limit
+        notify_forwarding = email.notify_forwarding
+
+        if user_id is None and email.telegram_chat_id:
+            user_stmt = select(UserModel).where(
+                UserModel.telegram_chat_id == email.telegram_chat_id
+            )
+            user_res = await self._session.execute(user_stmt)
+            user = user_res.scalar_one_or_none()
+            if user:
+                user_id = user.id
+                if notify_limit is None and user.default_notify_limit is not None:
+                    notify_limit = user.default_notify_limit
+                if email.notify_forwarding and not user.default_notify_forwarding:
+                    notify_forwarding = user.default_notify_forwarding
+
         model = TrackedEmailModel(
             token=email.token,
             title=email.title,
@@ -21,12 +38,13 @@ class SqlAlchemyEmailRepository(EmailRepositoryInterface):
             recipient_name=email.recipient_name,
             subject=email.subject,
             telegram_chat_id=email.telegram_chat_id,
+            user_id=user_id,
             created_at=email.created_at,
             first_opened_at=email.first_opened_at,
             last_opened_at=email.last_opened_at,
             open_count=email.open_count,
-            notify_limit=email.notify_limit,
-            notify_forwarding=email.notify_forwarding,
+            notify_limit=notify_limit,
+            notify_forwarding=notify_forwarding,
         )
         self._session.add(model)
         await self._session.commit()

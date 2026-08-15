@@ -1,6 +1,32 @@
 from typing import List, Optional, Protocol
 
-from .entities import OpenEventEntity, TrackedEmailEntity
+from .entities import OpenEventEntity, TrackedEmailEntity, UserEntity
+
+
+class UserRepositoryInterface(Protocol):
+    async def upsert_user(
+        self,
+        telegram_chat_id: str,
+        telegram_username: Optional[str] = None,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        language_code: Optional[str] = None,
+    ) -> UserEntity: ...
+
+    async def get_by_telegram_chat_id(self, telegram_chat_id: str) -> Optional[UserEntity]: ...
+
+    async def get_by_id(self, user_id: int) -> Optional[UserEntity]: ...
+
+    async def update_preferences(
+        self,
+        user_id: int,
+        default_notify_limit: Optional[int] = None,
+        update_notify_limit: bool = False,
+        default_notify_forwarding: Optional[bool] = None,
+        timezone: Optional[str] = None,
+    ) -> Optional[UserEntity]: ...
+
+    async def list_users(self, limit: int = 100, offset: int = 0) -> List[UserEntity]: ...
 
 
 class EmailRepositoryInterface(Protocol):

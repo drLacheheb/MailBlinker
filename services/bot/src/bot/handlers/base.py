@@ -1,3 +1,5 @@
+import html
+
 from aiogram import F, Router, types
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
@@ -9,8 +11,12 @@ router = Router()
 
 @router.message(CommandStart())
 async def cmd_start(message: types.Message):
+    greeting = "⚡ <b>MailBlinker</b>"
+    if message.from_user and message.from_user.first_name:
+        greeting = f"⚡ <b>Welcome, {html.escape(message.from_user.first_name)}!</b>"
+
     text = (
-        "⚡ <b>MailBlinker</b>\n"
+        f"{greeting}\n"
         "Invisible email tracking with instant open alerts.\n\n"
         "Choose an action below to get started:"
     )
