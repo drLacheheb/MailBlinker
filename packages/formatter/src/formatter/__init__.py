@@ -1,5 +1,9 @@
 from .density import DensityReport, EmailDensityOptimizer
-from .engine import format_email, generate_document_preview_card
+from .engine import (
+    format_email,
+    generate_document_preview_card,
+    generate_plaintext_mirror,
+)
 from .mime import (
     encode_mime_body,
     generate_enterprise_message_id,
@@ -32,6 +36,7 @@ __all__ = [
     "naturalize_text_entropy",
     "generate_unsubscribe_headers",
     "format_email",
+    "generate_plaintext_mirror",
     "generate_document_preview_card",
     "generate_tracking_tags",
     "inject_tracking_tags",

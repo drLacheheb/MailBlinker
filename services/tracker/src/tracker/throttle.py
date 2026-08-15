@@ -1,7 +1,7 @@
 import time
 from collections import defaultdict, deque
 from threading import Lock
-from typing import Deque, Dict
+from typing import Deque, Dict, Optional
 
 
 class TokenBurstShield:
@@ -48,3 +48,52 @@ class TokenBurstShield:
 
 
 token_burst_shield = TokenBurstShield(max_requests=5, window_seconds=10.0)
+
+
+class CanarySubnetBlacklist:
+    """Dynamic autonomous IP and subnet blacklist for crawlers tripping honeypot canary links."""
+
+    def __init__(self, default_ttl: float = 86400.0):
+        self.default_ttl = default_ttl
+        self._blacklist: Dict[str, float] = {}
+        self._lock = Lock()
+
+    def record_trap_hit(self, ip: str, ttl: Optional[float] = None) -> None:
+        """Register an IP and its /24 subnet into the honeypot blacklist."""
+        now = time.monotonic()
+        expires_at = now + (ttl if ttl is not None else self.default_ttl)
+        clean_ip = ip.strip()
+        with self._lock:
+            self._blacklist[clean_ip] = expires_at
+            # If IPv4, blacklist the entire /24 subnet
+            if "." in clean_ip and len(clean_ip.split(".")) == 4:
+                subnet_prefix = ".".join(clean_ip.split(".")[:3]) + ".0/24"
+                self._blacklist[subnet_prefix] = expires_at
+
+    def is_blacklisted(self, ip: Optional[str]) -> bool:
+        """Check whether an IP or its /24 subnet is actively blacklisted."""
+        if not ip:
+            return False
+        clean_ip = ip.strip()
+        now = time.monotonic()
+        with self._lock:
+            # Check direct IP
+            if clean_ip in self._blacklist:
+                if now < self._blacklist[clean_ip]:
+                    return True
+                else:
+                    del self._blacklist[clean_ip]
+
+            # Check /24 subnet
+            if "." in clean_ip and len(clean_ip.split(".")) == 4:
+                subnet_prefix = ".".join(clean_ip.split(".")[:3]) + ".0/24"
+                if subnet_prefix in self._blacklist:
+                    if now < self._blacklist[subnet_prefix]:
+                        return True
+                    else:
+                        del self._blacklist[subnet_prefix]
+
+        return False
+
+
+canary_blacklist = CanarySubnetBlacklist()

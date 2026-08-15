@@ -34,12 +34,14 @@ class DnsInspectionResult:
     dane_valid: bool
     dane_record: Optional[str]
     dane_status: str
+    arc_valid: bool
+    arc_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
 class DnsDeliverabilityInspector:
     """Async DNS over HTTPS (DoH) inspector with Multi-Provider Failover (Google, Cloudflare, Quad9)
-    for SPF, DMARC, DKIM, MX, PTR, and BIMI health.
+    for SPF, DMARC, DKIM, MX, PTR, BIMI, MTA-STS, TLS-RPT, DANE, and ARC health.
     """
 
     COMMON_DKIM_SELECTORS = [
@@ -51,6 +53,14 @@ class DnsDeliverabilityInspector:
         "m1",
         "smtp",
         "mail",
+    ]
+
+    COMMON_ARC_SELECTORS = [
+        "arc",
+        "arc1",
+        "google",
+        "default",
+        "s1",
     ]
 
     DOH_PROVIDERS = [
@@ -137,6 +147,8 @@ class DnsDeliverabilityInspector:
                 dane_valid=False,
                 dane_record=None,
                 dane_status="Invalid domain format",
+                arc_valid=False,
+                arc_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -303,6 +315,21 @@ class DnsDeliverabilityInspector:
         else:
             dane_status = "No DANE TLSA record (Optional for high-security pinning)"
 
+        # 10. Inspect ARC (RFC 8617 Authenticated Received Chain)
+        arc_found: List[str] = []
+        for sel in self.COMMON_ARC_SELECTORS:
+            arc_res = await self._query_doh(f"{sel}._domainkey.{clean_d}", "TXT")
+            if any("v=DKIM1" in r or "k=rsa" in r or "p=" in r for r in arc_res):
+                arc_found.append(sel)
+
+        if arc_found:
+            arc_valid = True
+            arc_status = f"Configured ({', '.join(arc_found)})"
+            score += 5
+        else:
+            arc_valid = False
+            arc_status = "No ARC selector found (Optional for relay authentication)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -334,5 +361,7 @@ class DnsDeliverabilityInspector:
             dane_valid=dane_valid,
             dane_record=dane_record,
             dane_status=dane_status,
+            arc_valid=arc_valid,
+            arc_status=arc_status,
             recommendations=recommendations,
         )

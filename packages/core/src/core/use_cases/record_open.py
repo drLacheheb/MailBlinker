@@ -18,6 +18,8 @@ class RecordOpenDTO:
     client_ip: Optional[str]
     user_agent: Optional[str]
     accept_language: Optional[str] = None
+    purpose: Optional[str] = None
+    client_hints: Optional[dict[str, str]] = None
 
 
 @dataclass
@@ -71,6 +73,8 @@ class RecordOpenUseCase:
             accept_language=dto.accept_language,
             past_events=email.events,
             geo_data=geo_data,
+            purpose=dto.purpose,
+            client_hints=dto.client_hints,
         )
 
         if not inspection.is_valid_open or not inspection.event:

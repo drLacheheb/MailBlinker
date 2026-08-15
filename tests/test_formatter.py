@@ -262,3 +262,25 @@ def test_generate_feedback_id_headers():
     assert "promo_fall:usr_99:marketing.acme.com:mb" in fbl["Feedback-ID"]
     assert "X-Complaints-To" in fbl
     assert fbl["X-Complaints-To"] == "abuse@marketing.acme.com"
+
+
+def test_generate_plaintext_mirror():
+    from formatter import generate_plaintext_mirror
+
+    html = """
+    <html>
+      <head><style>body { font-size: 14px; }</style></head>
+      <body>
+        <p>Hello Sarah,</p>
+        <p>Please review our <a href="https://example.com/proposal">Enterprise Proposal</a>.</p>
+        <br>
+        <p>Best regards,<br>Alex Dupont</p>
+      </body>
+    </html>
+    """
+    plain = generate_plaintext_mirror(html)
+    assert "<style>" not in plain
+    assert "<p>" not in plain
+    assert "Hello Sarah," in plain
+    assert "Enterprise Proposal [https://example.com/proposal]" in plain
+    assert "Alex Dupont" in plain

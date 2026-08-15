@@ -26,6 +26,36 @@ def format_email(payload: EmailPayload, token: str, base_url: str) -> str:
     return template.render(payload=formatted_payload, tracking_tags=tracking_tags)
 
 
+def generate_plaintext_mirror(html_content: str) -> str:
+    """Generate a clean, synchronized RFC 2046 text/plain alternative body from HTML content
+    to satisfy SpamAssassin and avoid MIME_HTML_ONLY penalties.
+    """
+    import html
+    import re
+
+    # Remove style and script tags
+    text = re.sub(
+        r"<(style|script)[^>]*>.*?</\1>", "", html_content, flags=re.DOTALL | re.IGNORECASE
+    )
+    # Convert links <a href="url">text</a> to text [url]
+    text = re.sub(
+        r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
+        r"\2 [\1]",
+        text,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    # Convert breaks and block elements to newlines
+    text = re.sub(r"<(br|p|div|tr|h[1-6])[^>]*>", "\n", text, flags=re.IGNORECASE)
+    # Strip remaining HTML tags
+    text = re.sub(r"<[^>]+>", "", text)
+    # Unescape HTML entities
+    text = html.unescape(text)
+    # Normalize whitespace
+    lines = [line.strip() for line in text.splitlines()]
+    clean_text = "\n".join(line for line in lines if line)
+    return clean_text
+
+
 def generate_document_preview_card(
     filename: str,
     target_url: str,

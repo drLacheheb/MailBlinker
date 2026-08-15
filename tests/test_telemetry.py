@@ -148,6 +148,8 @@ async def test_dns_deliverability_inspector():
     assert hasattr(res_gmail, "mx_ipv6_valid")
     assert hasattr(res_gmail, "dane_valid")
     assert hasattr(res_gmail, "dane_status")
+    assert hasattr(res_gmail, "arc_valid")
+    assert hasattr(res_gmail, "arc_status")
 
 
 def test_headless_probe_telemetry():
@@ -257,3 +259,41 @@ def test_parse_dmarc_rua_xml():
     assert len(summary.records) == 2
     assert summary.records[0].dkim_result == "pass"
     assert summary.records[1].source_ip == "198.51.100.99"
+
+
+def test_prefetch_and_client_hints_telemetry():
+    from core.telemetry.inspector import TelemetryInspector
+
+    inspector = TelemetryInspector()
+    sent_at = datetime(2026, 8, 15, 12, 0, 0, tzinfo=timezone.utc)
+    open_time = datetime(2026, 8, 15, 12, 5, 0, tzinfo=timezone.utc)
+
+    # 1. Speculative Prefetch request
+    res_prefetch = inspector.inspect(
+        email_id=12,
+        sent_at=sent_at,
+        open_time=open_time,
+        ip_address="198.51.100.1",
+        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
+        accept_language="en-US,en;q=0.9",
+        past_events=[],
+        geo_data=("United States", "New York", "New York", "Verizon"),
+        purpose="prefetch",
+    )
+    assert res_prefetch.is_valid_open is False
+    assert "Prefetch" in res_prefetch.device_summary
+
+    # 2. Forged Client-Hints (UA claims Windows, hints claim Linux)
+    res_forged = inspector.inspect(
+        email_id=13,
+        sent_at=sent_at,
+        open_time=open_time,
+        ip_address="198.51.100.2",
+        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
+        accept_language="en-US,en;q=0.9",
+        past_events=[],
+        geo_data=("United States", "New York", "New York", "Verizon"),
+        client_hints={"sec-ch-ua-platform": '"Linux"'},
+    )
+    assert res_forged.is_valid_open is False
+    assert "Forged Client Hints" in res_forged.device_summary

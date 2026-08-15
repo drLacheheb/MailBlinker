@@ -110,6 +110,8 @@ class TelemetryInspector:
         accept_language: Optional[str],
         past_events: List[OpenEventEntity],
         geo_data: Tuple[Optional[str], Optional[str], Optional[str], Optional[str]],
+        purpose: Optional[str] = None,
+        client_hints: Optional[dict[str, str]] = None,
     ) -> TelemetryInspectionResult:
         if sent_at.tzinfo is None:
             sent_at = sent_at.replace(tzinfo=timezone.utc)
@@ -119,6 +121,45 @@ class TelemetryInspector:
         elapsed_seconds = max(0.0, (open_time - sent_at).total_seconds())
         ua = user_agent or "Unknown"
         ua_lower = ua.lower()
+
+        # 1. Inspect Speculative Browser Pre-Render & Prefetch Headers
+        if purpose and purpose.strip().lower() in ("prefetch", "preview"):
+            return TelemetryInspectionResult(
+                is_valid_open=False,
+                event=None,
+                device_summary="Browser Speculative Pre-Render (Prefetch)",
+                forwarding_note=None,
+                elapsed_seconds=elapsed_seconds,
+            )
+
+        # 2. Inspect Client-Hints Consistency (Sec-CH-UA vs User-Agent)
+        if client_hints:
+            ch_platform = (
+                (
+                    client_hints.get("sec-ch-ua-platform")
+                    or client_hints.get("Sec-CH-UA-Platform")
+                    or ""
+                )
+                .replace('"', "")
+                .lower()
+            )
+            if ch_platform:
+                if "windows" in ua_lower and ch_platform not in ("windows", ""):
+                    return TelemetryInspectionResult(
+                        is_valid_open=False,
+                        event=None,
+                        device_summary="Automated Scraper (Forged Client Hints)",
+                        forwarding_note=None,
+                        elapsed_seconds=elapsed_seconds,
+                    )
+                if "macintosh" in ua_lower and ch_platform not in ("macos", "mac os x", "mac", ""):
+                    return TelemetryInspectionResult(
+                        is_valid_open=False,
+                        event=None,
+                        device_summary="Automated Scraper (Forged Client Hints)",
+                        forwarding_note=None,
+                        elapsed_seconds=elapsed_seconds,
+                    )
 
         country, region, city, isp = geo_data
         loc_summary = f"{city}, {country}".strip(", ") if city else None

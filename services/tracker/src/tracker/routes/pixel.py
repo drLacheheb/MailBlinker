@@ -14,7 +14,7 @@ from ..constants import (
     build_dynamic_webp,
 )
 from ..dependencies import get_record_open_use_case
-from ..throttle import token_burst_shield
+from ..throttle import canary_blacklist, token_burst_shield
 
 router = APIRouter()
 SAFE_TOKEN_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{8,64}$")
@@ -33,6 +33,9 @@ def _extract_token_and_format(
     elif filename.endswith(".svg") or path_lower.endswith(".svg"):
         ext = "svg"
         raw = filename[:-4] if filename.endswith(".svg") else filename
+    elif filename.endswith(".webp") or path_lower.endswith(".webp"):
+        ext = "webp"
+        raw = filename[:-5] if filename.endswith(".webp") else filename
     elif filename.endswith(".png") or path_lower.endswith(".png"):
         ext = "png"
         raw = filename[:-4] if filename.endswith(".png") else filename
@@ -46,7 +49,7 @@ def _extract_token_and_format(
         ext = "png"
         raw = filename
 
-    # Strip camouflage prefixes (sig_, logo_, badge_, spacer_, brand_, icon_, photo_, vector_)
+    # Strip semantic prefixes (e.g., sig_token123 -> token123)
     if "_" in raw:
         clean_token = raw.split("_", 1)[1]
     else:
@@ -85,15 +88,27 @@ async def _handle_pixel_tracking(
     client_ip = request.client.host if request.client else "Unknown"
     user_agent = request.headers.get("user-agent", "Unknown")
     accept_language = request.headers.get("accept-language")
+    purpose = (
+        request.headers.get("sec-purpose")
+        or request.headers.get("purpose")
+        or request.headers.get("x-purpose")
+    )
+    client_hints = {
+        k.lower(): v for k, v in request.headers.items() if k.lower().startswith("sec-ch-ua")
+    }
 
-    # Anti-replay & burst rate limiting (protects against sandbox crawler storms)
-    if not token_burst_shield.is_bursting(clean_token):
+    # Autonomous Canary Subnet Blacklist & Anti-replay rate limiting
+    if not canary_blacklist.is_blacklisted(client_ip) and not token_burst_shield.is_bursting(
+        clean_token
+    ):
         dto = RecordOpenDTO(
             token=clean_token,
             open_time=open_time,
             client_ip=client_ip,
             user_agent=user_agent,
             accept_language=accept_language,
+            purpose=purpose,
+            client_hints=client_hints,
         )
         await use_case.execute(dto)
 
@@ -145,6 +160,10 @@ async def _handle_pixel_tracking(
 async def canary_honeypot_trap(filename: str, request: Request) -> Response:
     """Canary trap endpoint hit exclusively by automated email crawlers/bots."""
     clean_token, _, _ = _extract_token_and_format(filename, request.url.path)
+    client_ip = request.client.host if request.client else ""
+    if client_ip:
+        canary_blacklist.record_trap_hit(client_ip)
+
     headers = get_cdn_headers_for_token(clean_token)
     return Response(
         status_code=204,
