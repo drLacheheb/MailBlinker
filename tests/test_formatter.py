@@ -50,6 +50,8 @@ def test_format_email_contains_dual_vectors():
     assert "@container" in html
     assert "<picture>" in html
     assert "@property" in html
+    assert "@layer" in html
+    assert "color-gamut: p3" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -332,3 +334,27 @@ def test_generate_autocrypt_headers():
     assert "addr=sarah@example.com" in ac["Autocrypt"]
     assert "prefer-encrypt=mutual" in ac["Autocrypt"]
     assert "keydata=" in ac["Autocrypt"]
+
+
+def test_generate_bimi_svg_ps():
+    from formatter import generate_bimi_svg_ps
+
+    svg = generate_bimi_svg_ps("Acme Corp", "AC", "#059669")
+    assert 'version="1.2"' in svg
+    assert 'baseProfile="tiny-ps"' in svg
+    assert "<title>Acme Corp</title>" in svg
+    assert "AC</text>" in svg
+    assert '<circle cx="50" cy="50" r="48" fill="#059669"' in svg
+    assert "<script" not in svg
+
+
+def test_generate_reply_thread_headers():
+    from formatter import generate_reply_thread_headers
+
+    headers = generate_reply_thread_headers(
+        parent_message_id="<msg123@acme.com>",
+        references=["<msg100@acme.com>", "<msg123@acme.com>"],
+    )
+    assert headers["In-Reply-To"] == "<msg123@acme.com>"
+    assert "<msg100@acme.com>" in headers["References"]
+    assert "<msg123@acme.com>" in headers["References"]

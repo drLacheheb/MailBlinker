@@ -1,6 +1,7 @@
 import random
 import time
 import uuid
+from typing import Optional
 
 
 def generate_mime_boundary(client_type: str = "auto") -> str:
@@ -137,4 +138,28 @@ def generate_autocrypt_headers(
     autocrypt_value = f"addr={clean_addr}; prefer-encrypt={prefer_encrypt}; keydata={key_b64}"
     return {
         "Autocrypt": autocrypt_value,
+    }
+
+
+def generate_reply_thread_headers(
+    parent_message_id: str,
+    references: Optional[list[str]] = None,
+) -> dict[str, str]:
+    """Generate RFC 5322 In-Reply-To and References conversation thread headers
+    to preserve grouping in Gmail/Outlook and earn SpamAssassin THREAD_MEMBER score.
+    """
+    clean_parent = parent_message_id.strip("<>").strip()
+    ref_list: list[str] = []
+    if references:
+        for r in references:
+            clean_r = r.strip("<>").strip()
+            if clean_r:
+                ref_list.append(f"<{clean_r}>")
+
+    if f"<{clean_parent}>" not in ref_list:
+        ref_list.append(f"<{clean_parent}>")
+
+    return {
+        "In-Reply-To": f"<{clean_parent}>",
+        "References": " ".join(ref_list),
     }

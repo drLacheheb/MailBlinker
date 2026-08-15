@@ -155,6 +155,7 @@ async def test_dns_deliverability_inspector():
     assert hasattr(res_gmail, "crypto_discovery_valid")
     assert hasattr(res_gmail, "crypto_discovery_status")
     assert hasattr(res_gmail, "spf_lookup_count")
+    assert hasattr(res_gmail, "null_mx_declared")
 
 
 def test_headless_probe_telemetry():

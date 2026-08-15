@@ -93,7 +93,7 @@ async def cmd_check_domain(message: types.Message):
     spf_icon = "✅" if res.spf_valid else "❌"
     dmarc_icon = "✅" if res.dmarc_valid else "❌"
     dkim_icon = "✅" if res.dkim_valid else "❌"
-    mx_icon = "✅" if res.mx_valid else "❌"
+    mx_icon = "🛡️" if res.null_mx_declared else ("✅" if res.mx_valid else "❌")
     ptr_icon = "✅" if res.ptr_valid else "❌"
     bimi_icon = "✅" if res.bimi_valid else "ℹ️"
     mta_icon = "✅" if res.mta_sts_valid else "ℹ️"

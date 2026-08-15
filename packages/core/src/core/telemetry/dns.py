@@ -22,6 +22,7 @@ class DnsInspectionResult:
     mx_records: List[str]
     mx_status: str
     mx_ipv6_valid: bool
+    null_mx_declared: bool
     ptr_valid: bool
     ptr_record: Optional[str]
     ptr_status: str
@@ -187,6 +188,7 @@ class DnsDeliverabilityInspector:
                 mx_records=[],
                 mx_status="Invalid domain format",
                 mx_ipv6_valid=False,
+                null_mx_declared=False,
                 ptr_valid=False,
                 ptr_record=None,
                 ptr_status="Invalid domain format",
@@ -296,16 +298,25 @@ class DnsDeliverabilityInspector:
         # 4. Inspect MX Records & IPv6 Dual-Stack Reachability
         mx_records = await self._query_doh(clean_d, "MX")
         mx_ipv6_valid = False
+        null_mx_declared = False
         if mx_records:
-            mx_valid = True
-            server_word = "servers" if len(mx_records) > 1 else "server"
-            mx_status = f"Active ({len(mx_records)} mail exchange {server_word})"
-            score += 10
+            if any(
+                r.strip() in ("0 .", "0 . .", "0") or r.strip().endswith(" 0 .") for r in mx_records
+            ):
+                null_mx_declared = True
+                mx_valid = True
+                mx_status = "RFC 7505 Null MX (Outbound-only subdomain, no inbound mail)"
+                score += 10
+            else:
+                mx_valid = True
+                server_word = "servers" if len(mx_records) > 1 else "server"
+                mx_status = f"Active ({len(mx_records)} mail exchange {server_word})"
+                score += 10
 
-            first_mx_host = mx_records[0].split()[-1].rstrip(".")
-            aaaa_records = await self._query_doh(first_mx_host, "AAAA")
-            if aaaa_records:
-                mx_ipv6_valid = True
+                first_mx_host = mx_records[0].split()[-1].rstrip(".")
+                aaaa_records = await self._query_doh(first_mx_host, "AAAA")
+                if aaaa_records:
+                    mx_ipv6_valid = True
         else:
             mx_valid = False
             mx_status = "No MX records found"
@@ -459,6 +470,7 @@ class DnsDeliverabilityInspector:
             mx_records=mx_records,
             mx_status=mx_status,
             mx_ipv6_valid=mx_ipv6_valid,
+            null_mx_declared=null_mx_declared,
             ptr_valid=ptr_valid,
             ptr_record=ptr_record,
             ptr_status=ptr_status,
