@@ -18,6 +18,7 @@ class CreateEmailRequest(BaseModel):
     body_text: Optional[str] = None
     custom_html: Optional[str] = None
     links: Optional[List[EmailLinkSchema]] = None
+    telegram_chat_id: Optional[str] = None
 
 
 class OpenEventSchema(BaseModel):
@@ -43,6 +44,7 @@ class TrackedEmailSchema(BaseModel):
     recipient_email: str
     recipient_name: Optional[str]
     subject: Optional[str]
+    telegram_chat_id: Optional[str] = None
     created_at: datetime
     first_opened_at: Optional[datetime]
     last_opened_at: Optional[datetime]

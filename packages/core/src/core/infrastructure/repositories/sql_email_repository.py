@@ -20,6 +20,7 @@ class SqlAlchemyEmailRepository(EmailRepositoryInterface):
             recipient_email=email.recipient_email,
             recipient_name=email.recipient_name,
             subject=email.subject,
+            telegram_chat_id=email.telegram_chat_id,
             created_at=email.created_at,
             first_opened_at=email.first_opened_at,
             last_opened_at=email.last_opened_at,
@@ -50,13 +51,18 @@ class SqlAlchemyEmailRepository(EmailRepositoryInterface):
         model = res.scalar_one_or_none()
         return model.to_entity() if model else None
 
-    async def list_all(self, limit: int = 100) -> List[TrackedEmailEntity]:
+    async def list_all(
+        self, limit: int = 100, telegram_chat_id: Optional[str] = None
+    ) -> List[TrackedEmailEntity]:
         stmt = (
             select(TrackedEmailModel)
             .options(selectinload(TrackedEmailModel.events))
             .order_by(desc(TrackedEmailModel.created_at))
-            .limit(limit)
         )
+        if telegram_chat_id is not None:
+            stmt = stmt.where(TrackedEmailModel.telegram_chat_id == telegram_chat_id)
+        stmt = stmt.limit(limit)
+
         res = await self._session.execute(stmt)
         models = res.scalars().all()
         return [m.to_entity() for m in models]

@@ -29,6 +29,7 @@ class TrackedEmailEntity:
     recipient_email: str
     recipient_name: Optional[str] = None
     subject: Optional[str] = None
+    telegram_chat_id: Optional[str] = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     first_opened_at: Optional[datetime] = None
     last_opened_at: Optional[datetime] = None

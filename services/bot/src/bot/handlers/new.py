@@ -1,3 +1,4 @@
+import html
 import io
 
 from aiogram import Router, types
@@ -25,31 +26,37 @@ async def cmd_new(message: types.Message):
         return
 
     parts = [p.strip() for p in raw_args.split("|")]
-    title = parts[0] if len(parts) > 0 else "Untitled Email"
-    email = parts[1] if len(parts) > 1 else "recipient@example.com"
+    title = parts[0] if len(parts) > 0 and parts[0] else "Untitled Email"
+    email = parts[1] if len(parts) > 1 and parts[1] else "recipient@example.com"
 
     dto = CreateEmailDTO(
         title=title,
         recipient_email=email,
         body_text=f"Regarding: {title}",
+        telegram_chat_id=str(message.chat.id),
     )
 
     async with get_create_email_use_case() as use_case:
         result = await use_case.execute(dto)
 
+    safe_title = html.escape(result.email.title)
+    safe_email = html.escape(result.email.recipient_email)
+    safe_token = html.escape(result.email.token)
+    safe_pixel = html.escape(result.pixel_url)
+
     response_text = (
         f"<b>Tracked Email Created</b>\n\n"
-        f"<b>Title:</b> {result.email.title}\n"
-        f"<b>Recipient:</b> <code>{result.email.recipient_email}</code>\n"
-        f"<b>Token:</b> <code>{result.email.token}</code>\n\n"
-        f"<b>Pixel URL:</b>\n<code>{result.pixel_url}</code>\n"
+        f"<b>Title:</b> {safe_title}\n"
+        f"<b>Recipient:</b> <code>{safe_email}</code>\n"
+        f"<b>Token:</b> <code>{safe_token}</code>\n\n"
+        f"<b>Pixel URL:</b>\n<code>{safe_pixel}</code>\n"
     )
 
     await message.answer(response_text, parse_mode="HTML")
 
     file_bytes = io.BytesIO(result.formatted_html.encode("utf-8"))
     clean_chars = (c for c in title if c.isalnum() or c in (" ", "_", "-"))
-    safe_title = "".join(clean_chars).rstrip().replace(" ", "_").lower()
-    doc_name = f"email_{safe_title or 'tracked'}.html"
+    safe_filename_title = "".join(clean_chars).rstrip().replace(" ", "_").lower()
+    doc_name = f"email_{safe_filename_title or 'tracked'}.html"
     doc = types.BufferedInputFile(file_bytes.getvalue(), filename=doc_name)
     await message.answer_document(doc, caption="Formatted HTML Email")

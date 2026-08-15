@@ -13,7 +13,6 @@ class Settings(BaseSettings):
     BASE_URL: str = "http://localhost:8000"
     DATABASE_URL: str = "sqlite+aiosqlite:///tracker.db"
     TELEGRAM_BOT_TOKEN: Optional[str] = None
-    TELEGRAM_CHAT_ID: Optional[str] = None
     TELEGRAM_BOT_MODE: str = "auto"  # "auto", "webhook", or "polling"
     TELEGRAM_WEBHOOK_PATH: str = "/api/webhook/telegram"
     TELEGRAM_WEBHOOK_SECRET: Optional[str] = None

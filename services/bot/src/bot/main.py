@@ -19,6 +19,21 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
 
+    # Register Telegram bot menu commands
+    try:
+        from aiogram.types import BotCommand
+        commands = [
+            BotCommand(command="start", description="Start bot & show guide"),
+            BotCommand(command="new", description="Fast tracked email (/new Title | email)"),
+            BotCommand(command="format", description="Interactive 5-step email composer"),
+            BotCommand(command="stats", description="View your email open analytics"),
+            BotCommand(command="cancel", description="Cancel active email composer"),
+            BotCommand(command="help", description="How to use with Gmail/Outlook"),
+        ]
+        await bot.set_my_commands(commands)
+    except Exception as e:
+        logger.warning(f"Could not register Telegram bot commands menu: {e}")
+
     logger.success("Telegram Bot started polling")
     try:
         await dp.start_polling(bot)

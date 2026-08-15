@@ -39,6 +39,7 @@ async def create_tracked_email(
         body_text=payload.body_text,
         custom_html=payload.custom_html,
         links=links_list,
+        telegram_chat_id=payload.telegram_chat_id,
     )
     result = await use_case.execute(dto)
 
@@ -48,15 +49,17 @@ async def create_tracked_email(
         "pixel_url": result.pixel_url,
         "title": result.email.title,
         "subject": result.email.subject,
+        "telegram_chat_id": result.email.telegram_chat_id,
         "formatted_html": result.formatted_html,
     }
 
 
 @router.get("")
 async def list_tracked_emails(
+    telegram_chat_id: str | None = None,
     use_case: ListEmailsUseCase = Depends(get_list_emails_use_case),
 ):
-    emails = await use_case.execute()
+    emails = await use_case.execute(telegram_chat_id=telegram_chat_id)
 
     return [
         {
@@ -66,6 +69,7 @@ async def list_tracked_emails(
             "recipient_email": e.recipient_email,
             "recipient_name": e.recipient_name,
             "subject": e.subject,
+            "telegram_chat_id": e.telegram_chat_id,
             "created_at": e.created_at.isoformat(),
             "first_opened_at": e.first_opened_at.isoformat() if e.first_opened_at else None,
             "last_opened_at": e.last_opened_at.isoformat() if e.last_opened_at else None,

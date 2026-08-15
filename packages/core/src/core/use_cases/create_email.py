@@ -20,6 +20,7 @@ class CreateEmailDTO:
     body_text: Optional[str] = None
     custom_html: Optional[str] = None
     links: Optional[List[EmailLink]] = None
+    telegram_chat_id: Optional[str] = None
 
 
 @dataclass
@@ -44,6 +45,7 @@ class CreateEmailUseCase:
             recipient_email=dto.recipient_email,
             recipient_name=dto.recipient_name,
             subject=dto.subject or dto.title,
+            telegram_chat_id=dto.telegram_chat_id,
             created_at=datetime.now(timezone.utc),
         )
         saved_email = await self._repository.create(email_entity)

@@ -29,6 +29,7 @@ class TrackedEmailModel(Base):
     recipient_email: Mapped[str] = mapped_column(String(255), nullable=False)
     recipient_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     subject: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    telegram_chat_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -65,6 +66,7 @@ class TrackedEmailModel(Base):
             recipient_email=self.recipient_email,
             recipient_name=self.recipient_name,
             subject=self.subject,
+            telegram_chat_id=self.telegram_chat_id,
             created_at=self.created_at,
             first_opened_at=self.first_opened_at,
             last_opened_at=self.last_opened_at,
