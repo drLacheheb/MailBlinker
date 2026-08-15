@@ -3,6 +3,7 @@ from .engine import format_email, generate_document_preview_card
 from .mime import (
     encode_mime_body,
     generate_enterprise_message_id,
+    generate_feedback_id_headers,
     generate_mime_boundary,
     generate_rfc2822_date,
 )
@@ -27,6 +28,7 @@ __all__ = [
     "encode_mime_body",
     "generate_enterprise_message_id",
     "generate_rfc2822_date",
+    "generate_feedback_id_headers",
     "naturalize_text_entropy",
     "generate_unsubscribe_headers",
     "format_email",

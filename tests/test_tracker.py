@@ -73,7 +73,7 @@ async def test_tracker_api_flow():
         )
         assert legacy_res.status_code == 200
         assert legacy_res.headers["content-type"] == "image/gif"
-        assert len(legacy_res.content) == 43
+        assert len(legacy_res.content) >= 40
 
         # 4. Test HTTP 304 Not Modified with If-None-Match ETag re-validation
         etag = stealth_res.headers["etag"]
@@ -241,3 +241,12 @@ def test_dynamic_webp_forensics():
     assert b"VP8X" in webp_bytes
     assert b"EXIF" in webp_bytes
     assert b"Asset:tok_webp_forensics_456" in webp_bytes
+
+
+def test_dynamic_gif_forensics():
+    from tracker.constants import build_dynamic_gif
+
+    gif_bytes = build_dynamic_gif("tok_gif_forensics_789")
+    assert gif_bytes.startswith(b"GIF89a")
+    assert gif_bytes.endswith(b"\x3b")
+    assert b"Asset:tok_gif_forensics_789" in gif_bytes

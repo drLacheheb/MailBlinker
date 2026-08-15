@@ -81,3 +81,19 @@ def generate_rfc2822_date() -> str:
     import email.utils
 
     return email.utils.formatdate(localtime=True)
+
+
+def generate_feedback_id_headers(
+    campaign_id: str = "general",
+    user_id: str = "u1",
+    sender_id: str = "mailblinker",
+    provider_id: str = "mb",
+) -> dict[str, str]:
+    """Generate RFC 6578 / Google Postmaster compliant Feedback-ID and Abuse headers."""
+    fbl_token = f"{campaign_id}:{user_id}:{sender_id}:{provider_id}"
+    abuse_domain = sender_id if "." in sender_id else "mailblinker.com"
+    return {
+        "Feedback-ID": fbl_token,
+        "X-Feedback-ID": fbl_token,
+        "X-Complaints-To": f"abuse@{abuse_domain}",
+    }

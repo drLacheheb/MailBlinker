@@ -31,6 +31,9 @@ class DnsInspectionResult:
     mta_sts_status: str
     tls_rpt_valid: bool
     tls_rpt_status: str
+    dane_valid: bool
+    dane_record: Optional[str]
+    dane_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -131,6 +134,9 @@ class DnsDeliverabilityInspector:
                 mta_sts_status="Invalid domain format",
                 tls_rpt_valid=False,
                 tls_rpt_status="Invalid domain format",
+                dane_valid=False,
+                dane_record=None,
+                dane_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -280,6 +286,23 @@ class DnsDeliverabilityInspector:
             tls_rpt_valid = False
             tls_rpt_status = "No TLS-RPT record (Optional for TLS reporting)"
 
+        # 9. Inspect DANE / TLSA (RFC 6698 / RFC 7672 SMTP Certificate Pinning)
+        dane_valid = False
+        dane_record = None
+        tlsa_host = f"_25._tcp.{clean_d}"
+        if mx_records:
+            first_mx = mx_records[0].split()[-1].rstrip(".")
+            tlsa_host = f"_25._tcp.{first_mx}"
+
+        tlsa_records = await self._query_doh(tlsa_host, "TLSA")
+        if tlsa_records:
+            dane_valid = True
+            dane_record = tlsa_records[0]
+            dane_status = f"Active ({dane_record[:20]}...)"
+            score += 5
+        else:
+            dane_status = "No DANE TLSA record (Optional for high-security pinning)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -308,5 +331,8 @@ class DnsDeliverabilityInspector:
             mta_sts_status=mta_sts_status,
             tls_rpt_valid=tls_rpt_valid,
             tls_rpt_status=tls_rpt_status,
+            dane_valid=dane_valid,
+            dane_record=dane_record,
+            dane_status=dane_status,
             recommendations=recommendations,
         )

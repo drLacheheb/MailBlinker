@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from ..cdn import get_cdn_headers_for_token
 from ..constants import (
-    TRANSPARENT_1X1_GIF,
+    build_dynamic_gif,
     build_dynamic_png,
     build_dynamic_svg,
     build_dynamic_webp,
@@ -54,7 +54,7 @@ def _extract_token_and_format(
 
     if ext == "gif":
         media_type = "image/gif"
-        content = TRANSPARENT_1X1_GIF
+        content = build_dynamic_gif(clean_token)
     elif ext == "svg":
         media_type = "image/svg+xml"
         content = build_dynamic_svg(clean_token)

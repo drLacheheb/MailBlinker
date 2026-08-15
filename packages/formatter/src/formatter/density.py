@@ -14,15 +14,41 @@ class DensityReport:
     spam_triggers_found: list[str]
     caps_ratio: float
     lexical_spam_score: int
+    homoglyphs_detected: list[str]
 
 
 class EmailDensityOptimizer:
-    """Analyzes email HTML structure and optimizes text-to-markup ratios and lexical entropy
-    to satisfy SpamAssassin and anti-spam deliverability rules.
+    """Analyzes email HTML structure and optimizes text-to-markup ratios, lexical entropy,
+    and homoglyph obfuscation to satisfy SpamAssassin and anti-spam deliverability rules.
     """
 
     TAG_REGEX = re.compile(r"<[^>]+>")
     LINK_REGEX = re.compile(r"<a\s+[^>]*href=", re.IGNORECASE)
+
+    # Common Cyrillic & Greek homoglyphs mimicking Latin letters
+    HOMOGLYPH_CHARS = {
+        "\u0430": "a",
+        "\u0441": "c",
+        "\u0435": "e",
+        "\u043e": "o",
+        "\u0440": "p",
+        "\u0455": "s",
+        "\u0456": "i",
+        "\u0443": "y",
+        "\u0445": "x",
+        "\u0410": "A",
+        "\u0412": "B",
+        "\u0415": "E",
+        "\u041a": "K",
+        "\u041c": "M",
+        "\u041d": "H",
+        "\u041e": "O",
+        "\u0420": "P",
+        "\u0421": "C",
+        "\u0422": "T",
+        "\u0425": "X",
+        "\u03bf": "o",
+    }
 
     SPAM_KEYWORDS = [
         "100% free",
@@ -105,6 +131,11 @@ class EmailDensityOptimizer:
         if clean_text.count("!") > 4:
             score -= 10  # Exclamation entropy penalty
 
+        # Homoglyph obfuscation analysis
+        homoglyphs_found = [c for c in clean_text if c in cls.HOMOGLYPH_CHARS]
+        if homoglyphs_found:
+            score -= min(25, len(homoglyphs_found) * 5)  # Anti-phishing homoglyph penalty
+
         final_score = max(0, min(100, score))
         is_balanced = final_score >= 70
 
@@ -118,6 +149,7 @@ class EmailDensityOptimizer:
             spam_triggers_found=triggers_found,
             caps_ratio=caps_ratio,
             lexical_spam_score=final_score,
+            homoglyphs_detected=list(set(homoglyphs_found)),
         )
 
     @classmethod

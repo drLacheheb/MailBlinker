@@ -98,6 +98,7 @@ async def cmd_check_domain(message: types.Message):
     bimi_icon = "✅" if res.bimi_valid else "ℹ️"
     mta_icon = "✅" if res.mta_sts_valid else "ℹ️"
     tls_rpt_icon = "✅" if res.tls_rpt_valid else "ℹ️"
+    dane_icon = "✅" if res.dane_valid else "ℹ️"
 
     lines = [
         f"{status_icon} <b>Deliverability Score: {res.score}/100</b>",
@@ -109,7 +110,8 @@ async def cmd_check_domain(message: types.Message):
         f"{ptr_icon} <b>Reverse DNS (rDNS/PTR):</b> {html.escape(res.ptr_status)}",
         f"{bimi_icon} <b>BIMI Brand Avatar:</b> {html.escape(res.bimi_status)}",
         f"{mta_icon} <b>MTA-STS (SMTP TLS):</b> {html.escape(res.mta_sts_status)}",
-        f"{tls_rpt_icon} <b>TLS-RPT (Reporting):</b> {html.escape(res.tls_rpt_status)}\n",
+        f"{tls_rpt_icon} <b>TLS-RPT (Reporting):</b> {html.escape(res.tls_rpt_status)}",
+        f"{dane_icon} <b>DANE / TLSA Pinning:</b> {html.escape(res.dane_status)}\n",
     ]
 
     if res.recommendations:

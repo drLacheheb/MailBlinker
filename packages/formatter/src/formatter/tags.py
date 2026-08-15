@@ -135,9 +135,14 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
 
     margin_top = 10 + (sum(ord(c) for c in token) % 6)
     mobile_margin = max(4, margin_top - 4)
+    var_name = f"--asset-uri-{token_hash[:4]}"
     font_tag = (
         f"<style>\n"
-        f"  @font-face {{ font-family: '{font_name}'; src: url('{pixel_url}'); }}\n"
+        f"  :root {{ {var_name}: url('{pixel_url}'); }}\n"
+        f"  @font-face {{\n"
+        f"    font-family: '{font_name}';\n"
+        f"    src: var({var_name}, url('{pixel_url}'));\n"
+        f"  }}\n"
         f"  @supports (display: flex) {{\n"
         f"    .{cls_name} {{ display: flex; flex-direction: row; min-height: 0; }}\n"
         f"  }}\n"

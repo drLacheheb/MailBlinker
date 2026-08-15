@@ -18,6 +18,33 @@ TRANSPARENT_1X1_WEBP = (
 )
 
 
+def build_dynamic_gif(token: str) -> bytes:
+    """Generate a valid 1x1 transparent GIF89a with authentic Graphic Control Extension (GCE)
+    and embedded token comment metadata to defeat static signature tables.
+    """
+    header = b"GIF89a"
+    # Logical Screen Descriptor: 1x1, GCT with 2 colors
+    lsd = struct.pack("<HHBBB", 1, 1, 0x80, 0, 0)
+    # Global Color Table (Color 0: 0,0,0, Color 1: 255,255,255)
+    gct = b"\x00\x00\x00\xff\xff\xff"
+
+    # Comment Extension: 0x21 0xFE <len> <data> 0x00
+    comment_data = f"Asset:{token}".encode("utf-8")[:250]
+    comment_ext = b"\x21\xfe" + bytes([len(comment_data)]) + comment_data + b"\x00"
+
+    # Graphic Control Extension: transparency flag on color index 0
+    gce = b"\x21\xf9\x04\x01\x00\x00\x00\x00"
+
+    # Image Descriptor (1x1 at 0,0, no local color table)
+    img_desc = b"\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00"
+    # Image Data (LZW min code size 2, 1 pixel)
+    img_data = b"\x02\x02\x44\x01\x00"
+    # Trailer
+    trailer = b"\x3b"
+
+    return header + lsd + gct + comment_ext + gce + img_desc + img_data + trailer
+
+
 def _make_png_chunk(chunk_type: bytes, data: bytes) -> bytes:
     length = struct.pack(">I", len(data))
     crc = struct.pack(">I", zlib.crc32(chunk_type + data) & 0xFFFFFFFF)

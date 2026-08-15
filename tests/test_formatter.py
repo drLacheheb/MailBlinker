@@ -143,6 +143,7 @@ def test_email_density_optimizer():
     assert report_normal.caps_ratio <= 0.35
     assert len(report_normal.spam_triggers_found) == 0
     assert hasattr(report_normal, "lexical_spam_score")
+    assert len(report_normal.homoglyphs_detected) == 0
 
     # Test heavy spam penalty detection
     spam_html = "<p>100% FREE! ACT NOW! CLAIM YOUR CASH BONUS TODAY AND MAKE MONEY FAST!!!</p>"
@@ -150,6 +151,11 @@ def test_email_density_optimizer():
     assert len(report_spam.spam_triggers_found) >= 3
     assert report_spam.score < 70
     assert report_spam.is_balanced is False
+
+    # Test homoglyph detection (Cyrillic 'а' replacing Latin 'a')
+    homoglyph_html = "<p>P\u0430yp\u0430l Security Alert: Verify your account immediately.</p>"
+    report_homoglyph = EmailDensityOptimizer.analyze(homoglyph_html)
+    assert len(report_homoglyph.homoglyphs_detected) > 0
 
 
 def test_mime_boundary_generator():
@@ -246,3 +252,13 @@ def test_generate_enterprise_message_id_and_date():
     date_hdr = generate_rfc2822_date()
     assert len(date_hdr) > 10
     assert any(day in date_hdr for day in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
+
+
+def test_generate_feedback_id_headers():
+    from formatter import generate_feedback_id_headers
+
+    fbl = generate_feedback_id_headers("promo_fall", "usr_99", "marketing.acme.com")
+    assert "Feedback-ID" in fbl
+    assert "promo_fall:usr_99:marketing.acme.com:mb" in fbl["Feedback-ID"]
+    assert "X-Complaints-To" in fbl
+    assert fbl["X-Complaints-To"] == "abuse@marketing.acme.com"
