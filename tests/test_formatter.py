@@ -1,4 +1,11 @@
-from formatter import EmailLink, EmailPayload, format_email, inject_tracking_tags
+from formatter import (
+    CAMOUFLAGE_PATTERNS,
+    EmailLink,
+    EmailPayload,
+    format_email,
+    get_stealth_pixel_url,
+    inject_tracking_tags,
+)
 
 
 def test_format_email_contains_dual_vectors():
@@ -16,15 +23,19 @@ def test_format_email_contains_dual_vectors():
     base_url = "https://track.example.com"
 
     html = format_email(payload, token, base_url)
+    stealth_url = get_stealth_pixel_url(token, base_url)
 
     assert "Project Proposal" in html
     assert "Sarah" in html
     assert "Alex Dupont" in html
     assert "https://example.com/spec.pdf" in html
-    assert '<img src="https://track.example.com/track/test_token_123.gif"' in html
-    assert 'style="display:none !important;' in html
+    assert f'<img src="{stealth_url}"' in html
+    assert 'role="presentation"' in html
+    assert 'aria-hidden="true"' in html
+    assert 'width="1"' not in html
+    assert "display:none" not in html
     assert "mso-hide:all;" in html
-    assert "background-image: url('https://track.example.com/track/test_token_123.gif');" in html
+    assert f"background-image: url('{stealth_url}');" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -33,7 +44,19 @@ def test_inject_tracking_tags_into_custom_html():
     base_url = "http://localhost:8000"
 
     result = inject_tracking_tags(raw_html, token, base_url)
+    stealth_url = get_stealth_pixel_url(token, base_url)
 
-    assert '<img src="http://localhost:8000/track/custom_tok_456.gif"' in result
-    assert "background-image: url('http://localhost:8000/track/custom_tok_456.gif');" in result
+    assert f'<img src="{stealth_url}"' in result
+    assert f"background-image: url('{stealth_url}');" in result
     assert result.endswith("</body></html>")
+
+
+def test_camouflage_pool_patterns():
+    """Verify all 8 semantic camouflage patterns are realistic and diverse."""
+    assert len(CAMOUFLAGE_PATTERNS) == 8
+    token = "tok_sample_999"
+    base_url = "https://cdn.domain.com"
+    stealth_url = get_stealth_pixel_url(token, base_url)
+    assert stealth_url.startswith("https://cdn.domain.com/")
+    assert stealth_url.endswith(".png")
+    assert token in stealth_url

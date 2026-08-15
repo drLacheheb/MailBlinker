@@ -3,7 +3,13 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from formatter import EmailLink, EmailPayload, format_email, inject_tracking_tags
+from formatter import (
+    EmailLink,
+    EmailPayload,
+    format_email,
+    get_stealth_pixel_url,
+    inject_tracking_tags,
+)
 
 from ..config import settings
 from ..domain.entities import TrackedEmailEntity
@@ -62,8 +68,7 @@ class CreateEmailUseCase:
             )
             formatted_html = format_email(payload, token, self._base_url)
 
-        clean_base = self._base_url.rstrip("/")
-        pixel_url = f"{clean_base}/track/{token}.gif"
+        pixel_url = get_stealth_pixel_url(token, self._base_url)
 
         return CreateEmailResult(
             email=saved_email,

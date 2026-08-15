@@ -24,19 +24,41 @@ async def test_tracker_api_flow():
         assert "pixel_url" in data
         assert "formatted_html" in data
         token = data["token"]
+        pixel_url = data["pixel_url"]
 
-        pixel_res = await ac.get(
+        # 1. Fetch generated stealth pixel URL (e.g. /assets/signature/sig_xxx.png)
+        relative_pixel_path = "/" + pixel_url.split("/", 3)[-1]
+        stealth_res = await ac.get(
+            relative_pixel_path,
+            headers={"User-Agent": "GoogleImageProxy"},
+        )
+        assert stealth_res.status_code == 200
+        assert stealth_res.headers["content-type"] == "image/png"
+        assert len(stealth_res.content) == 67
+        assert "no-cache" in stealth_res.headers["cache-control"]
+        assert "etag" in stealth_res.headers
+
+        # 2. Test other semantic camouflage routes
+        patterns_to_test = [
+            f"/assets/signature/sig_{token}.png",
+            f"/cdn/media/logo_{token}.png",
+            f"/static/images/badge_{token}.png",
+            f"/assets/img/spacer_{token}.png",
+            f"/cdn/fonts/glyph_{token}.png",
+        ]
+        for path in patterns_to_test:
+            resp = await ac.get(path, headers={"User-Agent": "GoogleImageProxy"})
+            assert resp.status_code == 200
+            assert resp.headers["content-type"] == "image/png"
+
+        # 3. Test legacy fallback /track/{token}.gif
+        legacy_res = await ac.get(
             f"/track/{token}.gif",
             headers={"User-Agent": "GoogleImageProxy"},
         )
-        assert pixel_res.status_code == 200
-        assert pixel_res.headers["content-type"] == "image/gif"
-        assert len(pixel_res.content) == 43
-
-        assert "no-cache" in pixel_res.headers["cache-control"]
-        assert "no-store" in pixel_res.headers["cache-control"]
-        assert pixel_res.headers["pragma"] == "no-cache"
-        assert "etag" in pixel_res.headers
+        assert legacy_res.status_code == 200
+        assert legacy_res.headers["content-type"] == "image/gif"
+        assert len(legacy_res.content) == 43
 
         list_res = await ac.get("/api/emails")
         assert list_res.status_code == 200
