@@ -1,9 +1,9 @@
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
+
+import httpx
 import pytest
 import pytest_asyncio
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
-import httpx
-
 from core import (
     AsyncSessionLocal,
     CreateEmailDTO,
@@ -26,6 +26,7 @@ async def setup_db():
 async def test_multi_user_email_isolation():
     """Verify that User A and User B only see their own tracked emails."""
     import uuid
+
     chat_a = f"user_a_{uuid.uuid4().hex[:6]}"
     chat_b = f"user_b_{uuid.uuid4().hex[:6]}"
     chat_c = f"user_c_{uuid.uuid4().hex[:6]}"
@@ -126,7 +127,9 @@ async def test_notification_resilience_on_blocked_bot():
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         # Simulate Telegram API returning 403 Forbidden
-        mock_resp = httpx.Response(403, json={"ok": False, "description": "Forbidden: bot was blocked by the user"})
+        mock_resp = httpx.Response(
+            403, json={"ok": False, "description": "Forbidden: bot was blocked by the user"}
+        )
         mock_post.return_value = mock_resp
 
         async with AsyncSessionLocal() as session:

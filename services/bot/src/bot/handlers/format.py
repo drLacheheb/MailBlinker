@@ -1,27 +1,40 @@
 import html
 import io
 
-from aiogram import Router, types
+from aiogram import F, Router, types
+from aiogram.enums import ChatAction
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from core import CreateEmailDTO
 from formatter import EmailLink
 
 from ..dependencies import get_create_email_use_case
+from ..keyboards import email_created_inline_keyboard, main_menu_keyboard, wizard_step_keyboard
 from ..states import FormatEmailStates
 
 router = Router()
 
 
 @router.message(Command("format"))
+@router.message(F.text == "📝 Compose Email")
 async def cmd_format(message: types.Message, state: FSMContext):
     await state.set_state(FormatEmailStates.waiting_for_title)
-    prompt = (
-        "<b>Step 1/5:</b> What is the <b>Subject / Title</b> of this email?\n"
-        "<i>(e.g., Application for Backend Engineer, Invoice #1024, Project Update)</i>\n\n"
-        "<i>Type <code>/cancel</code> anytime to abort.</i>"
+    prompt = "📝 <b>Step 1/4:</b> Enter email Subject / Title:"
+    await message.answer(
+        prompt, parse_mode="HTML", reply_markup=wizard_step_keyboard(can_skip=False)
     )
-    await message.answer(prompt, parse_mode="HTML")
+
+
+@router.callback_query(F.data == "wizard:cancel")
+async def callback_wizard_cancel(callback: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.answer("Wizard cancelled", show_alert=False)
+    if isinstance(callback.message, types.Message):
+        await callback.message.answer(
+            "❌ <b>Cancelled.</b>",
+            parse_mode="HTML",
+            reply_markup=main_menu_keyboard(),
+        )
 
 
 @router.message(FormatEmailStates.waiting_for_title)
@@ -29,34 +42,38 @@ async def process_title(message: types.Message, state: FSMContext):
     title = (message.text or "").strip()
     await state.update_data(title=title)
     await state.set_state(FormatEmailStates.waiting_for_email)
-    prompt = (
-        "<b>Step 2/5:</b> What is the <b>Recipient Email</b>?\n"
-        "<i>(e.g., client@example.com, hr@company.com)</i>"
+    prompt = "👤 <b>Step 2/4:</b> Enter Recipient Email:"
+    await message.answer(
+        prompt, parse_mode="HTML", reply_markup=wizard_step_keyboard(can_skip=False)
     )
-    await message.answer(prompt, parse_mode="HTML")
 
 
 @router.message(FormatEmailStates.waiting_for_email)
 async def process_email(message: types.Message, state: FSMContext):
     email = (message.text or "").strip()
     await state.update_data(email=email)
-    await state.set_state(FormatEmailStates.waiting_for_recipient_name)
-    prompt = "<b>Step 3/5:</b> What is the <b>Recipient Name</b>? <i>(or type 'skip')</i>"
-    await message.answer(prompt, parse_mode="HTML")
-
-
-@router.message(FormatEmailStates.waiting_for_recipient_name)
-async def process_recipient_name(message: types.Message, state: FSMContext):
-    text = (message.text or "").strip()
-    recipient_name = None if text.lower() == "skip" else text
-    await state.update_data(recipient_name=recipient_name)
     await state.set_state(FormatEmailStates.waiting_for_links)
     prompt = (
-        "<b>Step 4/5:</b> Enter any <b>Links</b> to include in the email.\n"
-        "<i>Format: Label: URL | Label: URL (or type 'skip')</i>\n"
-        "<i>Example: Portfolio: https://mysite.com | Resume: https://mysite.com/cv.pdf</i>"
+        "🔗 <b>Step 3/4:</b> Add Links (or tap Skip):\n"
+        "<code>Portfolio: https://site.com | Resume: https://site.com/cv.pdf</code>"
     )
-    await message.answer(prompt, parse_mode="HTML")
+    await message.answer(
+        prompt, parse_mode="HTML", reply_markup=wizard_step_keyboard(can_skip=True)
+    )
+
+
+@router.callback_query(F.data == "wizard:skip", FormatEmailStates.waiting_for_links)
+async def callback_skip_links(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer("Step skipped")
+    await state.update_data(links=[])
+    await state.set_state(FormatEmailStates.waiting_for_body)
+    prompt = "✉️ <b>Step 4/4:</b> Enter Message Body (or send <code>default</code>):"
+    if isinstance(callback.message, types.Message):
+        await callback.message.answer(
+            prompt,
+            parse_mode="HTML",
+            reply_markup=wizard_step_keyboard(can_skip=False),
+        )
 
 
 @router.message(FormatEmailStates.waiting_for_links)
@@ -81,8 +98,10 @@ async def process_links(message: types.Message, state: FSMContext):
 
     await state.update_data(links=links_list)
     await state.set_state(FormatEmailStates.waiting_for_body)
-    prompt = "<b>Step 5/5:</b> Enter the <b>Email Body / Message Text</b> (or type 'default'):"
-    await message.answer(prompt, parse_mode="HTML")
+    prompt = "✉️ <b>Step 4/4:</b> Enter Message Body (or send <code>default</code>):"
+    await message.answer(
+        prompt, parse_mode="HTML", reply_markup=wizard_step_keyboard(can_skip=False)
+    )
 
 
 @router.message(FormatEmailStates.waiting_for_body)
@@ -96,6 +115,9 @@ async def process_body(message: types.Message, state: FSMContext):
     body_text = (message.text or "").strip()
     if body_text.lower() == "default":
         body_text = f"I am writing regarding {title}. Please find the details below."
+
+    if message.bot:
+        await message.bot.send_chat_action(chat_id=message.chat.id, action=ChatAction.TYPING)
 
     email_links = [EmailLink(text=lnk["text"], url=lnk["url"]) for lnk in raw_links]
     dto = CreateEmailDTO(
@@ -114,21 +136,26 @@ async def process_body(message: types.Message, state: FSMContext):
 
     safe_title = html.escape(result.email.title)
     safe_email = html.escape(result.email.recipient_email)
-    safe_token = html.escape(result.email.token)
     safe_pixel = html.escape(result.pixel_url)
 
     response_text = (
-        f"<b>Tracked Email Generated</b>\n\n"
-        f"<b>Title:</b> {safe_title}\n"
-        f"<b>Recipient:</b> <code>{safe_email}</code>\n"
-        f"<b>Token:</b> <code>{safe_token}</code>\n\n"
-        f"<b>Tracking Pixel URL:</b>\n<code>{safe_pixel}</code>\n"
+        f"🎉 <b>Template Ready</b>\n\n"
+        f"📧 <b>{safe_title}</b>\n"
+        f"👤 <code>{safe_email}</code>\n\n"
+        f"<code>{safe_pixel}</code>"
     )
-    await message.answer(response_text, parse_mode="HTML")
+
+    kb = email_created_inline_keyboard(pixel_url=result.pixel_url, email_id=result.email.id)
+    await message.answer(response_text, parse_mode="HTML", reply_markup=kb)
+
+    if message.bot:
+        await message.bot.send_chat_action(
+            chat_id=message.chat.id, action=ChatAction.UPLOAD_DOCUMENT
+        )
 
     file_bytes = io.BytesIO(result.formatted_html.encode("utf-8"))
     clean_chars = (c for c in title if c.isalnum() or c in (" ", "_", "-"))
     safe_filename_title = "".join(clean_chars).rstrip().replace(" ", "_").lower()
-    doc_name = f"email_{safe_filename_title or 'tracked'}.html"
+    doc_name = f"email_{safe_filename_title or 'formatted'}.html"
     doc = types.BufferedInputFile(file_bytes.getvalue(), filename=doc_name)
-    await message.answer_document(doc, caption="Formatted HTML Email")
+    await message.answer_document(doc, caption="📄 Pasteable Draft")

@@ -84,9 +84,8 @@ async def main():
     tasks = [run_fastapi(stop_event)]
 
     if settings.is_webhook_mode:
-        logger.success(
-            f"Telegram operating in Webhook mode at {settings.BASE_URL}{settings.TELEGRAM_WEBHOOK_PATH} (1-5 replicas ready)"
-        )
+        webhook_ep = f"{settings.BASE_URL}{settings.TELEGRAM_WEBHOOK_PATH}"
+        logger.success(f"Telegram operating in Webhook mode at {webhook_ep}")
     elif settings.TELEGRAM_BOT_TOKEN:
         tasks.append(run_bot_polling(stop_event))
 

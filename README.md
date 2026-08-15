@@ -126,10 +126,10 @@ This builds and runs MailBlinker in the background with persistent storage in `.
 * `/help` - Helpful tips on pasting formatted HTML into Gmail and Outlook.
 
 ### Sending Your Email
-1. Run `/new` or `/format` in Telegram to generate your tracked email.
+1. Tap **⚡ Fast Track** or send `/new` in Telegram to generate your tracked email.
 2. Open the generated `.html` attachment in a browser.
-3. Select All (`Ctrl+A` / `Cmd+A`), Copy (`Ctrl+C` / `Cmd+C`), and Paste (`Ctrl+V` / `Cmd+V`) into your Gmail or Outlook compose box.
-4. Send your email. When opened, the bot pings you instantly with rich telemetry (device, network, reading delay, location).
+3. Copy and paste the rendered email into your Gmail or Outlook compose box.
+4. Send your email. When opened, the bot pings you instantly with rich telemetry (device, reading delay, location).
 
 ---
 

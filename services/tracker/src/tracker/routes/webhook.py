@@ -40,16 +40,9 @@ async def setup_webhook() -> None:
 
     logger.info(f"Registering Telegram Webhook at: {webhook_url}")
     try:
-        from aiogram.types import BotCommand
-        commands = [
-            BotCommand(command="start", description="Start bot & show guide"),
-            BotCommand(command="new", description="Fast tracked email (/new Title | email)"),
-            BotCommand(command="format", description="Interactive 5-step email composer"),
-            BotCommand(command="stats", description="View your email open analytics"),
-            BotCommand(command="cancel", description="Cancel active email composer"),
-            BotCommand(command="help", description="How to use with Gmail/Outlook"),
-        ]
-        await bot.set_my_commands(commands)
+        from bot.profile import setup_bot_profile
+
+        await setup_bot_profile(bot)
         await bot.set_webhook(
             url=webhook_url,
             secret_token=settings.TELEGRAM_WEBHOOK_SECRET,

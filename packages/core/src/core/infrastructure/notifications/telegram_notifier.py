@@ -12,6 +12,17 @@ from ...telemetry import format_elapsed_time
 logger = get_logger("telegram.notifier")
 
 
+def _get_device_emoji(device_str: str) -> str:
+    lower = device_str.lower()
+    if "iphone" in lower or "android" in lower or "mobile" in lower:
+        return "📱"
+    if "mac" in lower or "apple" in lower or "laptop" in lower:
+        return "💻"
+    if "windows" in lower or "pc" in lower or "desktop" in lower or "linux" in lower:
+        return "🖥️"
+    return "🌐"
+
+
 class TelegramNotificationService(NotificationServiceInterface):
     def __init__(
         self,
@@ -34,41 +45,47 @@ class TelegramNotificationService(NotificationServiceInterface):
         safe_title = html.escape(email.title)
         safe_recipient = html.escape(email.recipient_email)
         safe_device = html.escape(device)
+        dev_emoji = _get_device_emoji(device)
 
         location_parts = [p for p in [event.city, event.region, event.country] if p]
         location_str = (
-            html.escape(", ".join(location_parts)) if location_parts else None
+            html.escape(", ".join(location_parts)) if location_parts else "Location Hidden / Proxy"
         )
 
         elapsed_str = (
             f"{format_elapsed_time(event.elapsed_seconds)} after sending"
             if event.elapsed_seconds is not None
-            else None
+            else "Just now"
+        )
+
+        # Status badge
+        badge = (
+            "🟢 <b>Email Opened</b>"
+            if email.open_count <= 1
+            else f"🔥 <b>Email Opened ({email.open_count}x)</b>"
         )
 
         lines = [
-            "<b>Email Opened</b>\n",
-            f"<b>Title:</b> {safe_title}",
-            f"<b>Recipient:</b> <code>{safe_recipient}</code>",
-            f"<b>Device:</b> {safe_device}",
+            f"{badge} • <b>{safe_title}</b>\n",
+            f"👤 <code>{safe_recipient}</code>",
+            f"{dev_emoji} {safe_device} • 📍 {location_str}",
+            f"⏱️ {elapsed_str}",
         ]
 
-        if location_str:
-            lines.append(f"<b>Location:</b> {location_str}")
-        if event.isp:
-            lines.append(f"<b>ISP / Network:</b> {html.escape(event.isp)}")
-        if event.language:
-            lines.append(f"<b>Language:</b> {html.escape(event.language)}")
-
-        lines.append(f"<b>IP:</b> {ip_display}")
-
-        if elapsed_str:
-            lines.append(f"<b>Reading Time:</b> Opened {elapsed_str}")
-
-        lines.append(f"<b>Total Opens:</b> {email.open_count}")
-
         if forwarding_note:
-            lines.append(f"\n<b>Forwarding Clue:</b> {html.escape(forwarding_note)}")
+            lines.append(f"\n🔀 <b>Forwarding Alert:</b> {html.escape(forwarding_note)}")
+
+        # Secondary Technical Details in Expandable Quote
+        tech_details = [
+            f"🌐 <b>IP Address:</b> {ip_display}",
+        ]
+        if event.isp:
+            tech_details.append(f"🏢 <b>ISP / Network:</b> {html.escape(event.isp)}")
+        if event.language:
+            tech_details.append(f"🗣️ <b>Language:</b> {html.escape(event.language)}")
+        tech_details.append(f"🔢 <b>Total Opens:</b> {email.open_count}")
+
+        lines.append(f"\n<blockquote expandable>{chr(10).join(tech_details)}</blockquote>")
 
         text = "\n".join(lines)
 
@@ -77,7 +94,22 @@ class TelegramNotificationService(NotificationServiceInterface):
             "chat_id": target_chat_id,
             "text": text,
             "parse_mode": "HTML",
+            "reply_markup": {
+                "inline_keyboard": [
+                    [
+                        {
+                            "text": "📊 View Email Analytics",
+                            "callback_data": f"stats:view:{email.id}",
+                        }
+                    ]
+                ]
+            }
+            if email.id
+            else None,
         }
+
+        # Remove None values from payload
+        payload = {k: v for k, v in payload.items() if v is not None}
 
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
@@ -87,12 +119,8 @@ class TelegramNotificationService(NotificationServiceInterface):
                         f"Telegram bot was blocked or chat was deleted by user {target_chat_id}"
                     )
                 elif resp.status_code == 429:
-                    logger.warning(
-                        f"Telegram rate limited when sending alert to user {target_chat_id}: {resp.text}"
-                    )
+                    logger.warning(f"Telegram rate limited for user {target_chat_id}: {resp.text}")
                 elif resp.is_error:
-                    logger.error(
-                        f"Telegram API returned error {resp.status_code}: {resp.text}"
-                    )
+                    logger.error(f"Telegram API error {resp.status_code}: {resp.text}")
         except Exception as e:
             logger.error(f"Failed to dispatch Telegram push alert to {target_chat_id}: {e}")
