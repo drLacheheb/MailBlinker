@@ -7,6 +7,7 @@ from bot.keyboards import (
     email_created_inline_keyboard,
     email_detail_keyboard,
     main_menu_keyboard,
+    notify_settings_keyboard,
     stats_list_keyboard,
     wizard_step_keyboard,
 )
@@ -53,7 +54,7 @@ def test_wizard_step_keyboard():
 
 
 def test_stats_keyboards():
-    """Verify dashboard email listing, detail controls, and delete confirmation."""
+    """Verify dashboard email listing, detail controls, and settings keyboards."""
     dummy_emails = [
         TrackedEmailEntity(
             id=1,
@@ -79,11 +80,31 @@ def test_stats_keyboards():
     assert any(btn.callback_data == "stats:view:2" for btn in list_btns if btn.callback_data)
     assert any(btn.callback_data == "stats:refresh_list" for btn in list_btns if btn.callback_data)
 
-    detail_kb = email_detail_keyboard(1)
+    detail_kb = email_detail_keyboard(1, notify_limit=3, notify_forwarding=True)
     detail_btns = [btn for row in detail_kb.inline_keyboard for btn in row]
     assert any(btn.callback_data == "stats:refresh:1" for btn in detail_btns if btn.callback_data)
     assert any(btn.callback_data == "stats:delete:1" for btn in detail_btns if btn.callback_data)
+    assert any(
+        btn.callback_data == "stats:settings_menu:1" for btn in detail_btns if btn.callback_data
+    )
     assert any(btn.callback_data == "stats:back" for btn in detail_btns if btn.callback_data)
+
+    settings_kb = notify_settings_keyboard(1, current_limit=3, notify_forwarding=True)
+    settings_btns = [btn for row in settings_kb.inline_keyboard for btn in row]
+    assert any(
+        btn.callback_data == "stats:set_limit:1:3" for btn in settings_btns if btn.callback_data
+    )
+    assert any(
+        btn.callback_data == "stats:set_limit:1:none" for btn in settings_btns if btn.callback_data
+    )
+    assert any(
+        btn.callback_data == "stats:toggle_forwarding:1"
+        for btn in settings_btns
+        if btn.callback_data
+    )
+    assert any(
+        btn.callback_data == "stats:custom_limit:1" for btn in settings_btns if btn.callback_data
+    )
 
     del_kb = delete_confirm_keyboard(1)
     del_btns = [btn for row in del_kb.inline_keyboard for btn in row]
@@ -94,7 +115,7 @@ def test_stats_keyboards():
 
 @pytest.mark.asyncio
 async def test_rich_notification_alert_formatting():
-    """Verify notification payload contains status badge, expandable quote, and stats button."""
+    """Verify payload contains status badge, expandable quote, and mute/analytics buttons."""
     notifier = TelegramNotificationService(bot_token="test_token")
     email = TrackedEmailEntity(
         id=99,
@@ -137,4 +158,6 @@ async def test_rich_notification_alert_formatting():
         assert "London, United Kingdom" in text
         assert "<blockquote expandable>" in text
         assert "Vodafone Ltd" in text
-        assert payload["reply_markup"]["inline_keyboard"][0][0]["callback_data"] == "stats:view:99"
+        inline_buttons = payload["reply_markup"]["inline_keyboard"][0]
+        assert inline_buttons[0]["callback_data"] == "stats:view:99"
+        assert inline_buttons[1]["callback_data"] == "stats:quick_mute:99"

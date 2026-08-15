@@ -25,6 +25,8 @@ class SqlAlchemyEmailRepository(EmailRepositoryInterface):
             first_opened_at=email.first_opened_at,
             last_opened_at=email.last_opened_at,
             open_count=email.open_count,
+            notify_limit=email.notify_limit,
+            notify_forwarding=email.notify_forwarding,
         )
         self._session.add(model)
         await self._session.commit()
@@ -113,6 +115,32 @@ class SqlAlchemyEmailRepository(EmailRepositoryInterface):
         if model.first_opened_at is None:
             model.first_opened_at = event.timestamp
         model.last_opened_at = event.timestamp
+
+        await self._session.commit()
+        await self._session.refresh(model)
+        return model.to_entity()
+
+    async def update_notify_settings(
+        self,
+        email_id: int,
+        limit: Optional[int] = None,
+        update_limit: bool = False,
+        notify_forwarding: Optional[bool] = None,
+    ) -> Optional[TrackedEmailEntity]:
+        stmt = (
+            select(TrackedEmailModel)
+            .options(selectinload(TrackedEmailModel.events))
+            .where(TrackedEmailModel.id == email_id)
+        )
+        res = await self._session.execute(stmt)
+        model = res.scalar_one_or_none()
+        if not model:
+            return None
+
+        if update_limit:
+            model.notify_limit = limit
+        if notify_forwarding is not None:
+            model.notify_forwarding = notify_forwarding
 
         await self._session.commit()
         await self._session.refresh(model)

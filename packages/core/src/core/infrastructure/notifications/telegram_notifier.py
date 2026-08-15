@@ -90,22 +90,28 @@ class TelegramNotificationService(NotificationServiceInterface):
         text = "\n".join(lines)
 
         url = f"https://api.telegram.org/bot{self._bot_token}/sendMessage"
+        reply_markup = None
+        if email.id:
+            reply_markup = {
+                "inline_keyboard": [
+                    [
+                        {
+                            "text": "📊 Analytics",
+                            "callback_data": f"stats:view:{email.id}",
+                        },
+                        {
+                            "text": "🔕 Mute",
+                            "callback_data": f"stats:quick_mute:{email.id}",
+                        },
+                    ]
+                ]
+            }
+
         payload = {
             "chat_id": target_chat_id,
             "text": text,
             "parse_mode": "HTML",
-            "reply_markup": {
-                "inline_keyboard": [
-                    [
-                        {
-                            "text": "📊 View Email Analytics",
-                            "callback_data": f"stats:view:{email.id}",
-                        }
-                    ]
-                ]
-            }
-            if email.id
-            else None,
+            "reply_markup": reply_markup,
         }
 
         # Remove None values from payload

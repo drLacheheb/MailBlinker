@@ -38,6 +38,7 @@ from .use_cases import (
     RecordOpenDTO,
     RecordOpenResult,
     RecordOpenUseCase,
+    UpdateNotifySettingsUseCase,
 )
 
 __all__ = [
@@ -76,4 +77,5 @@ __all__ = [
     "RecordOpenUseCase",
     "ListEmailsUseCase",
     "DeleteEmailUseCase",
+    "UpdateNotifySettingsUseCase",
 ]

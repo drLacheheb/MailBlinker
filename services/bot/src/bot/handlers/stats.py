@@ -1,17 +1,31 @@
 import html
+from typing import Optional
 
 from aiogram import F, Router, types
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
-from ..dependencies import get_delete_email_use_case, get_email_repo, get_list_emails_use_case
+from ..dependencies import (
+    get_delete_email_use_case,
+    get_email_repo,
+    get_list_emails_use_case,
+    get_update_notify_settings_use_case,
+)
 from ..keyboards import (
     delete_confirm_keyboard,
     email_detail_keyboard,
     main_menu_keyboard,
+    notify_settings_keyboard,
     stats_list_keyboard,
+    wizard_step_keyboard,
 )
 
 router = Router()
+
+
+class CustomLimitState(StatesGroup):
+    waiting_for_number = State()
 
 
 def _format_dashboard_text(emails) -> str:
@@ -36,9 +50,21 @@ def _format_detail_text(email) -> str:
     status_icon = "🟢" if email.open_count > 0 else "⏳"
     status_text = f"Read {email.open_count}x" if email.open_count > 0 else "Pending"
 
+    if email.notify_limit == 0:
+        alert_info = "🔕 Muted"
+    elif email.notify_limit is None:
+        alert_info = "🔔 Unlimited"
+    elif email.notify_limit == 1:
+        alert_info = "🔔 1st Only"
+    else:
+        alert_info = f"🔔 Max {email.notify_limit}x"
+
+    fwd_info = " • 🔀 Fwd: ON" if email.notify_forwarding else " • 🔀 Fwd: OFF"
+
     lines = [
         f"{status_icon} <b>{safe_title}</b>",
         f"👤 <code>{safe_recipient}</code> • {status_text}",
+        f"⚙️ <b>Alerts:</b> {alert_info}{fwd_info}",
     ]
 
     if email.first_opened_at:
@@ -116,7 +142,9 @@ async def callback_stats_view(callback: types.CallbackQuery):
 
     await callback.answer()
     text = _format_detail_text(email)
-    kb = email_detail_keyboard(email.id)
+    kb = email_detail_keyboard(
+        email.id, notify_limit=email.notify_limit, notify_forwarding=email.notify_forwarding
+    )
     if isinstance(callback.message, types.Message):
         await callback.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
 
@@ -137,12 +165,212 @@ async def callback_stats_refresh(callback: types.CallbackQuery):
 
     await callback.answer("✅ Telemetry refreshed!", show_alert=False)
     text = _format_detail_text(email)
-    kb = email_detail_keyboard(email.id)
+    kb = email_detail_keyboard(
+        email.id, notify_limit=email.notify_limit, notify_forwarding=email.notify_forwarding
+    )
     if isinstance(callback.message, types.Message):
         try:
             await callback.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
         except Exception:
             pass
+
+
+@router.callback_query(F.data.startswith("stats:quick_mute:"))
+async def callback_stats_quick_mute(callback: types.CallbackQuery):
+    if not callback.data:
+        return
+    chat_id = str(callback.from_user.id)
+    email_id = int(callback.data.split(":")[-1])
+
+    async with get_email_repo() as repo:
+        email = await repo.get_by_id(email_id)
+
+    if not email or not email.id or email.telegram_chat_id != chat_id:
+        await callback.answer("⚠️ Email not found or access denied.", show_alert=True)
+        return
+
+    async with get_update_notify_settings_use_case() as use_case:
+        await use_case.execute(email_id=email_id, limit=0, update_limit=True)
+
+    await callback.answer("🔕 Future alerts muted for this email!", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("stats:settings_menu:"))
+async def callback_stats_settings_menu(callback: types.CallbackQuery):
+    if not callback.data:
+        return
+    chat_id = str(callback.from_user.id)
+    email_id = int(callback.data.split(":")[-1])
+
+    async with get_email_repo() as repo:
+        email = await repo.get_by_id(email_id)
+
+    if not email or not email.id or email.telegram_chat_id != chat_id:
+        await callback.answer("⚠️ Email not found.", show_alert=True)
+        return
+
+    await callback.answer()
+    text = (
+        f"⚙️ <b>Notification Settings</b>\n"
+        f"📧 <b>{html.escape(email.title)}</b>\n\n"
+        f"Set max notification limit or toggle smart forwarding alerts:"
+    )
+    kb = notify_settings_keyboard(
+        email_id=email.id,
+        current_limit=email.notify_limit,
+        notify_forwarding=email.notify_forwarding,
+    )
+    if isinstance(callback.message, types.Message):
+        await callback.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.startswith("stats:set_limit:"))
+async def callback_stats_set_limit(callback: types.CallbackQuery):
+    if not callback.data:
+        return
+    chat_id = str(callback.from_user.id)
+    parts = callback.data.split(":")
+    email_id = int(parts[2])
+    raw_val = parts[3]
+
+    new_limit: Optional[int] = None if raw_val == "none" else int(raw_val)
+
+    async with get_email_repo() as repo:
+        email = await repo.get_by_id(email_id)
+
+    if not email or not email.id or email.telegram_chat_id != chat_id:
+        await callback.answer("⚠️ Access denied.", show_alert=True)
+        return
+
+    async with get_update_notify_settings_use_case() as use_case:
+        updated = await use_case.execute(email_id=email_id, limit=new_limit, update_limit=True)
+
+    if not updated or not updated.id:
+        await callback.answer("⚠️ Error updating settings.", show_alert=True)
+        return
+
+    msg = (
+        "✅ Alerts set to Unlimited" if new_limit is None else f"✅ Alert limit set to {new_limit}"
+    )
+    if new_limit == 0:
+        msg = "🔕 Alerts muted for this email"
+    await callback.answer(msg, show_alert=False)
+
+    text = (
+        f"⚙️ <b>Notification Settings</b>\n"
+        f"📧 <b>{html.escape(updated.title)}</b>\n\n"
+        f"Set max notification limit or toggle smart forwarding alerts:"
+    )
+    kb = notify_settings_keyboard(
+        email_id=updated.id,
+        current_limit=updated.notify_limit,
+        notify_forwarding=updated.notify_forwarding,
+    )
+    if isinstance(callback.message, types.Message):
+        try:
+            await callback.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+        except Exception:
+            pass
+
+
+@router.callback_query(F.data.startswith("stats:toggle_forwarding:"))
+async def callback_stats_toggle_forwarding(callback: types.CallbackQuery):
+    if not callback.data:
+        return
+    chat_id = str(callback.from_user.id)
+    email_id = int(callback.data.split(":")[-1])
+
+    async with get_email_repo() as repo:
+        email = await repo.get_by_id(email_id)
+
+    if not email or not email.id or email.telegram_chat_id != chat_id:
+        await callback.answer("⚠️ Access denied.", show_alert=True)
+        return
+
+    new_fwd = not email.notify_forwarding
+    async with get_update_notify_settings_use_case() as use_case:
+        updated = await use_case.execute(email_id=email_id, notify_forwarding=new_fwd)
+
+    if not updated or not updated.id:
+        await callback.answer("⚠️ Error updating settings.", show_alert=True)
+        return
+
+    status_msg = "🔀 Forwarding alerts ON" if new_fwd else "🔀 Forwarding alerts OFF"
+    await callback.answer(f"✅ {status_msg}", show_alert=False)
+
+    text = (
+        f"⚙️ <b>Notification Settings</b>\n"
+        f"📧 <b>{html.escape(updated.title)}</b>\n\n"
+        f"Set max notification limit or toggle smart forwarding alerts:"
+    )
+    kb = notify_settings_keyboard(
+        email_id=updated.id,
+        current_limit=updated.notify_limit,
+        notify_forwarding=updated.notify_forwarding,
+    )
+    if isinstance(callback.message, types.Message):
+        try:
+            await callback.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+        except Exception:
+            pass
+
+
+@router.callback_query(F.data.startswith("stats:custom_limit:"))
+async def callback_stats_custom_limit(callback: types.CallbackQuery, state: FSMContext):
+    if not callback.data:
+        return
+    email_id = int(callback.data.split(":")[-1])
+    await state.update_data(email_id=email_id)
+    await state.set_state(CustomLimitState.waiting_for_number)
+    await callback.answer()
+
+    prompt = (
+        "✏️ <b>Custom Alert Limit</b>\n\n"
+        "Send max notifications for this email (e.g. <code>5</code>):"
+    )
+    if isinstance(callback.message, types.Message):
+        await callback.message.answer(
+            prompt, parse_mode="HTML", reply_markup=wizard_step_keyboard(can_skip=False)
+        )
+
+
+@router.message(CustomLimitState.waiting_for_number)
+async def process_custom_limit(message: types.Message, state: FSMContext):
+    raw_text = (message.text or "").strip()
+    try:
+        val = int(raw_text)
+        if val < 0:
+            raise ValueError
+    except ValueError:
+        await message.answer(
+            "⚠️ Please send a valid positive number (e.g. <code>5</code>):", parse_mode="HTML"
+        )
+        return
+
+    data = await state.get_data()
+    email_id = data.get("email_id")
+    await state.clear()
+
+    if not email_id:
+        await message.answer("⚠️ Session expired.", reply_markup=main_menu_keyboard())
+        return
+
+    async with get_update_notify_settings_use_case() as use_case:
+        updated = await use_case.execute(email_id=email_id, limit=val, update_limit=True)
+
+    if not updated or not updated.id:
+        await message.answer("⚠️ Email not found.", reply_markup=main_menu_keyboard())
+        return
+
+    text = _format_detail_text(updated)
+    kb = email_detail_keyboard(
+        updated.id, notify_limit=updated.notify_limit, notify_forwarding=updated.notify_forwarding
+    )
+    await message.answer(
+        f"✅ <b>Alert limit set to {val}!</b>\n\n{text}",
+        parse_mode="HTML",
+        reply_markup=kb,
+    )
 
 
 @router.callback_query(F.data.startswith("stats:delete:"))

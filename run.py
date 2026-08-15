@@ -48,6 +48,7 @@ async def run_bot_polling(stop_event: asyncio.Event):
 
     try:
         from bot.profile import setup_bot_profile
+
         await setup_bot_profile(bot)
     except Exception as e:
         logger.warning(f"Could not sync profile during polling startup: {e}")

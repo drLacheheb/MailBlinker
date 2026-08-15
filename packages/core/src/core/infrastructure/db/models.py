@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     Float,
     ForeignKey,
@@ -45,6 +46,8 @@ class TrackedEmailModel(Base):
         nullable=True,
     )
     open_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    notify_limit: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=None)
+    notify_forwarding: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     events: Mapped[List["OpenEventModel"]] = relationship(
         "OpenEventModel",
@@ -71,6 +74,8 @@ class TrackedEmailModel(Base):
             first_opened_at=self.first_opened_at,
             last_opened_at=self.last_opened_at,
             open_count=self.open_count,
+            notify_limit=self.notify_limit,
+            notify_forwarding=self.notify_forwarding,
             events=events_entities,
         )
 

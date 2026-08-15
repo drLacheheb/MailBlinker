@@ -88,8 +88,19 @@ def stats_list_keyboard(emails: List[TrackedEmailEntity]) -> InlineKeyboardMarku
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def email_detail_keyboard(email_id: int) -> InlineKeyboardMarkup:
+def email_detail_keyboard(
+    email_id: int, notify_limit: Optional[int] = None, notify_forwarding: bool = True
+) -> InlineKeyboardMarkup:
     """Action controls when viewing a specific email's telemetry."""
+    if notify_limit == 0:
+        limit_text = "🔕 Alerts: Muted"
+    elif notify_limit is None:
+        limit_text = "🔔 Alerts: Unlimited"
+    elif notify_limit == 1:
+        limit_text = "🔔 Alerts: 1st Only"
+    else:
+        limit_text = f"🔔 Alerts: Max {notify_limit}x"
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -99,7 +110,68 @@ def email_detail_keyboard(email_id: int) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="🗑️ Delete", callback_data=f"stats:delete:{email_id}"),
             ],
             [
+                InlineKeyboardButton(
+                    text=f"⚙️ {limit_text}", callback_data=f"stats:settings_menu:{email_id}"
+                ),
+            ],
+            [
                 InlineKeyboardButton(text="🔙 Back to My Emails", callback_data="stats:back"),
+            ],
+        ]
+    )
+
+
+def notify_settings_keyboard(
+    email_id: int, current_limit: Optional[int], notify_forwarding: bool
+) -> InlineKeyboardMarkup:
+    """In-place notification limit picker & smart forwarding toggle."""
+
+    def _chk(val: Optional[int]) -> str:
+        return "✅ " if current_limit == val else ""
+
+    fwd_icon = "✅" if notify_forwarding else "❌"
+    fwd_status = "ON" if notify_forwarding else "OFF"
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=f"{_chk(1)}1", callback_data=f"stats:set_limit:{email_id}:1"
+                ),
+                InlineKeyboardButton(
+                    text=f"{_chk(2)}2", callback_data=f"stats:set_limit:{email_id}:2"
+                ),
+                InlineKeyboardButton(
+                    text=f"{_chk(3)}3", callback_data=f"stats:set_limit:{email_id}:3"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text=f"{_chk(5)}5", callback_data=f"stats:set_limit:{email_id}:5"
+                ),
+                InlineKeyboardButton(
+                    text=f"{_chk(10)}10", callback_data=f"stats:set_limit:{email_id}:10"
+                ),
+                InlineKeyboardButton(
+                    text=f"{_chk(None)}♾️ All", callback_data=f"stats:set_limit:{email_id}:none"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="✏️ Custom Limit", callback_data=f"stats:custom_limit:{email_id}"
+                ),
+                InlineKeyboardButton(
+                    text=f"{_chk(0)}🔕 Mute", callback_data=f"stats:set_limit:{email_id}:0"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text=f"{fwd_icon} 🔀 Forwarding Alerts: {fwd_status}",
+                    callback_data=f"stats:toggle_forwarding:{email_id}",
+                ),
+            ],
+            [
+                InlineKeyboardButton(text="🔙 Done", callback_data=f"stats:view:{email_id}"),
             ],
         ]
     )

@@ -7,6 +7,7 @@ from core import (
     DeleteEmailUseCase,
     ListEmailsUseCase,
     SqlAlchemyEmailRepository,
+    UpdateNotifySettingsUseCase,
 )
 
 
@@ -29,6 +30,15 @@ async def get_delete_email_use_case() -> AsyncGenerator[DeleteEmailUseCase, None
     async with AsyncSessionLocal() as session:
         repo = SqlAlchemyEmailRepository(session)
         yield DeleteEmailUseCase(repository=repo)
+
+
+@asynccontextmanager
+async def get_update_notify_settings_use_case() -> AsyncGenerator[
+    UpdateNotifySettingsUseCase, None
+]:
+    async with AsyncSessionLocal() as session:
+        repo = SqlAlchemyEmailRepository(session)
+        yield UpdateNotifySettingsUseCase(repository=repo)
 
 
 @asynccontextmanager

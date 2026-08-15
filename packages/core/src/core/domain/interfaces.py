@@ -16,6 +16,13 @@ class EmailRepositoryInterface(Protocol):
         token: str,
         event: OpenEventEntity,
     ) -> Optional[TrackedEmailEntity]: ...
+    async def update_notify_settings(
+        self,
+        email_id: int,
+        limit: Optional[int] = None,
+        update_limit: bool = False,
+        notify_forwarding: Optional[bool] = None,
+    ) -> Optional[TrackedEmailEntity]: ...
 
 
 class NotificationServiceInterface(Protocol):

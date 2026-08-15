@@ -72,12 +72,26 @@ class RecordOpenUseCase:
         updated_email = await self._repository.record_open_event(dto.token, inspection.event)
 
         if self._notifier and updated_email:
-            await self._notifier.send_open_alert(
-                updated_email,
-                inspection.event,
-                device=inspection.device_summary,
-                forwarding_note=inspection.forwarding_note,
-            )
+            should_notify = True
+            limit = updated_email.notify_limit
+
+            if limit == 0:
+                should_notify = False
+            elif limit is not None and updated_email.open_count > limit:
+                should_notify = False
+
+            # Smart Forwarding Override: If muted/limited, but forwarded -> notify!
+            is_forwarding = bool(inspection.forwarding_note)
+            if not should_notify and updated_email.notify_forwarding and is_forwarding:
+                should_notify = True
+
+            if should_notify:
+                await self._notifier.send_open_alert(
+                    updated_email,
+                    inspection.event,
+                    device=inspection.device_summary,
+                    forwarding_note=inspection.forwarding_note,
+                )
 
         return RecordOpenResult(
             email=updated_email,
