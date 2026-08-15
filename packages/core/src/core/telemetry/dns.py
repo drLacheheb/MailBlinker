@@ -20,11 +20,14 @@ class DnsInspectionResult:
     mx_valid: bool
     mx_records: List[str]
     mx_status: str
+    ptr_valid: bool
+    ptr_record: Optional[str]
+    ptr_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
 class DnsDeliverabilityInspector:
-    """Async DNS over HTTPS (DoH) inspector for SPF, DMARC, DKIM, and MX health."""
+    """Async DNS over HTTPS (DoH) inspector for SPF, DMARC, DKIM, MX, and FCrDNS/PTR health."""
 
     COMMON_DKIM_SELECTORS = [
         "google",
@@ -92,6 +95,9 @@ class DnsDeliverabilityInspector:
                 mx_valid=False,
                 mx_records=[],
                 mx_status="Invalid domain format",
+                ptr_valid=False,
+                ptr_record=None,
+                ptr_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -114,11 +120,11 @@ class DnsDeliverabilityInspector:
                 spf_status = (
                     "Valid (Strict alignment)" if "-all" in spf_record else "Valid (SoftFail)"
                 )
-                score += 30
+                score += 25
             else:
                 spf_valid = True
                 spf_status = "Configured (Neutral/Unspecified all)"
-                score += 20
+                score += 15
         else:
             spf_valid = False
             spf_status = "Missing SPF record"
@@ -135,14 +141,14 @@ class DnsDeliverabilityInspector:
                 dmarc_valid = True
                 policy = "reject" if "p=reject" in dmarc_record else "quarantine"
                 dmarc_status = f"Enforced ({policy})"
-                score += 30
+                score += 25
             else:
                 dmarc_valid = True
                 dmarc_status = "Monitoring mode (p=none)"
                 recommendations.append(
                     "Strengthen DMARC policy from 'p=none' to 'p=quarantine' or 'p=reject'."
                 )
-                score += 20
+                score += 15
         else:
             dmarc_valid = False
             dmarc_status = "Missing DMARC record"
@@ -181,6 +187,27 @@ class DnsDeliverabilityInspector:
             mx_status = "No MX records found"
             recommendations.append(f"Configure MX records on '{clean_d}' to receive reply emails.")
 
+        # 5. Inspect A & Reverse DNS (PTR / FCrDNS)
+        a_records = await self._query_doh(clean_d, "A")
+        ptr_valid = False
+        ptr_record = None
+        ptr_status = "No A records found"
+        if a_records:
+            ip = a_records[0]
+            octets = ip.split(".")
+            if len(octets) == 4:
+                arpa_name = f"{octets[3]}.{octets[2]}.{octets[1]}.{octets[0]}.in-addr.arpa"
+                ptr_records = await self._query_doh(arpa_name, "PTR")
+                if ptr_records:
+                    ptr_valid = True
+                    ptr_record = ptr_records[0].rstrip(".")
+                    ptr_status = f"Configured ({ptr_record})"
+                    score += 10
+                else:
+                    ptr_status = f"No PTR for {ip}"
+            else:
+                ptr_status = f"IP format unrecognized ({ip})"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -198,5 +225,8 @@ class DnsDeliverabilityInspector:
             mx_valid=mx_valid,
             mx_records=mx_records,
             mx_status=mx_status,
+            ptr_valid=ptr_valid,
+            ptr_record=ptr_record,
+            ptr_status=ptr_status,
             recommendations=recommendations,
         )

@@ -24,6 +24,7 @@ from .infrastructure import (
     is_private_or_local_ip,
 )
 from .logger import JsonFormatter, TrackerLogger, get_logger
+from .security import extract_raw_token, sign_token, verify_signed_token
 from .telemetry import (
     KNOWN_PROXIES,
     KNOWN_SECURITY_BOTS,
@@ -57,6 +58,9 @@ __all__ = [
     "get_logger",
     "TrackerLogger",
     "JsonFormatter",
+    "sign_token",
+    "verify_signed_token",
+    "extract_raw_token",
     "UserEntity",
     "OpenEventEntity",
     "TrackedEmailEntity",

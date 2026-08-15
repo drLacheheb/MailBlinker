@@ -152,12 +152,22 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
         "</table>"
     )
 
+    # Outlook MSO Conditional Camouflage (Word HTML engine vector rendering)
+    outlook_mso_block = (
+        "<!--[if mso]>\n"
+        '<v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="false" stroke="false" '
+        'style="width:1px;height:1px;mso-position-horizontal:absolute;top:0;left:0;">\n'
+        f'  <v:imagedata src="{pixel_url}" />\n'
+        "</v:rect>\n"
+        "<![endif]-->"
+    )
+
     # Polymorphic comment padding for unique email body cryptographic checksum
     asset_ref = hashlib.sha256((token + "_cdn_salt").encode()).hexdigest()[:16]
     build_num = (sum(ord(c) for c in token) % 9) + 1
     comment_tag = f"<!-- cdn-asset-ref: {asset_ref} | build-id: 2026.08.15-v{build_num} -->"
 
-    return f"{layout_wrapper}\n{font_tag}\n{comment_tag}"
+    return f"{layout_wrapper}\n{outlook_mso_block}\n{font_tag}\n{comment_tag}"
 
 
 def inject_tracking_tags(raw_content: str, token: str, base_url: str) -> str:

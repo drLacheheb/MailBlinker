@@ -44,6 +44,7 @@ def test_format_email_contains_dual_vectors():
     assert f"background-image: url('{stealth_url}');" in html
     assert "@font-face" in html
     assert "font-" in html
+    assert "<!--[if mso]>" in html
 
 
 def test_inject_tracking_tags_into_custom_html():

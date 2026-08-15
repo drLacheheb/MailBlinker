@@ -46,6 +46,8 @@ async def test_tracker_api_flow():
         assert stealth_res.headers["server"].lower() in ("cloudflare", "cloudfront", "varnish")
         assert stealth_res.headers["accept-ranges"] == "bytes"
         assert "no-cache" in stealth_res.headers["cache-control"]
+        assert "no-transform" in stealth_res.headers["cache-control"]
+        assert "stale-while-revalidate" in stealth_res.headers["cache-control"]
         assert "etag" in stealth_res.headers
         assert "server-timing" in stealth_res.headers
 

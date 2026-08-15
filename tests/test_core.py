@@ -97,3 +97,20 @@ def test_classify_human_open():
     assert result.event is not None
     assert result.event.city == "Paris"
     assert result.event.language is not None and "French" in result.event.language
+
+
+def test_hmac_token_signing_and_verification():
+    from core import extract_raw_token, sign_token, verify_signed_token
+
+    base_tok = "tok_enterprise_999"
+    signed = sign_token(base_tok)
+    assert signed.startswith(base_tok + ".")
+    assert verify_signed_token(signed) is True
+    assert extract_raw_token(signed) == base_tok
+
+    # Test tampering
+    tampered = signed[:-1] + ("0" if signed[-1] != "0" else "1")
+    assert verify_signed_token(tampered) is False
+
+    # Test unsigned legacy token graceful passthrough
+    assert verify_signed_token(base_tok) is True

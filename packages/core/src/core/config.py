@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     TELEGRAM_WEBHOOK_PATH: str = "/api/webhook/telegram"
     TELEGRAM_WEBHOOK_SECRET: Optional[str] = None
     API_KEY: Optional[str] = None
+    SECRET_KEY: str = "mailblinker-secure-token-salt"
     RATE_LIMIT_ENABLED: bool = True
     LOG_FILE: str = "logs/app.log"
     HOST: str = "0.0.0.0"

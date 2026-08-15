@@ -47,6 +47,18 @@ async def track_and_redirect_link(
     user_agent = request.headers.get("user-agent", "Unknown") if request else "Unknown"
     accept_language = request.headers.get("accept-language") if request else None
 
+    # Headless Browser Sandbox Trap (detects automated sandbox runners before 302 redirect)
+    ua_lower = user_agent.lower()
+    is_headless_sandbox = (
+        "headless" in ua_lower
+        or "phantomjs" in ua_lower
+        or "puppeteer" in ua_lower
+        or "playwright" in ua_lower
+        or (not accept_language and "linux" in ua_lower and "chrome" in ua_lower)
+    )
+    if is_headless_sandbox:
+        user_agent = f"{user_agent} [Headless Sandbox Probe]"
+
     dto = RecordOpenDTO(
         token=clean_token,
         open_time=open_time,

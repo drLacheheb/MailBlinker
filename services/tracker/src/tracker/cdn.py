@@ -10,7 +10,8 @@ def get_cdn_headers_for_token(token: str) -> Dict[str, str]:
 
     base_headers = {
         "Cache-Control": (
-            "no-cache, no-store, must-revalidate, max-age=0, private, proxy-revalidate"
+            "no-cache, no-store, must-revalidate, max-age=0, private, proxy-revalidate, "
+            "no-transform, stale-while-revalidate=0"
         ),
         "Pragma": "no-cache",
         "Expires": "0",
