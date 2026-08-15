@@ -158,6 +158,7 @@ async def test_dns_deliverability_inspector():
     assert hasattr(res_gmail, "null_mx_declared")
     assert hasattr(res_gmail, "caa_valid")
     assert hasattr(res_gmail, "dmarc_forensic_valid")
+    assert hasattr(res_gmail, "dnssec_valid")
 
 
 def test_headless_probe_telemetry():
@@ -385,3 +386,63 @@ def test_software_renderer_telemetry():
     )
     assert res.is_valid_open is True
     assert "[Software Renderer Sandbox]" in res.device_summary
+
+
+def test_high_velocity_forward_telemetry():
+    from core.domain.entities import OpenEventEntity
+    from core.telemetry.inspector import TelemetryInspector
+
+    inspector = TelemetryInspector()
+    sent_at = datetime(2026, 8, 15, 12, 0, 0, tzinfo=timezone.utc)
+    t1 = datetime(2026, 8, 15, 12, 1, 0, tzinfo=timezone.utc)
+    t2 = datetime(2026, 8, 15, 12, 2, 0, tzinfo=timezone.utc)
+    open_time = datetime(2026, 8, 15, 12, 3, 0, tzinfo=timezone.utc)
+
+    past = [
+        OpenEventEntity(
+            id=1,
+            email_id=17,
+            timestamp=t1,
+            ip_address="198.51.100.1",
+            country="US",
+            region="NY",
+            city="New York",
+            isp="Verizon",
+            device_model="Desktop",
+            os_name="Windows 11",
+            browser_name="Chrome 120",
+            language="en-US",
+            user_agent="UA1",
+            elapsed_seconds=60,
+        ),
+        OpenEventEntity(
+            id=2,
+            email_id=17,
+            timestamp=t2,
+            ip_address="198.51.100.2",
+            country="US",
+            region="CA",
+            city="San Francisco",
+            isp="Comcast",
+            device_model="Desktop",
+            os_name="macOS 14",
+            browser_name="Safari 17",
+            language="en-US",
+            user_agent="UA2",
+            elapsed_seconds=120,
+        ),
+    ]
+
+    res = inspector.inspect(
+        email_id=17,
+        sent_at=sent_at,
+        open_time=open_time,
+        ip_address="198.51.100.3",
+        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
+        accept_language="en-US,en;q=0.9",
+        past_events=past,
+        geo_data=("United States", "TX", "Austin", "AT&T"),
+    )
+    assert res.is_valid_open is True
+    assert res.forwarding_note is not None
+    assert "High-Velocity Team Forward" in res.forwarding_note

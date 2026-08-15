@@ -91,6 +91,9 @@ def detect_forwarding_clues(
         if ev.device_model:
             different_devices.add(ev.device_model)
 
+    if len(different_ips) >= 2 and current_ip and current_ip not in different_ips:
+        return f"⚡ High-Velocity Team Forward ({len(different_ips) + 1} distinct networks)"
+
     if (
         current_loc
         and different_locations

@@ -8,6 +8,7 @@ from .engine import (
 from .mime import (
     encode_mime_body,
     encode_rfc2047_header,
+    generate_arf_feedback_report,
     generate_autocrypt_headers,
     generate_enterprise_message_id,
     generate_feedback_id_headers,
@@ -45,6 +46,7 @@ __all__ = [
     "generate_feedback_id_headers",
     "generate_reply_thread_headers",
     "generate_internationalized_headers",
+    "generate_arf_feedback_report",
     "naturalize_text_entropy",
     "generate_unsubscribe_headers",
     "generate_rfc2369_headers",

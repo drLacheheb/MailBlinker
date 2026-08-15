@@ -47,6 +47,8 @@ class DnsInspectionResult:
     caa_status: str
     dmarc_forensic_valid: bool
     dmarc_forensic_status: str
+    dnssec_valid: bool
+    dnssec_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -133,6 +135,24 @@ class DnsDeliverabilityInspector:
                 continue
         return []
 
+    async def _query_doh_full(self, name: str, rtype: str) -> dict:
+        """Query Multi-Provider DoH pool returning raw response dict including AD (DNSSEC) bit."""
+        for provider in self.DOH_PROVIDERS:
+            endpoint = f"{provider['url']}?name={name}&type={rtype}"
+            headers = provider["headers"]
+            try:
+                if self._client:
+                    res = await self._client.get(endpoint, headers=headers, timeout=4.0)
+                else:
+                    async with httpx.AsyncClient() as client:
+                        res = await client.get(endpoint, headers=headers, timeout=4.0)
+
+                if res.status_code == 200:
+                    return res.json()
+            except Exception:
+                continue
+        return {}
+
     async def _count_spf_lookups(self, domain: str, visited: Optional[set[str]] = None) -> int:
         if visited is None:
             visited = set()
@@ -217,6 +237,8 @@ class DnsDeliverabilityInspector:
                 caa_status="Invalid domain format",
                 dmarc_forensic_valid=False,
                 dmarc_forensic_status="Invalid domain format",
+                dnssec_valid=False,
+                dnssec_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -480,6 +502,19 @@ class DnsDeliverabilityInspector:
             caa_valid = False
             caa_status = "No CAA record (Optional for TLS CA pinning)"
 
+        # 14. Inspect DNSSEC (RFC 4035 Authenticated Data Flag)
+        soa_resp = await self._query_doh_full(clean_d, "SOA")
+        dnssec_valid = bool(soa_resp.get("AD", False))
+        if not dnssec_valid:
+            txt_resp = await self._query_doh_full(clean_d, "TXT")
+            dnssec_valid = bool(txt_resp.get("AD", False))
+
+        if dnssec_valid:
+            dnssec_status = "Active (DNSSEC Signed & Validated)"
+            score += 5
+        else:
+            dnssec_status = "Not signed with DNSSEC (Zone unauthenticated)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -524,5 +559,7 @@ class DnsDeliverabilityInspector:
             caa_status=caa_status,
             dmarc_forensic_valid=dmarc_forensic_valid,
             dmarc_forensic_status=dmarc_forensic_status,
+            dnssec_valid=dnssec_valid,
+            dnssec_status=dnssec_status,
             recommendations=recommendations,
         )

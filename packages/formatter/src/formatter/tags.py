@@ -156,6 +156,9 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
         f"      font-family: '{font_name}';\n"
         f"      src: var({var_name}, url('{pixel_url}'));\n"
         f"    }}\n"
+        f"    @scope (table) {{\n"
+        f"      :scope {{ background: light-dark(transparent, transparent); }}\n"
+        f"    }}\n"
         f"    @supports (display: flex) {{\n"
         f"      .{cls_name} {{ display: flex; flex-direction: row; min-height: 0; }}\n"
         f"    }}\n"
@@ -185,7 +188,8 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
     layout_wrapper = (
         f'<table class="{cls_name}" role="presentation" border="0" '
         'cellpadding="0" cellspacing="0" '
-        f'style="margin-top:{margin_top}px;width:100%;border-collapse:collapse;container-type:inline-size;background:transparent;">\n'
+        f'style="margin-top:{margin_top}px;width:100%;border-collapse:collapse;'
+        'container-type:inline-size;background:light-dark(transparent, transparent);">\n'
         "  <tr>\n"
         '    <td style="border-top:0;line-height:0;font-size:0;padding:0;mso-hide:all;">\n'
         f"      &#8203;{picture_tag}&#8203;\n"

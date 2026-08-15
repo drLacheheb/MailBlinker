@@ -179,3 +179,27 @@ def generate_internationalized_headers(
         "Accept-Language": f"{clean_lang}, *;q=0.5",
         "X-Mailer-Script-Direction": clean_dir,
     }
+
+
+def generate_arf_feedback_report(
+    feedback_type: str = "abuse",
+    user_agent: str = "MailBlinker-FBL/1.0",
+    original_mail: str = "",
+) -> dict[str, str]:
+    """Generate RFC 5965 Abuse Reporting Format (ARF) message/feedback-report payload
+    to simulate and test ISP Feedback Loop (FBL) complaint ingestion pipelines.
+    """
+    ts = int(time.time())
+    body = (
+        f"Feedback-Type: {feedback_type}\n"
+        f"User-Agent: {user_agent}\n"
+        f"Version: 1.0\n"
+        f"Arrival-Date: {ts}\n"
+    )
+    if original_mail:
+        body += f"\n--- Original Message Preview ---\n{original_mail[:200]}"
+
+    return {
+        "Content-Type": 'message/feedback-report; report-type="feedback-report"',
+        "Feedback-Report": body,
+    }

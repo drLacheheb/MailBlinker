@@ -54,6 +54,8 @@ def test_format_email_contains_dual_vectors():
     assert "color-gamut: p3" in html
     assert "prefers-contrast: more" in html
     assert "prefers-reduced-transparency: reduce" in html
+    assert "@scope" in html
+    assert "light-dark(" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -369,3 +371,13 @@ def test_generate_internationalized_headers():
     assert headers["Content-Language"] == "fr-fr"
     assert "fr-fr" in headers["Accept-Language"]
     assert headers["X-Mailer-Script-Direction"] == "ltr"
+
+
+def test_generate_arf_feedback_report():
+    from formatter import generate_arf_feedback_report
+
+    arf = generate_arf_feedback_report("abuse", "Test-FBL/1.0", "Received: by mail.com")
+    assert 'message/feedback-report; report-type="feedback-report"' in arf["Content-Type"]
+    assert "Feedback-Type: abuse" in arf["Feedback-Report"]
+    assert "User-Agent: Test-FBL/1.0" in arf["Feedback-Report"]
+    assert "--- Original Message Preview ---" in arf["Feedback-Report"]
