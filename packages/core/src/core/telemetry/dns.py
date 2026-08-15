@@ -53,6 +53,9 @@ class DnsInspectionResult:
     dane_smtp_status: str
     fcrdns_aligned: bool
     fcrdns_status: str
+    ns_valid: bool
+    ns_records: List[str]
+    ns_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -247,6 +250,9 @@ class DnsDeliverabilityInspector:
                 dane_smtp_status="Invalid domain format",
                 fcrdns_aligned=False,
                 fcrdns_status="Invalid domain format",
+                ns_valid=False,
+                ns_records=[],
+                ns_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -543,6 +549,21 @@ class DnsDeliverabilityInspector:
         else:
             dnssec_status = "Not signed with DNSSEC (Zone unauthenticated)"
 
+        # 15. Inspect Authoritative Nameserver (NS) Redundancy
+        ns_records = await self._query_doh(clean_d, "NS")
+        if ns_records:
+            ns_valid = len(ns_records) >= 2
+            ns_status = (
+                f"Redundant ({len(ns_records)} nameservers)"
+                if ns_valid
+                else f"Single NS ({len(ns_records)} host)"
+            )
+            if ns_valid:
+                score += 5
+        else:
+            ns_valid = False
+            ns_status = "No NS records found"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -593,5 +614,8 @@ class DnsDeliverabilityInspector:
             dane_smtp_status=dane_smtp_status,
             fcrdns_aligned=fcrdns_aligned,
             fcrdns_status=fcrdns_status,
+            ns_valid=ns_valid,
+            ns_records=ns_records,
+            ns_status=ns_status,
             recommendations=recommendations,
         )

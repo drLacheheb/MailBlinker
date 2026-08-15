@@ -236,3 +236,31 @@ def decode_verp_address(verp_address: str) -> tuple[str, str]:
         return (original_rp, rcpt_email)
 
     return (f"{base_user}@{domain}", "")
+
+
+def generate_cid_asset_headers(
+    content_id: str,
+    content_type: str = "image/png",
+) -> dict[str, str]:
+    """Generate RFC 2046 MIME headers for inline CID (Content-ID) asset embedding
+    within multipart/related payloads to bypass external image blocking.
+    """
+    clean_cid = content_id.strip("<>").strip()
+    return {
+        "Content-Type": content_type,
+        "Content-ID": f"<{clean_cid}>",
+        "Content-Disposition": "inline",
+    }
+
+
+def generate_auto_submitted_headers(
+    mode: str = "auto-generated",
+) -> dict[str, str]:
+    """Generate RFC 3834 Auto-Submitted headers to prevent automated responder
+    and vacation out-of-office (OOO) bounce loops against tracking endpoints.
+    """
+    clean_mode = mode.strip().lower() or "auto-generated"
+    return {
+        "Auto-Submitted": clean_mode,
+        "X-Auto-Response-Suppress": "All",
+    }

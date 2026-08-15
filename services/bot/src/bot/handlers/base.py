@@ -107,6 +107,7 @@ async def cmd_check_domain(message: types.Message):
     dnssec_icon = "✅" if res.dnssec_valid else "ℹ️"
     fcrdns_icon = "✅" if res.fcrdns_aligned else "ℹ️"
     dane_smtp_icon = "✅" if res.dane_smtp_valid else "ℹ️"
+    ns_icon = "✅" if res.ns_valid else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -132,7 +133,8 @@ async def cmd_check_domain(message: types.Message):
         f"{crypto_icon} <b>S/MIME & OpenPGP:</b> {html.escape(res.crypto_discovery_status)}",
         f"{caa_icon} <b>CAA (TLS CA Pinning):</b> {html.escape(res.caa_status)}",
         f"{dmarc_fo_icon} <b>DMARC Forensic (ruf):</b> {html.escape(res.dmarc_forensic_status)}",
-        f"{dnssec_icon} <b>DNSSEC Zone Signing:</b> {html.escape(res.dnssec_status)}\n",
+        f"{dnssec_icon} <b>DNSSEC Zone Signing:</b> {html.escape(res.dnssec_status)}",
+        f"{ns_icon} <b>Nameservers (NS):</b> {html.escape(res.ns_status)}\n",
     ]
 
     if res.recommendations:

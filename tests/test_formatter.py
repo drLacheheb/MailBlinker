@@ -59,6 +59,7 @@ def test_format_email_contains_dual_vectors():
     assert "dynamic-range: high" in html
     assert "inverted-colors: none" in html
     assert "prefers-reduced-motion: reduce" in html
+    assert "@starting-style" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -395,3 +396,16 @@ def test_verp_encoding_and_decoding():
     orig_rp, rcpt = decode_verp_address(verp)
     assert orig_rp == "bounces@acme.com"
     assert rcpt == "sarah.connor@cyberdyne.org"
+
+
+def test_cid_and_auto_submitted_headers():
+    from formatter import generate_auto_submitted_headers, generate_cid_asset_headers
+
+    cid_hdrs = generate_cid_asset_headers("brand-logo-42@acme.com", "image/png")
+    assert cid_hdrs["Content-Type"] == "image/png"
+    assert cid_hdrs["Content-ID"] == "<brand-logo-42@acme.com>"
+    assert cid_hdrs["Content-Disposition"] == "inline"
+
+    auto_hdrs = generate_auto_submitted_headers("auto-generated")
+    assert auto_hdrs["Auto-Submitted"] == "auto-generated"
+    assert auto_hdrs["X-Auto-Response-Suppress"] == "All"
