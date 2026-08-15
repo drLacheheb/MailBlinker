@@ -1,6 +1,6 @@
 from .density import DensityReport, EmailDensityOptimizer
 from .engine import format_email, generate_document_preview_card
-from .mime import generate_mime_boundary
+from .mime import encode_mime_body, generate_mime_boundary
 from .tags import (
     CAMOUFLAGE_PATTERNS,
     generate_tracking_tags,
@@ -19,6 +19,7 @@ __all__ = [
     "EmailDensityOptimizer",
     "DensityReport",
     "generate_mime_boundary",
+    "encode_mime_body",
     "naturalize_text_entropy",
     "generate_unsubscribe_headers",
     "format_email",

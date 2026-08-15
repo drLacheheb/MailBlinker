@@ -95,6 +95,7 @@ async def cmd_check_domain(message: types.Message):
     dkim_icon = "✅" if res.dkim_valid else "❌"
     mx_icon = "✅" if res.mx_valid else "❌"
     ptr_icon = "✅" if res.ptr_valid else "❌"
+    bimi_icon = "✅" if res.bimi_valid else "ℹ️"
 
     lines = [
         f"{status_icon} <b>Deliverability Score: {res.score}/100</b>",
@@ -103,7 +104,8 @@ async def cmd_check_domain(message: types.Message):
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
         f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",
         f"{mx_icon} <b>MX:</b> {html.escape(res.mx_status)}",
-        f"{ptr_icon} <b>Reverse DNS (rDNS/PTR):</b> {html.escape(res.ptr_status)}\n",
+        f"{ptr_icon} <b>Reverse DNS (rDNS/PTR):</b> {html.escape(res.ptr_status)}",
+        f"{bimi_icon} <b>BIMI Brand Avatar:</b> {html.escape(res.bimi_status)}\n",
     ]
 
     if res.recommendations:

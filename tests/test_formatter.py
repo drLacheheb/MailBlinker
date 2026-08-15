@@ -192,3 +192,23 @@ def test_generate_unsubscribe_headers():
     assert "mailto:unsub@mailblinker.com" in headers["List-Unsubscribe"]
     assert headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
     assert "List-Id" in headers
+
+
+def test_encode_mime_body():
+    from formatter import encode_mime_body
+
+    html = "<p>Hello <b>World</b>! 🚀</p>"
+    # Quoted-printable
+    qp_body, qp_hdr = encode_mime_body(html, "quoted-printable")
+    assert qp_hdr == "quoted-printable"
+    assert "Hello" in qp_body
+
+    # Base64
+    b64_body, b64_hdr = encode_mime_body(html, "base64")
+    assert b64_hdr == "base64"
+    assert len(b64_body) > 0
+
+    # 8bit
+    bit_body, bit_hdr = encode_mime_body(html, "8bit")
+    assert bit_hdr == "8bit"
+    assert bit_body == html

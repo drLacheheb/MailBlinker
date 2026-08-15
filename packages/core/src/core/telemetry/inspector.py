@@ -270,6 +270,16 @@ class TelemetryInspector:
                 elapsed_seconds=elapsed_seconds,
             )
 
+        # Synthetic TLS / Headless Crawler anomaly check
+        if "[headless sandbox probe]" in ua_lower or "headlesschrome" in ua_lower:
+            return TelemetryInspectionResult(
+                is_valid_open=False,
+                event=None,
+                device_summary="Automated Sandbox Crawler (Headless TLS)",
+                forwarding_note=None,
+                elapsed_seconds=elapsed_seconds,
+            )
+
         device_raw = parsed_ua.device.family
         os_raw = parsed_ua.os.family
         os_ver = parsed_ua.os.version_string

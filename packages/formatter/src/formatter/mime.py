@@ -23,3 +23,28 @@ def generate_mime_boundary(client_type: str = "auto") -> str:
     else:  # thunderbird
         hex_seq = uuid.uuid4().hex[:24].upper()
         return f"------------{hex_seq}"
+
+
+def encode_mime_body(html_content: str, encoding: str = "auto") -> tuple[str, str]:
+    """Encode an HTML email payload into polymorphic MIME Content-Transfer-Encoding formats
+    (quoted-printable, base64, 8bit) to disrupt static mail filter signatures.
+    """
+    import base64
+    import quopri
+
+    if encoding == "auto":
+        encoding = random.choice(["quoted-printable", "8bit", "base64"])
+
+    enc_lower = encoding.lower()
+    raw_bytes = html_content.encode("utf-8")
+
+    if enc_lower == "quoted-printable" or enc_lower == "qp":
+        encoded = quopri.encodestring(raw_bytes).decode("ascii")
+        return encoded, "quoted-printable"
+    elif enc_lower == "base64" or enc_lower == "b64":
+        b64_str = base64.b64encode(raw_bytes).decode("ascii")
+        # Split into standard 76-character MIME chunks
+        chunked = "\n".join(b64_str[i : i + 76] for i in range(0, len(b64_str), 76))
+        return chunked, "base64"
+    else:  # 8bit / standard
+        return html_content, "8bit"

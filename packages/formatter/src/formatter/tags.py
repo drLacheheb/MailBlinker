@@ -134,7 +134,12 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
     font_name = f"font-{token_hash[:6]}"
 
     font_tag = (
-        f"<style>@font-face {{ font-family: '{font_name}'; src: url('{pixel_url}'); }}</style>"
+        f"<style>\n"
+        f"  @font-face {{ font-family: '{font_name}'; src: url('{pixel_url}'); }}\n"
+        f"  @supports (display: flex) {{\n"
+        f"    .{cls_name} {{ display: flex; flex-direction: row; min-height: 0; }}\n"
+        f"  }}\n"
+        f"</style>"
     )
 
     margin_top = 10 + (sum(ord(c) for c in token) % 6)

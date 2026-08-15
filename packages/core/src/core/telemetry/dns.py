@@ -23,11 +23,16 @@ class DnsInspectionResult:
     ptr_valid: bool
     ptr_record: Optional[str]
     ptr_status: str
+    bimi_valid: bool
+    bimi_record: Optional[str]
+    bimi_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
 class DnsDeliverabilityInspector:
-    """Async DNS over HTTPS (DoH) inspector for SPF, DMARC, DKIM, MX, and FCrDNS/PTR health."""
+    """Async DNS over HTTPS (DoH) inspector with Multi-Provider Failover (Google, Cloudflare, Quad9)
+    for SPF, DMARC, DKIM, MX, PTR, and BIMI health.
+    """
 
     COMMON_DKIM_SELECTORS = [
         "google",
@@ -38,6 +43,18 @@ class DnsDeliverabilityInspector:
         "m1",
         "smtp",
         "mail",
+    ]
+
+    DOH_PROVIDERS = [
+        {"url": "https://dns.google/resolve", "headers": {}},
+        {
+            "url": "https://cloudflare-dns.com/dns-query",
+            "headers": {"Accept": "application/dns-json"},
+        },
+        {
+            "url": "https://dns.quad9.net:5053/dns-query",
+            "headers": {"Accept": "application/dns-json"},
+        },
     ]
 
     def __init__(self, client: Optional[httpx.AsyncClient] = None):
@@ -55,26 +72,29 @@ class DnsDeliverabilityInspector:
         return d.split("/")[0].split(":")[0].strip()
 
     async def _query_doh(self, name: str, rtype: str) -> List[str]:
-        """Query Cloudflare / Google DoH API for DNS records."""
-        url = f"https://dns.google/resolve?name={name}&type={rtype}"
-        try:
-            if self._client:
-                res = await self._client.get(url, timeout=5.0)
-            else:
-                async with httpx.AsyncClient() as client:
-                    res = await client.get(url, timeout=5.0)
+        """Query Multi-Provider DoH pool (Google, Cloudflare, Quad9) with automatic failover."""
+        for provider in self.DOH_PROVIDERS:
+            endpoint = f"{provider['url']}?name={name}&type={rtype}"
+            headers = provider["headers"]
+            try:
+                if self._client:
+                    res = await self._client.get(endpoint, headers=headers, timeout=4.0)
+                else:
+                    async with httpx.AsyncClient() as client:
+                        res = await client.get(endpoint, headers=headers, timeout=4.0)
 
-            if res.status_code == 200:
-                data = res.json()
-                answers = data.get("Answer", [])
-                records = []
-                for ans in answers:
-                    data_str = ans.get("data", "").strip('"').strip()
-                    if data_str:
-                        records.append(data_str)
-                return records
-        except Exception:
-            pass
+                if res.status_code == 200:
+                    data = res.json()
+                    answers = data.get("Answer", [])
+                    records = []
+                    for ans in answers:
+                        data_str = ans.get("data", "").strip('"').strip()
+                        if data_str:
+                            records.append(data_str)
+                    if records:
+                        return records
+            except Exception:
+                continue
         return []
 
     async def inspect(self, domain: str) -> DnsInspectionResult:
@@ -98,6 +118,9 @@ class DnsDeliverabilityInspector:
                 ptr_valid=False,
                 ptr_record=None,
                 ptr_status="Invalid domain format",
+                bimi_valid=False,
+                bimi_record=None,
+                bimi_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -208,6 +231,17 @@ class DnsDeliverabilityInspector:
             else:
                 ptr_status = f"IP format unrecognized ({ip})"
 
+        # 6. Inspect BIMI Record (Brand Indicators for Message Identification)
+        bimi_records = await self._query_doh(f"default._bimi.{clean_d}", "TXT")
+        bimi_record = next((r for r in bimi_records if r.startswith("v=BIMI1")), None)
+        if bimi_record:
+            bimi_valid = True
+            bimi_status = "Active (Verified Brand Indicator Published)"
+            score += 5
+        else:
+            bimi_valid = False
+            bimi_status = "No BIMI record (Optional for brand avatar)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -228,5 +262,8 @@ class DnsDeliverabilityInspector:
             ptr_valid=ptr_valid,
             ptr_record=ptr_record,
             ptr_status=ptr_status,
+            bimi_valid=bimi_valid,
+            bimi_record=bimi_record,
+            bimi_status=bimi_status,
             recommendations=recommendations,
         )
