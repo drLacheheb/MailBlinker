@@ -6,12 +6,14 @@ from datetime import datetime, timezone
 from core import RecordOpenDTO, RecordOpenUseCase
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
+from ..cdn import get_cdn_headers_for_token
 from ..constants import (
     TRANSPARENT_1X1_GIF,
     TRANSPARENT_1X1_WEBP,
     build_dynamic_png,
 )
 from ..dependencies import get_record_open_use_case
+from ..throttle import token_burst_shield
 
 router = APIRouter()
 SAFE_TOKEN_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{8,64}$")
@@ -74,28 +76,19 @@ async def _handle_pixel_tracking(
     user_agent = request.headers.get("user-agent", "Unknown")
     accept_language = request.headers.get("accept-language")
 
-    dto = RecordOpenDTO(
-        token=clean_token,
-        open_time=open_time,
-        client_ip=client_ip,
-        user_agent=user_agent,
-        accept_language=accept_language,
-    )
-    await use_case.execute(dto)
+    # Anti-replay & burst rate limiting (protects against sandbox crawler storms)
+    if not token_burst_shield.is_bursting(clean_token):
+        dto = RecordOpenDTO(
+            token=clean_token,
+            open_time=open_time,
+            client_ip=client_ip,
+            user_agent=user_agent,
+            accept_language=accept_language,
+        )
+        await use_case.execute(dto)
 
-    cache_header = "no-cache, no-store, must-revalidate, max-age=0, private, proxy-revalidate"
-    etag_val = f'"{clean_token}"'
-    headers = {
-        "Server": "cloudflare",
-        "CF-Cache-Status": "DYNAMIC",
-        "CF-Ray": f"{clean_token[:16]}-FRA",
-        "Accept-Ranges": "bytes",
-        "Vary": "Accept-Encoding, Accept",
-        "Cache-Control": cache_header,
-        "Pragma": "no-cache",
-        "Expires": "0",
-        "ETag": etag_val,
-    }
+    headers = get_cdn_headers_for_token(clean_token)
+    etag_val = headers.get("ETag", f'"{clean_token}"')
 
     # Humanized CDN edge propagation micro-jitter (10-25ms)
     await asyncio.sleep(random.uniform(0.010, 0.025))
@@ -121,13 +114,10 @@ async def _handle_pixel_tracking(
 async def canary_honeypot_trap(filename: str, request: Request) -> Response:
     """Canary trap endpoint hit exclusively by automated email crawlers/bots."""
     clean_token, _, _ = _extract_token_and_format(filename, request.url.path)
+    headers = get_cdn_headers_for_token(clean_token)
     return Response(
         status_code=204,
-        headers={
-            "Server": "cloudflare",
-            "CF-Ray": f"{clean_token[:16]}-FRA",
-            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
-        },
+        headers=headers,
     )
 
 

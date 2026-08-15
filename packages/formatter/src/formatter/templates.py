@@ -3,7 +3,15 @@ GENERAL_EMAIL_TEMPLATE = """<!DOCTYPE html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>{{ payload.title }}</title>
+  <style>
+    :root { color-scheme: light dark; supported-color-schemes: light dark; }
+    @media (prefers-color-scheme: dark) {
+      .mb-tracker-table { background: transparent !important; }
+    }
+  </style>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #2d3748; padding: 16px;">
   <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px;">

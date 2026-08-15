@@ -118,3 +118,20 @@ def test_spoofed_mobile_ua_detection():
     )
     assert res.is_valid_open is False
     assert res.device_summary == "Automated Scraper (Spoofed UA)"
+
+
+@pytest.mark.asyncio
+async def test_dns_deliverability_inspector():
+    from core import DnsDeliverabilityInspector
+
+    inspector = DnsDeliverabilityInspector()
+    # Test invalid domain
+    res_invalid = await inspector.inspect("not-a-domain")
+    assert res_invalid.score == 0
+    assert res_invalid.spf_valid is False
+
+    # Test real domain DoH lookup
+    res_gmail = await inspector.inspect("gmail.com")
+    assert res_gmail.domain == "gmail.com"
+    assert res_gmail.score >= 50
+    assert res_gmail.mx_valid is True

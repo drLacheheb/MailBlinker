@@ -3,6 +3,7 @@ import html
 from aiogram import F, Router, types
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
+from core import DnsDeliverabilityInspector
 
 from ..keyboards import main_menu_keyboard
 
@@ -61,3 +62,50 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
         parse_mode="HTML",
         reply_markup=main_menu_keyboard(),
     )
+
+
+_dns_inspector = DnsDeliverabilityInspector()
+
+
+@router.message(Command("check_domain"))
+@router.message(Command("dns"))
+async def cmd_check_domain(message: types.Message):
+    args = message.text.split(maxsplit=1) if message.text else []
+    if len(args) < 2:
+        await message.answer(
+            "🔍 <b>DNS Deliverability Inspector</b>\n\n"
+            "Usage: <code>/check_domain &lt;domain_or_email&gt;</code>\n"
+            "Example: <code>/check_domain acme.com</code>\n\n"
+            "Checks SPF, DMARC, and MX records to calculate your email deliverability score.",
+            parse_mode="HTML",
+        )
+        return
+
+    target_domain = args[1].strip()
+    wait_msg = await message.answer(
+        f"🔍 Analyzing DNS authentication for <code>{html.escape(target_domain)}</code>...",
+        parse_mode="HTML",
+    )
+
+    res = await _dns_inspector.inspect(target_domain)
+
+    status_icon = "🟢" if res.score >= 80 else ("🟡" if res.score >= 50 else "🔴")
+    spf_icon = "✅" if res.spf_valid else "❌"
+    dmarc_icon = "✅" if res.dmarc_valid else "❌"
+    mx_icon = "✅" if res.mx_valid else "❌"
+
+    lines = [
+        f"{status_icon} <b>Deliverability Score: {res.score}/100</b>",
+        f"🌐 <b>Domain:</b> <code>{html.escape(res.domain)}</code>\n",
+        f"{spf_icon} <b>SPF:</b> {html.escape(res.spf_status)}",
+        f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
+        f"{mx_icon} <b>MX:</b> {html.escape(res.mx_status)}\n",
+    ]
+
+    if res.recommendations:
+        lines.append("💡 <b>Recommended Fixes:</b>")
+        for rec in res.recommendations:
+            lines.append(f"• {html.escape(rec)}")
+
+    report_text = "\n".join(lines)
+    await wait_msg.edit_text(report_text, parse_mode="HTML")

@@ -6,6 +6,7 @@ from core import RecordOpenDTO, RecordOpenUseCase
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 
+from ..cdn import get_cdn_headers_for_token
 from ..dependencies import get_record_open_use_case
 
 router = APIRouter()
@@ -53,9 +54,5 @@ async def track_and_redirect_link(
     )
     await use_case.execute(dto)
 
-    headers = {
-        "Server": "cloudflare",
-        "CF-Ray": f"{clean_token[:16]}-FRA",
-        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0, private",
-    }
+    headers = get_cdn_headers_for_token(clean_token)
     return RedirectResponse(url=dest, status_code=302, headers=headers)

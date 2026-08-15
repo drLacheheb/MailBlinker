@@ -90,13 +90,14 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
 
     margin_top = 10 + (sum(ord(c) for c in token) % 6)
     layout_wrapper = (
-        f'<table role="presentation" border="0" cellpadding="0" cellspacing="0" '
-        f'style="margin-top:{margin_top}px;width:100%;border-collapse:collapse;">\n'
+        f'<table class="mb-tracker-table" role="presentation" border="0" '
+        'cellpadding="0" cellspacing="0" '
+        f'style="margin-top:{margin_top}px;width:100%;border-collapse:collapse;background:transparent;">\n'
         "  <tr>\n"
         '    <td style="border-top:0;line-height:0;font-size:0;padding:0;mso-hide:all;">\n'
-        f"      {img_tag}\n"
-        f"      {div_tag}\n"
-        f"      {canary_link}\n"
+        f"      &#8203;{img_tag}&#8203;\n"
+        f"      {div_tag}&#8203;\n"
+        f"      {canary_link}&#8203;\n"
         "    </td>\n"
         "  </tr>\n"
         "</table>"

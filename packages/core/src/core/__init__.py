@@ -27,6 +27,8 @@ from .logger import JsonFormatter, TrackerLogger, get_logger
 from .telemetry import (
     KNOWN_PROXIES,
     KNOWN_SECURITY_BOTS,
+    DnsDeliverabilityInspector,
+    DnsInspectionResult,
     TelemetryInspectionResult,
     TelemetryInspector,
     detect_forwarding_clues,
@@ -64,6 +66,8 @@ __all__ = [
     "GeoIpResolverInterface",
     "TelemetryInspector",
     "TelemetryInspectionResult",
+    "DnsDeliverabilityInspector",
+    "DnsInspectionResult",
     "format_elapsed_time",
     "parse_accept_language",
     "detect_forwarding_clues",

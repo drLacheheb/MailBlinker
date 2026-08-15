@@ -33,9 +33,11 @@ def test_format_email_contains_dual_vectors():
     assert f'<img src="{stealth_url}"' in html
     assert 'role="presentation"' in html
     assert 'aria-hidden="true"' in html
-    assert '<table role="presentation"' in html
+    assert '<table class="mb-tracker-table" role="presentation"' in html
+    assert "&#8203;" in html
     assert "cdn/verify/chk_test_token_123" in html
     assert "<!-- cdn-asset-ref:" in html
+    assert 'color-scheme" content="light dark"' in html
     assert 'width="1"' not in html
     assert "display:none" not in html or 'style="display:none !important;' in html
     assert "mso-hide:all;" in html

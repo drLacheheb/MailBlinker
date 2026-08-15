@@ -39,9 +39,7 @@ async def test_tracker_api_flow():
         assert stealth_res.headers["content-type"] == "image/png"
         assert stealth_res.content.startswith(b"\x89PNG")
         assert len(stealth_res.content) > 50
-        assert stealth_res.headers["server"] == "cloudflare"
-        assert stealth_res.headers["cf-cache-status"] == "DYNAMIC"
-        assert "cf-ray" in stealth_res.headers
+        assert stealth_res.headers["server"].lower() in ("cloudflare", "cloudfront", "varnish")
         assert stealth_res.headers["accept-ranges"] == "bytes"
         assert "no-cache" in stealth_res.headers["cache-control"]
         assert "etag" in stealth_res.headers
@@ -126,7 +124,7 @@ async def test_tracker_api_flow():
         # 8. Test Honeypot Canary Trap
         canary_res = await ac.get(f"/cdn/verify/chk_{token}.png")
         assert canary_res.status_code == 204
-        assert canary_res.headers["server"] == "cloudflare"
+        assert canary_res.headers["server"].lower() in ("cloudflare", "cloudfront", "varnish")
 
         # 9. Test Semantic Link Click Tracking & Safe Redirection
         link_res = await ac.get(
@@ -135,7 +133,7 @@ async def test_tracker_api_flow():
         )
         assert link_res.status_code == 302
         assert link_res.headers["location"] == "https://example.com/proposal.pdf"
-        assert link_res.headers["server"] == "cloudflare"
+        assert link_res.headers["server"].lower() in ("cloudflare", "cloudfront", "varnish")
 
         # 10. Test Open Redirect Protection on Invalid Scheme
         bad_link_res = await ac.get(
@@ -143,3 +141,21 @@ async def test_tracker_api_flow():
             follow_redirects=False,
         )
         assert bad_link_res.status_code == 400
+
+        # 11. Test DNS Deliverability API Tool Endpoint
+        dns_res = await ac.get("/api/tools/dns-check?domain=gmail.com")
+        assert dns_res.status_code == 200
+        dns_data = dns_res.json()
+        assert dns_data["domain"] == "gmail.com"
+        assert dns_data["score"] >= 50
+        assert dns_data["mx_valid"] is True
+
+        # 12. Test Token Burst Throttle & Anti-Replay Shield
+        from tracker.throttle import TokenBurstShield
+
+        shield = TokenBurstShield(max_requests=3, window_seconds=5.0)
+        test_tok = "burst_token_xyz"
+        assert shield.is_bursting(test_tok) is False
+        assert shield.is_bursting(test_tok) is False
+        assert shield.is_bursting(test_tok) is False
+        assert shield.is_bursting(test_tok) is True
