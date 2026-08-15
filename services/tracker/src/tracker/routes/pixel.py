@@ -112,6 +112,27 @@ async def _handle_pixel_tracking(
     ):
         return Response(status_code=304, headers=headers)
 
+    # HEAD request support
+    if request.method == "HEAD":
+        return Response(status_code=200, headers=headers, media_type=media_type)
+
+    # HTTP 206 Partial Content (Range request support for CDN byte-serving emulation)
+    range_header = request.headers.get("range")
+    if range_header and range_header.startswith("bytes="):
+        try:
+            range_spec = range_header[6:].split("-")[0]
+            start = int(range_spec) if range_spec else 0
+            sliced = content[start:]
+            headers["Content-Range"] = f"bytes {start}-{len(content) - 1}/{len(content)}"
+            return Response(
+                content=sliced,
+                status_code=206,
+                media_type=media_type,
+                headers=headers,
+            )
+        except Exception:
+            pass
+
     return Response(
         content=content,
         media_type=media_type,
@@ -119,8 +140,8 @@ async def _handle_pixel_tracking(
     )
 
 
-@router.get("/cdn/verify/{filename}", include_in_schema=False)
-@router.get("/assets/check/{filename}", include_in_schema=False)
+@router.api_route("/cdn/verify/{filename}", methods=["GET", "HEAD"], include_in_schema=False)
+@router.api_route("/assets/check/{filename}", methods=["GET", "HEAD"], include_in_schema=False)
 async def canary_honeypot_trap(filename: str, request: Request) -> Response:
     """Canary trap endpoint hit exclusively by automated email crawlers/bots."""
     clean_token, _, _ = _extract_token_and_format(filename, request.url.path)
@@ -131,9 +152,9 @@ async def canary_honeypot_trap(filename: str, request: Request) -> Response:
     )
 
 
-@router.get("/assets/{category}/{filename}")
-@router.get("/cdn/{category}/{filename}")
-@router.get("/static/{category}/{filename}")
+@router.api_route("/assets/{category}/{filename}", methods=["GET", "HEAD"])
+@router.api_route("/cdn/{category}/{filename}", methods=["GET", "HEAD"])
+@router.api_route("/static/{category}/{filename}", methods=["GET", "HEAD"])
 async def track_stealth_pixel(
     category: str,
     filename: str,
@@ -143,8 +164,8 @@ async def track_stealth_pixel(
     return await _handle_pixel_tracking(filename, request, use_case)
 
 
-@router.get("/track/{token}")
-@router.get("/track/{token}.gif")
+@router.api_route("/track/{token}", methods=["GET", "HEAD"])
+@router.api_route("/track/{token}.gif", methods=["GET", "HEAD"])
 async def track_pixel_legacy(
     token: str,
     request: Request,

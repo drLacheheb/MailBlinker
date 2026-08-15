@@ -104,7 +104,7 @@ async def test_tracker_api_flow():
         assert target_email["open_count"] >= 1
         assert len(target_email["events"]) >= 1
 
-        health_res = await ac.get("/")
+        health_res = await ac.get("/health")
         assert health_res.status_code == 200
         assert health_res.json()["service"] == "MailBlinker API"
 
@@ -185,3 +185,32 @@ async def test_tracker_api_flow():
         assert cloaked_res.status_code == 302
         assert cloaked_res.headers["location"] == "https://example.com/confidential-demo"
         assert cloaked_res.headers["server"].lower() in ("cloudflare", "cloudfront", "varnish")
+
+        # 15. Test HEAD Request Method Emulation
+        head_res = await ac.head(f"/assets/signature/sig_{token}.png")
+        assert head_res.status_code == 200
+        assert len(head_res.content) == 0  # Empty body for HEAD requests
+
+        # 16. Test HTTP 206 Partial Content Range Slicing Emulation
+        range_res = await ac.get(
+            f"/assets/signature/sig_{token}.png",
+            headers={"Range": "bytes=0-15"},
+        )
+        assert range_res.status_code == 206
+        assert "bytes 0-" in range_res.headers["content-range"]
+
+        # 17. Test RFC 8058 One-Click List-Unsubscribe Endpoint
+        unsub_post = await ac.post(f"/unsub/{token}")
+        assert unsub_post.status_code == 200
+        assert unsub_post.json()["status"] == "unsubscribed"
+
+        # 18. Test Web Unsubscribe Confirmation Page
+        unsub_get = await ac.get(f"/unsub/{token}")
+        assert unsub_get.status_code == 200
+        assert "Unsubscribed Successfully" in unsub_get.text
+
+        # 19. Test CDN Edge Landing Portal Decoy
+        portal_res = await ac.get("/")
+        assert portal_res.status_code == 200
+        assert "CloudEdge" in portal_res.text
+        assert "Operational" in portal_res.text

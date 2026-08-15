@@ -11,6 +11,7 @@ from .tags import (
     wrap_link_for_tracking,
 )
 from .types import EmailLink, EmailPayload
+from .unsubscribe import generate_unsubscribe_headers
 
 __all__ = [
     "EmailPayload",
@@ -19,6 +20,7 @@ __all__ = [
     "DensityReport",
     "generate_mime_boundary",
     "naturalize_text_entropy",
+    "generate_unsubscribe_headers",
     "format_email",
     "generate_document_preview_card",
     "generate_tracking_tags",

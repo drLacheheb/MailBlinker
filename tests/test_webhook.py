@@ -11,7 +11,7 @@ async def test_webhook_endpoint():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         # Test health endpoints
-        for path in ["/", "/health", "/healthz"]:
+        for path in ["/health", "/healthz"]:
             res = await ac.get(path)
             assert res.status_code == 200
             assert res.json()["status"] == "healthy"

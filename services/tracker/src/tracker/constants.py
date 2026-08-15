@@ -53,8 +53,14 @@ TRANSPARENT_1X1_SVG = (
 
 
 def build_dynamic_svg(token: str) -> bytes:
-    """Generate a valid vector SVG graphic with embedded asset token metadata."""
+    """Generate an adaptive dark-mode vector SVG with embedded asset token metadata."""
     return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1" '
-        f'opacity="0.01"><!-- asset-id: {token} --></svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1">\n'
+        "  <style>\n"
+        "    :root { color-scheme: light dark; }\n"
+        "    @media (prefers-color-scheme: dark) { rect { fill: transparent !important; } }\n"
+        "  </style>\n"
+        f"  <!-- asset-id: {token} -->\n"
+        '  <rect width="1" height="1" fill="transparent" opacity="0.01" />\n'
+        "</svg>"
     ).encode("utf-8")

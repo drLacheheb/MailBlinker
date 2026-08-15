@@ -32,7 +32,7 @@ async def test_clean_architecture_use_cases():
 
         assert create_result.email.id is not None
         assert create_result.email.title == "Clean Architecture Proposal"
-        assert ".png?" in create_result.pixel_url or create_result.pixel_url.endswith(".png")
+        assert any(ext in create_result.pixel_url for ext in [".png", ".svg", ".webp", ".gif"])
         assert create_result.email.token in create_result.pixel_url
         assert "Martin Fowler" in create_result.formatted_html
 

@@ -176,3 +176,18 @@ def test_document_preview_card():
     assert "Q3_Financial_Audit.pdf" in card
     assert "PDF Document" in card
     assert "/cdn/go/" in card
+
+
+def test_generate_unsubscribe_headers():
+    from formatter import generate_unsubscribe_headers
+
+    headers = generate_unsubscribe_headers(
+        token="unsub_token_777",
+        base_url="https://mailblinker.com",
+        mailto="unsub@mailblinker.com",
+    )
+    assert "List-Unsubscribe" in headers
+    assert "<https://mailblinker.com/unsub/unsub_token_777>" in headers["List-Unsubscribe"]
+    assert "mailto:unsub@mailblinker.com" in headers["List-Unsubscribe"]
+    assert headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
+    assert "List-Id" in headers
