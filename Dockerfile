@@ -19,7 +19,7 @@ COPY pyproject.toml ./
 COPY packages/ ./packages/
 COPY services/ ./services/
 
-RUN uv sync --no-cache --compile-bytecode
+RUN uv sync --all-packages --no-cache --compile-bytecode
 
 COPY alembic.ini ./
 COPY alembic/ ./alembic/
