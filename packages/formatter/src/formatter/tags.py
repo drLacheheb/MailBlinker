@@ -1,4 +1,6 @@
+import base64
 import hashlib
+import json
 import urllib.parse
 
 CAMOUFLAGE_PATTERNS = [
@@ -10,6 +12,7 @@ CAMOUFLAGE_PATTERNS = [
     "cdn/assets/icon_{token}.png?res=hd",
     "assets/media/photo_{token}.png?q=90",
     "cdn/fonts/glyph_{token}.png?v=1.0",
+    "cdn/graphics/vector_{token}.svg?v=1.0",
 ]
 
 
@@ -27,6 +30,14 @@ def wrap_link_for_tracking(target_url: str, token: str, base_url: str) -> str:
     clean_base = base_url.rstrip("/")
     encoded_dest = urllib.parse.quote(target_url, safe="")
     return f"{clean_base}/l/{token}?dest={encoded_dest}"
+
+
+def wrap_link_cloaked(target_url: str, token: str, base_url: str) -> str:
+    """Wrap an outbound hyperlink with compact Base64URL payload obfuscation."""
+    clean_base = base_url.rstrip("/")
+    payload_json = json.dumps({"t": token, "u": target_url}, separators=(",", ":"))
+    encoded = base64.urlsafe_b64encode(payload_json.encode("utf-8")).decode("ascii").rstrip("=")
+    return f"{clean_base}/cdn/go/{encoded}"
 
 
 def _build_jittered_css(token: str, base_props: list[str]) -> str:

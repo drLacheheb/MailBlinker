@@ -53,4 +53,5 @@ class TrackedEmailEntity:
     open_count: int = 0
     notify_limit: Optional[int] = None
     notify_forwarding: bool = True
+    expires_at: Optional[datetime] = None
     events: List[OpenEventEntity] = field(default_factory=list)

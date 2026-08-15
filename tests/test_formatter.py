@@ -65,13 +65,13 @@ def test_inject_tracking_tags_into_custom_html():
 
 
 def test_camouflage_pool_patterns():
-    """Verify all 8 semantic camouflage patterns are realistic, salted, and diverse."""
-    assert len(CAMOUFLAGE_PATTERNS) == 8
+    """Verify all 9 semantic camouflage patterns are realistic, salted, and diverse."""
+    assert len(CAMOUFLAGE_PATTERNS) == 9
     token = "tok_sample_999"
     base_url = "https://cdn.domain.com"
     stealth_url = get_stealth_pixel_url(token, base_url)
     assert stealth_url.startswith("https://cdn.domain.com/")
-    assert ".png?" in stealth_url or stealth_url.endswith(".png")
+    assert ".png?" in stealth_url or stealth_url.endswith(".png") or ".svg?" in stealth_url
     assert token in stealth_url
 
 
@@ -99,3 +99,16 @@ def test_polymorphic_body_checksum_uniqueness():
     hash1 = hashlib.sha256(html1.encode("utf-8")).hexdigest()
     hash2 = hashlib.sha256(html2.encode("utf-8")).hexdigest()
     assert hash1 != hash2
+
+
+def test_wrap_link_cloaked():
+    from formatter import wrap_link_cloaked
+
+    cloaked_url = wrap_link_cloaked(
+        target_url="https://acme.com/contracts/NDA.pdf",
+        token="token_sec_999",
+        base_url="https://mailblinker.com",
+    )
+    assert cloaked_url.startswith("https://mailblinker.com/cdn/go/")
+    assert "token_sec_999" not in cloaked_url  # Cloaked in base64
+    assert "contracts/NDA.pdf" not in cloaked_url

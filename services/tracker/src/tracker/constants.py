@@ -44,3 +44,17 @@ def build_dynamic_png(token: str) -> bytes:
     iend_chunk = _make_png_chunk(b"IEND", b"")
 
     return header + ihdr_chunk + text_chunk + idat_chunk + iend_chunk
+
+
+TRANSPARENT_1X1_SVG = (
+    b'<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" '
+    b'viewBox="0 0 1 1" opacity="0.01"></svg>'
+)
+
+
+def build_dynamic_svg(token: str) -> bytes:
+    """Generate a valid vector SVG graphic with embedded asset token metadata."""
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1" '
+        f'opacity="0.01"><!-- asset-id: {token} --></svg>'
+    ).encode("utf-8")

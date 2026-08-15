@@ -45,6 +45,7 @@ class SqlAlchemyEmailRepository(EmailRepositoryInterface):
             open_count=email.open_count,
             notify_limit=notify_limit,
             notify_forwarding=notify_forwarding,
+            expires_at=email.expires_at,
         )
         self._session.add(model)
         await self._session.commit()

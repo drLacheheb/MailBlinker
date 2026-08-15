@@ -59,3 +59,47 @@ async def test_clean_architecture_use_cases():
 
         not_found = await repo.get_by_id(create_result.email.id)
         assert not_found is None
+
+
+@pytest.mark.asyncio
+async def test_ephemeral_token_ttl_lifecycle():
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        repo = SqlAlchemyEmailRepository(session)
+        create_uc = CreateEmailUseCase(repository=repo)
+        # Create with 30-day TTL
+        dto = CreateEmailDTO(
+            title="Time-Limited Proposal",
+            recipient_email="client@example.com",
+            ttl_days=30,
+        )
+        result = await create_uc.execute(dto)
+        assert result.email.expires_at is not None
+
+        # 1. Valid open before expiration
+        from datetime import timedelta
+
+        record_uc = RecordOpenUseCase(repository=repo)
+        valid_open_time = result.email.created_at + timedelta(seconds=5)
+        valid_open = await record_uc.execute(
+            RecordOpenDTO(
+                token=result.email.token,
+                open_time=valid_open_time,
+                client_ip="127.0.0.1",
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+            )
+        )
+        assert valid_open.is_recorded is True
+
+        # 2. Expired open after expiration
+        expired_time = result.email.expires_at + timedelta(days=5)
+        expired_open = await record_uc.execute(
+            RecordOpenDTO(
+                token=result.email.token,
+                open_time=expired_time,
+                client_ip="127.0.0.1",
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+            )
+        )
+        assert expired_open.is_recorded is False

@@ -106,6 +106,11 @@ class TrackedEmailModel(Base):
     open_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     notify_limit: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=None)
     notify_forwarding: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        default=None,
+    )
 
     user: Mapped[Optional["UserModel"]] = relationship("UserModel", back_populates="emails")
 
@@ -137,6 +142,7 @@ class TrackedEmailModel(Base):
             open_count=self.open_count,
             notify_limit=self.notify_limit,
             notify_forwarding=self.notify_forwarding,
+            expires_at=self.expires_at,
             events=events_entities,
         )
 

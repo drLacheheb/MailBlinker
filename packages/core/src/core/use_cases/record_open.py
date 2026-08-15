@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from ..domain.entities import TrackedEmailEntity
@@ -44,6 +44,17 @@ class RecordOpenUseCase:
         email = await self._repository.get_by_token(dto.token)
         if not email:
             return RecordOpenResult(email=None, inspection=None, is_recorded=False)
+
+        # Check if email tracking token has expired
+        if email.expires_at:
+            exp = email.expires_at
+            if exp.tzinfo is None:
+                exp = exp.replace(tzinfo=timezone.utc)
+            open_t = dto.open_time
+            if open_t.tzinfo is None:
+                open_t = open_t.replace(tzinfo=timezone.utc)
+            if open_t > exp:
+                return RecordOpenResult(email=email, inspection=None, is_recorded=False)
 
         geo_data = (
             await self._geoip_resolver.resolve(dto.client_ip)

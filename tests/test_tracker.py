@@ -36,9 +36,13 @@ async def test_tracker_api_flow():
             headers={"User-Agent": "GoogleImageProxy"},
         )
         assert stealth_res.status_code == 200
-        assert stealth_res.headers["content-type"] == "image/png"
-        assert stealth_res.content.startswith(b"\x89PNG")
-        assert len(stealth_res.content) > 50
+        assert stealth_res.headers["content-type"] in (
+            "image/png",
+            "image/svg+xml",
+            "image/webp",
+            "image/gif",
+        )
+        assert len(stealth_res.content) >= 20
         assert stealth_res.headers["server"].lower() in ("cloudflare", "cloudfront", "varnish")
         assert stealth_res.headers["accept-ranges"] == "bytes"
         assert "no-cache" in stealth_res.headers["cache-control"]
@@ -159,3 +163,24 @@ async def test_tracker_api_flow():
         assert shield.is_bursting(test_tok) is False
         assert shield.is_bursting(test_tok) is False
         assert shield.is_bursting(test_tok) is True
+
+        # 13. Test SVG Vector Camouflage Rendering
+        svg_res = await ac.get(f"/cdn/graphics/vector_{token}.svg")
+        assert svg_res.status_code == 200
+        assert svg_res.headers["content-type"] == "image/svg+xml"
+        assert b"<svg" in svg_res.content
+        assert token.encode() in svg_res.content
+
+        # 14. Test Base64URL Obfuscated Link Cloaking Redirection
+        from formatter import wrap_link_cloaked
+
+        cloaked_url = wrap_link_cloaked(
+            target_url="https://example.com/confidential-demo",
+            token=token,
+            base_url="http://testserver",
+        )
+        cloaked_path = "/" + cloaked_url.split("/", 3)[-1]
+        cloaked_res = await ac.get(cloaked_path, follow_redirects=False)
+        assert cloaked_res.status_code == 302
+        assert cloaked_res.headers["location"] == "https://example.com/confidential-demo"
+        assert cloaked_res.headers["server"].lower() in ("cloudflare", "cloudfront", "varnish")

@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from formatter import (
@@ -27,6 +27,7 @@ class CreateEmailDTO:
     custom_html: Optional[str] = None
     links: Optional[List[EmailLink]] = None
     telegram_chat_id: Optional[str] = None
+    ttl_days: Optional[int] = None
 
 
 @dataclass
@@ -43,6 +44,8 @@ class CreateEmailUseCase:
 
     async def execute(self, dto: CreateEmailDTO) -> CreateEmailResult:
         token = uuid.uuid4().hex[:12]
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(days=dto.ttl_days) if dto.ttl_days else None
 
         email_entity = TrackedEmailEntity(
             id=None,
@@ -52,7 +55,8 @@ class CreateEmailUseCase:
             recipient_name=dto.recipient_name,
             subject=dto.subject or dto.title,
             telegram_chat_id=dto.telegram_chat_id,
-            created_at=datetime.now(timezone.utc),
+            created_at=now,
+            expires_at=expires_at,
         )
         saved_email = await self._repository.create(email_entity)
 

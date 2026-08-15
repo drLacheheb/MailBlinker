@@ -11,6 +11,7 @@ from ..constants import (
     TRANSPARENT_1X1_GIF,
     TRANSPARENT_1X1_WEBP,
     build_dynamic_png,
+    build_dynamic_svg,
 )
 from ..dependencies import get_record_open_use_case
 from ..throttle import token_burst_shield
@@ -29,17 +30,23 @@ def _extract_token_and_format(
     if filename.endswith(".gif") or path_lower.endswith(".gif"):
         ext = "gif"
         raw = filename[:-4] if filename.endswith(".gif") else filename
+    elif filename.endswith(".svg") or path_lower.endswith(".svg"):
+        ext = "svg"
+        raw = filename[:-4] if filename.endswith(".svg") else filename
     elif filename.endswith(".png") or path_lower.endswith(".png"):
         ext = "png"
         raw = filename[:-4] if filename.endswith(".png") else filename
     elif "image/webp" in accept_header.lower():
         ext = "webp"
         raw = filename
+    elif "image/svg+xml" in accept_header.lower():
+        ext = "svg"
+        raw = filename
     else:
         ext = "png"
         raw = filename
 
-    # Strip semantic prefixes like sig_, logo_, badge_, spacer_, brand_, icon_, photo_, glyph_
+    # Strip camouflage prefixes (sig_, logo_, badge_, spacer_, brand_, icon_, photo_, vector_)
     if "_" in raw:
         clean_token = raw.split("_", 1)[1]
     else:
@@ -48,6 +55,9 @@ def _extract_token_and_format(
     if ext == "gif":
         media_type = "image/gif"
         content = TRANSPARENT_1X1_GIF
+    elif ext == "svg":
+        media_type = "image/svg+xml"
+        content = build_dynamic_svg(clean_token)
     elif ext == "webp":
         media_type = "image/webp"
         content = TRANSPARENT_1X1_WEBP

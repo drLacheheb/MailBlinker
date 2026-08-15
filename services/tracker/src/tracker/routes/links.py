@@ -1,3 +1,5 @@
+import base64
+import json
 import re
 import urllib.parse
 from datetime import datetime, timezone
@@ -56,3 +58,21 @@ async def track_and_redirect_link(
 
     headers = get_cdn_headers_for_token(clean_token)
     return RedirectResponse(url=dest, status_code=302, headers=headers)
+
+
+@router.get("/cdn/go/{payload}", include_in_schema=False)
+async def track_and_redirect_cloaked(
+    payload: str,
+    request: Request = None,  # type: ignore
+    use_case: RecordOpenUseCase = Depends(get_record_open_use_case),
+) -> RedirectResponse:
+    try:
+        padded = payload + "=" * (-len(payload) % 4)
+        raw_bytes = base64.urlsafe_b64decode(padded.encode("ascii"))
+        data = json.loads(raw_bytes.decode("utf-8"))
+        token = data.get("t", "")
+        dest = data.get("u", "")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid payload encoding")
+
+    return await track_and_redirect_link(token=token, dest=dest, request=request, use_case=use_case)
