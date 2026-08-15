@@ -46,7 +46,13 @@ async def run_bot_polling(stop_event: asyncio.Event):
     dp = Dispatcher()
     dp.include_router(bot_router)
 
-    logger.success("Telegram Bot polling started (local development mode)")
+    try:
+        from bot.profile import setup_bot_profile
+        await setup_bot_profile(bot)
+    except Exception as e:
+        logger.warning(f"Could not sync profile during polling startup: {e}")
+
+    logger.success("Telegram Bot polling started")
     bot_task = asyncio.create_task(dp.start_polling(bot))
 
     stop_waiter = asyncio.create_task(stop_event.wait())
