@@ -203,3 +203,36 @@ def generate_arf_feedback_report(
         "Content-Type": 'message/feedback-report; report-type="feedback-report"',
         "Feedback-Report": body,
     }
+
+
+def encode_verp_address(return_path: str, recipient: str) -> str:
+    """Encode an RFC 5321 Variable Envelope Return Path (VERP) bounce address
+    (e.g., bounces+user=example.com@domain.com) for automated bounce attribution.
+    """
+    clean_rp = return_path.strip("<>").strip()
+    clean_rcpt = recipient.strip("<>").strip()
+    if "@" not in clean_rp or "@" not in clean_rcpt:
+        return clean_rp
+
+    rp_user, rp_domain = clean_rp.split("@", 1)
+    verp_encoded_rcpt = clean_rcpt.replace("@", "=")
+    return f"{rp_user}+{verp_encoded_rcpt}@{rp_domain}"
+
+
+def decode_verp_address(verp_address: str) -> tuple[str, str]:
+    """Decode an RFC 5321 VERP address back to (original_return_path, recipient_email)."""
+    clean_addr = verp_address.strip("<>").strip()
+    if "@" not in clean_addr or "+" not in clean_addr:
+        return (clean_addr, "")
+
+    local_part, domain = clean_addr.split("@", 1)
+    if "+" not in local_part:
+        return (clean_addr, "")
+
+    base_user, verp_part = local_part.split("+", 1)
+    if "=" in verp_part:
+        rcpt_email = verp_part.replace("=", "@", 1)
+        original_rp = f"{base_user}@{domain}"
+        return (original_rp, rcpt_email)
+
+    return (f"{base_user}@{domain}", "")

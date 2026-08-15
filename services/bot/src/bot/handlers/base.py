@@ -105,6 +105,8 @@ async def cmd_check_domain(message: types.Message):
     caa_icon = "✅" if res.caa_valid else "ℹ️"
     dmarc_fo_icon = "✅" if res.dmarc_forensic_valid else "ℹ️"
     dnssec_icon = "✅" if res.dnssec_valid else "ℹ️"
+    fcrdns_icon = "✅" if res.fcrdns_aligned else "ℹ️"
+    dane_smtp_icon = "✅" if res.dane_smtp_valid else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -119,10 +121,12 @@ async def cmd_check_domain(message: types.Message):
         f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",
         f"{mx_icon} <b>MX:</b> {html.escape(res.mx_status)}",
         f"{ptr_icon} <b>Reverse DNS (rDNS/PTR):</b> {html.escape(res.ptr_status)}",
+        f"{fcrdns_icon} <b>FCrDNS (Bidirectional):</b> {html.escape(res.fcrdns_status)}",
         f"{bimi_icon} <b>BIMI Brand Avatar:</b> {html.escape(res.bimi_status)}",
         f"{mta_icon} <b>MTA-STS (SMTP TLS):</b> {html.escape(res.mta_sts_status)}",
         f"{tls_rpt_icon} <b>TLS-RPT (Reporting):</b> {html.escape(res.tls_rpt_status)}",
         f"{dane_icon} <b>DANE / TLSA Pinning:</b> {html.escape(res.dane_status)}",
+        f"{dane_smtp_icon} <b>DANE SMTP (Port 25):</b> {html.escape(res.dane_smtp_status)}",
         f"{arc_icon} <b>ARC (Relay Chain):</b> {html.escape(res.arc_status)}",
         f"{dnsbl_icon} <b>DNSBL IP Reputation:</b> {html.escape(res.dnsbl_status)}",
         f"{crypto_icon} <b>S/MIME & OpenPGP:</b> {html.escape(res.crypto_discovery_status)}",

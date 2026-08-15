@@ -6,8 +6,10 @@ from .engine import (
     generate_plaintext_mirror,
 )
 from .mime import (
+    decode_verp_address,
     encode_mime_body,
     encode_rfc2047_header,
+    encode_verp_address,
     generate_arf_feedback_report,
     generate_autocrypt_headers,
     generate_enterprise_message_id,
@@ -40,6 +42,8 @@ __all__ = [
     "generate_mime_boundary",
     "encode_mime_body",
     "encode_rfc2047_header",
+    "encode_verp_address",
+    "decode_verp_address",
     "generate_autocrypt_headers",
     "generate_enterprise_message_id",
     "generate_rfc2822_date",

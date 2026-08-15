@@ -56,6 +56,9 @@ def test_format_email_contains_dual_vectors():
     assert "prefers-reduced-transparency: reduce" in html
     assert "@scope" in html
     assert "light-dark(" in html
+    assert "dynamic-range: high" in html
+    assert "inverted-colors: none" in html
+    assert "prefers-reduced-motion: reduce" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -381,3 +384,14 @@ def test_generate_arf_feedback_report():
     assert "Feedback-Type: abuse" in arf["Feedback-Report"]
     assert "User-Agent: Test-FBL/1.0" in arf["Feedback-Report"]
     assert "--- Original Message Preview ---" in arf["Feedback-Report"]
+
+
+def test_verp_encoding_and_decoding():
+    from formatter import decode_verp_address, encode_verp_address
+
+    verp = encode_verp_address("bounces@acme.com", "sarah.connor@cyberdyne.org")
+    assert verp == "bounces+sarah.connor=cyberdyne.org@acme.com"
+
+    orig_rp, rcpt = decode_verp_address(verp)
+    assert orig_rp == "bounces@acme.com"
+    assert rcpt == "sarah.connor@cyberdyne.org"

@@ -49,6 +49,10 @@ class DnsInspectionResult:
     dmarc_forensic_status: str
     dnssec_valid: bool
     dnssec_status: str
+    dane_smtp_valid: bool
+    dane_smtp_status: str
+    fcrdns_aligned: bool
+    fcrdns_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -239,6 +243,10 @@ class DnsDeliverabilityInspector:
                 dmarc_forensic_status="Invalid domain format",
                 dnssec_valid=False,
                 dnssec_status="Invalid domain format",
+                dane_smtp_valid=False,
+                dane_smtp_status="Invalid domain format",
+                fcrdns_aligned=False,
+                fcrdns_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -364,6 +372,8 @@ class DnsDeliverabilityInspector:
         ptr_valid = False
         ptr_record = None
         ptr_status = "No A records found"
+        fcrdns_aligned = False
+        fcrdns_status = "No A records found"
         if a_records:
             ip = a_records[0]
             octets = ip.split(".")
@@ -375,10 +385,23 @@ class DnsDeliverabilityInspector:
                     ptr_record = ptr_records[0].rstrip(".")
                     ptr_status = f"Configured ({ptr_record})"
                     score += 5
+
+                    fwd_a = await self._query_doh(ptr_record, "A")
+                    if ip in fwd_a:
+                        fcrdns_aligned = True
+                        fcrdns_status = f"Verified (100% bidirectional match: {ip} ↔ {ptr_record})"
+                        score += 5
+                    else:
+                        fcrdns_aligned = False
+                        fcrdns_status = (
+                            f"Mismatch (PTR {ptr_record} resolves to {fwd_a} vs IP {ip})"
+                        )
                 else:
                     ptr_status = f"No PTR for {ip}"
+                    fcrdns_status = f"No PTR for {ip}"
             else:
                 ptr_status = f"IP format unrecognized ({ip})"
+                fcrdns_status = f"IP format unrecognized ({ip})"
 
         # 6. Inspect BIMI Record (Brand Indicators for Message Identification)
         bimi_records = await self._query_doh(f"default._bimi.{clean_d}", "TXT")
@@ -416,6 +439,8 @@ class DnsDeliverabilityInspector:
         # 9. Inspect DANE / TLSA (RFC 6698 / RFC 7672 SMTP Certificate Pinning)
         dane_valid = False
         dane_record = None
+        dane_smtp_valid = False
+        dane_smtp_status = "No DANE SMTP TLSA record"
         tlsa_host = f"_25._tcp.{clean_d}"
         if mx_records:
             first_mx = mx_records[0].split()[-1].rstrip(".")
@@ -424,11 +449,14 @@ class DnsDeliverabilityInspector:
         tlsa_records = await self._query_doh(tlsa_host, "TLSA")
         if tlsa_records:
             dane_valid = True
+            dane_smtp_valid = True
             dane_record = tlsa_records[0]
             dane_status = f"Active ({dane_record[:20]}...)"
+            dane_smtp_status = f"Enforced on {tlsa_host}"
             score += 5
         else:
             dane_status = "No DANE TLSA record (Optional for high-security pinning)"
+            dane_smtp_status = "No RFC 7672 DANE TLSA pinned on port 25"
 
         # 10. Inspect ARC (RFC 8617 Authenticated Received Chain)
         arc_found: List[str] = []
@@ -561,5 +589,9 @@ class DnsDeliverabilityInspector:
             dmarc_forensic_status=dmarc_forensic_status,
             dnssec_valid=dnssec_valid,
             dnssec_status=dnssec_status,
+            dane_smtp_valid=dane_smtp_valid,
+            dane_smtp_status=dane_smtp_status,
+            fcrdns_aligned=fcrdns_aligned,
+            fcrdns_status=fcrdns_status,
             recommendations=recommendations,
         )
