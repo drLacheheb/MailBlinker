@@ -1,3 +1,6 @@
+import hashlib
+import urllib.parse
+
 CAMOUFLAGE_PATTERNS = [
     "assets/signature/sig_{token}.png?v=1.2",
     "cdn/media/logo_{token}.png?res=2x",
@@ -19,6 +22,13 @@ def get_stealth_pixel_url(token: str, base_url: str) -> str:
     return f"{clean_base}/{relative_path}"
 
 
+def wrap_link_for_tracking(target_url: str, token: str, base_url: str) -> str:
+    """Wrap an outbound hyperlink for semantic click-through tracking."""
+    clean_base = base_url.rstrip("/")
+    encoded_dest = urllib.parse.quote(target_url, safe="")
+    return f"{clean_base}/l/{token}?dest={encoded_dest}"
+
+
 def _build_jittered_css(token: str, base_props: list[str]) -> str:
     """Deterministically permute CSS properties based on token to defeat NLP pattern matching."""
     seed = sum(ord(c) * (i + 1) for i, c in enumerate(token))
@@ -30,8 +40,10 @@ def _build_jittered_css(token: str, base_props: list[str]) -> str:
 
 
 def generate_tracking_tags(token: str, base_url: str) -> str:
-    """Generate multi-vector stealth tracking tags embedded in a semantic presentation table."""
+    """Generate multi-vector stealth tracking tags with canary trap and polymorphic padding."""
+    clean_base = base_url.rstrip("/")
     pixel_url = get_stealth_pixel_url(token, base_url)
+    canary_url = f"{clean_base}/cdn/verify/chk_{token}.png"
 
     img_props = [
         "width:0",
@@ -67,6 +79,13 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
     ]
     div_style = _build_jittered_css(token + "_div", div_props)
     div_tag = f'<div style="{div_style}"></div>'
+
+    canary_link = (
+        f'<a href="{canary_url}" rel="nofollow" tabindex="-1" aria-hidden="true" '
+        'style="display:none !important;width:0;height:0;font-size:0;line-height:0;'
+        'opacity:0;pointer-events:none;visibility:hidden;mso-hide:all;"></a>'
+    )
+
     font_tag = f"<style>@font-face {{ font-family: 'mb-glyph'; src: url('{pixel_url}'); }}</style>"
 
     margin_top = 10 + (sum(ord(c) for c in token) % 6)
@@ -77,12 +96,18 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
         '    <td style="border-top:0;line-height:0;font-size:0;padding:0;mso-hide:all;">\n'
         f"      {img_tag}\n"
         f"      {div_tag}\n"
+        f"      {canary_link}\n"
         "    </td>\n"
         "  </tr>\n"
         "</table>"
     )
 
-    return f"{layout_wrapper}\n{font_tag}"
+    # Polymorphic comment padding for unique email body cryptographic checksum
+    asset_ref = hashlib.sha256((token + "_cdn_salt").encode()).hexdigest()[:16]
+    build_num = (sum(ord(c) for c in token) % 9) + 1
+    comment_tag = f"<!-- cdn-asset-ref: {asset_ref} | build-id: 2026.08.15-v{build_num} -->"
+
+    return f"{layout_wrapper}\n{font_tag}\n{comment_tag}"
 
 
 def inject_tracking_tags(raw_content: str, token: str, base_url: str) -> str:

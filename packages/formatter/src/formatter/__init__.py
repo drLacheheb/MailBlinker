@@ -4,6 +4,7 @@ from .tags import (
     generate_tracking_tags,
     get_stealth_pixel_url,
     inject_tracking_tags,
+    wrap_link_for_tracking,
 )
 from .types import EmailLink, EmailPayload
 
@@ -14,5 +15,6 @@ __all__ = [
     "generate_tracking_tags",
     "inject_tracking_tags",
     "get_stealth_pixel_url",
+    "wrap_link_for_tracking",
     "CAMOUFLAGE_PATTERNS",
 ]

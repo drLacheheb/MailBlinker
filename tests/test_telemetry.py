@@ -96,3 +96,25 @@ def test_apple_mail_privacy_protection_detection():
     )
     assert res2.is_valid_open is True
     assert "Apple Mail" in res2.device_summary
+
+
+def test_spoofed_mobile_ua_detection():
+    from core.telemetry.inspector import TelemetryInspector
+
+    inspector = TelemetryInspector()
+    now = datetime.now(timezone.utc)
+    sent_at = datetime.fromtimestamp(now.timestamp() - 60, tz=timezone.utc)
+
+    # Spoofed iPhone UA coming from AWS datacenter without language header
+    res = inspector.inspect(
+        email_id=3,
+        sent_at=sent_at,
+        open_time=now,
+        ip_address="54.210.1.1",
+        user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+        accept_language=None,
+        past_events=[],
+        geo_data=("United States", "Virginia", "Ashburn", "Amazon.com, Inc. (AWS)"),
+    )
+    assert res.is_valid_open is False
+    assert res.device_summary == "Automated Scraper (Spoofed UA)"

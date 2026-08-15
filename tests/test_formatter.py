@@ -29,13 +29,15 @@ def test_format_email_contains_dual_vectors():
     assert "Project Proposal" in html
     assert "Sarah" in html
     assert "Alex Dupont" in html
-    assert "https://example.com/spec.pdf" in html
+    assert "dest=https%3A%2F%2Fexample.com%2Fspec.pdf" in html
     assert f'<img src="{stealth_url}"' in html
     assert 'role="presentation"' in html
     assert 'aria-hidden="true"' in html
     assert '<table role="presentation"' in html
+    assert "cdn/verify/chk_test_token_123" in html
+    assert "<!-- cdn-asset-ref:" in html
     assert 'width="1"' not in html
-    assert "display:none" not in html
+    assert "display:none" not in html or 'style="display:none !important;' in html
     assert "mso-hide:all;" in html
     assert f"background-image: url('{stealth_url}');" in html
     assert (
@@ -55,6 +57,8 @@ def test_inject_tracking_tags_into_custom_html():
     assert f'<img src="{stealth_url}"' in result
     assert f"background-image: url('{stealth_url}');" in result
     assert "@font-face" in result
+    assert "cdn/verify/chk_custom_tok_456" in result
+    assert "<!-- cdn-asset-ref:" in result
     assert result.endswith("</body></html>")
 
 
@@ -76,3 +80,20 @@ def test_css_property_jitter_uniqueness():
     assert tags1 != tags2
     assert "opacity:0.01" in tags1 and "opacity:0.01" in tags2
     assert "pointer-events:none" in tags1 and "pointer-events:none" in tags2
+
+
+def test_polymorphic_body_checksum_uniqueness():
+    """Verify identical email contents yield completely different cryptographic body hashes."""
+    import hashlib
+
+    payload = EmailPayload(
+        title="Quarterly Review",
+        recipient_name="David",
+        body_text="Please review the attached quarterly metrics.",
+    )
+    html1 = format_email(payload, "token_alpha_111", "https://track.com")
+    html2 = format_email(payload, "token_beta_222", "https://track.com")
+
+    hash1 = hashlib.sha256(html1.encode("utf-8")).hexdigest()
+    hash2 = hashlib.sha256(html2.encode("utf-8")).hexdigest()
+    assert hash1 != hash2

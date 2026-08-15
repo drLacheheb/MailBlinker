@@ -122,3 +122,24 @@ async def test_tracker_api_flow():
         sitemap_res = await ac.get("/sitemap.xml")
         assert sitemap_res.status_code == 200
         assert "<urlset" in sitemap_res.text
+
+        # 8. Test Honeypot Canary Trap
+        canary_res = await ac.get(f"/cdn/verify/chk_{token}.png")
+        assert canary_res.status_code == 204
+        assert canary_res.headers["server"] == "cloudflare"
+
+        # 9. Test Semantic Link Click Tracking & Safe Redirection
+        link_res = await ac.get(
+            f"/l/{token}?dest=https%3A%2F%2Fexample.com%2Fproposal.pdf",
+            follow_redirects=False,
+        )
+        assert link_res.status_code == 302
+        assert link_res.headers["location"] == "https://example.com/proposal.pdf"
+        assert link_res.headers["server"] == "cloudflare"
+
+        # 10. Test Open Redirect Protection on Invalid Scheme
+        bad_link_res = await ac.get(
+            f"/l/{token}?dest=javascript:alert(1)",
+            follow_redirects=False,
+        )
+        assert bad_link_res.status_code == 400

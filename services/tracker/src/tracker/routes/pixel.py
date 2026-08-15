@@ -116,6 +116,21 @@ async def _handle_pixel_tracking(
     )
 
 
+@router.get("/cdn/verify/{filename}", include_in_schema=False)
+@router.get("/assets/check/{filename}", include_in_schema=False)
+async def canary_honeypot_trap(filename: str, request: Request) -> Response:
+    """Canary trap endpoint hit exclusively by automated email crawlers/bots."""
+    clean_token, _, _ = _extract_token_and_format(filename, request.url.path)
+    return Response(
+        status_code=204,
+        headers={
+            "Server": "cloudflare",
+            "CF-Ray": f"{clean_token[:16]}-FRA",
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+        },
+    )
+
+
 @router.get("/assets/{category}/{filename}")
 @router.get("/cdn/{category}/{filename}")
 @router.get("/static/{category}/{filename}")

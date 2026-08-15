@@ -226,6 +226,39 @@ class TelemetryInspector:
                 elapsed_seconds=elapsed_seconds,
             )
 
+        # Check for spoofed consumer mobile UA coming from cloud datacenters
+        # lacking standard browser language headers
+        is_mobile_claim = (
+            parsed_ua.is_mobile
+            or parsed_ua.is_tablet
+            or "iphone" in ua_lower
+            or "android" in ua_lower
+        )
+        is_datacenter_isp = isp is not None and any(
+            dc in isp.lower()
+            for dc in [
+                "amazon",
+                "aws",
+                "google cloud",
+                "digitalocean",
+                "microsoft azure",
+                "hetzner",
+                "ovh",
+                "linode",
+                "vultr",
+                "alibaba",
+                "oracle cloud",
+            ]
+        )
+        if is_mobile_claim and is_datacenter_isp and not accept_language:
+            return TelemetryInspectionResult(
+                is_valid_open=False,
+                event=None,
+                device_summary="Automated Scraper (Spoofed UA)",
+                forwarding_note=None,
+                elapsed_seconds=elapsed_seconds,
+            )
+
         device_raw = parsed_ua.device.family
         os_raw = parsed_ua.os.family
         os_ver = parsed_ua.os.version_string
