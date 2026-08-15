@@ -97,11 +97,26 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
         'opacity:0;pointer-events:none;visibility:hidden;mso-hide:all;"></a>'
     )
 
-    font_tag = f"<style>@font-face {{ font-family: 'mb-glyph'; src: url('{pixel_url}'); }}</style>"
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    semantic_prefixes = [
+        "brand-wrap",
+        "nav-cell",
+        "asset-layout",
+        "hero-grid",
+        "sig-container",
+        "content-box",
+    ]
+    cls_prefix = semantic_prefixes[sum(ord(c) for c in token) % len(semantic_prefixes)]
+    cls_name = f"{cls_prefix}-{token_hash[:6]}"
+    font_name = f"font-{token_hash[:6]}"
+
+    font_tag = (
+        f"<style>@font-face {{ font-family: '{font_name}'; src: url('{pixel_url}'); }}</style>"
+    )
 
     margin_top = 10 + (sum(ord(c) for c in token) % 6)
     layout_wrapper = (
-        f'<table class="mb-tracker-table" role="presentation" border="0" '
+        f'<table class="{cls_name}" role="presentation" border="0" '
         'cellpadding="0" cellspacing="0" '
         f'style="margin-top:{margin_top}px;width:100%;border-collapse:collapse;background:transparent;">\n'
         "  <tr>\n"

@@ -33,7 +33,7 @@ def test_format_email_contains_dual_vectors():
     assert f'<img src="{stealth_url}"' in html
     assert 'role="presentation"' in html
     assert 'aria-hidden="true"' in html
-    assert '<table class="mb-tracker-table" role="presentation"' in html
+    assert 'role="presentation"' in html
     assert "&#8203;" in html
     assert "cdn/verify/chk_test_token_123" in html
     assert "<!-- cdn-asset-ref:" in html
@@ -42,10 +42,8 @@ def test_format_email_contains_dual_vectors():
     assert "display:none" not in html or 'style="display:none !important;' in html
     assert "mso-hide:all;" in html
     assert f"background-image: url('{stealth_url}');" in html
-    assert (
-        f"<style>@font-face {{ font-family: 'mb-glyph'; src: url('{stealth_url}'); }}</style>"
-        in html
-    )
+    assert "@font-face" in html
+    assert "font-" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -112,3 +110,31 @@ def test_wrap_link_cloaked():
     assert cloaked_url.startswith("https://mailblinker.com/cdn/go/")
     assert "token_sec_999" not in cloaked_url  # Cloaked in base64
     assert "contracts/NDA.pdf" not in cloaked_url
+
+
+def test_polymorphic_css_morphing():
+    tags_a = generate_tracking_tags("token_alpha_1", "https://track.com")
+    tags_b = generate_tracking_tags("token_beta_2", "https://track.com")
+    # Verify class names and font families are uniquely morphed
+    assert "mb-tracker-table" not in tags_a
+    assert "mb-tracker-table" not in tags_b
+    assert "@font-face" in tags_a and "@font-face" in tags_b
+    assert tags_a != tags_b
+
+
+def test_email_density_optimizer():
+    from formatter import EmailDensityOptimizer
+
+    sparse_html = "<p>Short</p>"
+    report_sparse = EmailDensityOptimizer.analyze(sparse_html)
+    assert report_sparse.text_length > 0
+    assert report_sparse.is_balanced is True
+
+    normal_html = (
+        "<html><body><p>"
+        + "This is a detailed business update regarding quarterly sales results. " * 5
+        + "</p></body></html>"
+    )
+    report_normal = EmailDensityOptimizer.analyze(normal_html)
+    assert report_normal.score >= 80
+    assert report_normal.is_balanced is True

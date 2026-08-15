@@ -16,6 +16,7 @@ async def test_security_headers_present():
         assert res.headers["x-frame-options"] == "DENY"
         assert res.headers["x-xss-protection"] == "1; mode=block"
         assert "strict-origin" in res.headers["referrer-policy"]
+        assert "max-age=31536000" in res.headers["strict-transport-security"]
 
 
 @pytest.mark.asyncio

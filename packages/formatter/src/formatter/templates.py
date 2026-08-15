@@ -9,7 +9,7 @@ GENERAL_EMAIL_TEMPLATE = """<!DOCTYPE html>
   <style>
     :root { color-scheme: light dark; supported-color-schemes: light dark; }
     @media (prefers-color-scheme: dark) {
-      .mb-tracker-table { background: transparent !important; }
+      table[role="presentation"] { background: transparent !important; }
     }
   </style>
 </head>

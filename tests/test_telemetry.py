@@ -135,3 +135,41 @@ async def test_dns_deliverability_inspector():
     assert res_gmail.domain == "gmail.com"
     assert res_gmail.score >= 50
     assert res_gmail.mx_valid is True
+
+
+def test_off_hours_telemetry_heuristics():
+    from core.telemetry.inspector import TelemetryInspector
+
+    inspector = TelemetryInspector()
+    # 03:00 AM UTC (Off-hours probe)
+    off_hours_time = datetime(2026, 8, 15, 3, 30, 0, tzinfo=timezone.utc)
+    sent_at = datetime(2026, 8, 15, 3, 0, 0, tzinfo=timezone.utc)
+
+    # 1. Off-hours datacenter probe without language header
+    dc_probe = inspector.inspect(
+        email_id=5,
+        sent_at=sent_at,
+        open_time=off_hours_time,
+        ip_address="142.250.190.46",
+        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
+        accept_language=None,
+        past_events=[],
+        geo_data=("United States", "California", "Mountain View", "Google Cloud"),
+    )
+    assert dc_probe.is_valid_open is False
+    assert "Off-Hours" in dc_probe.device_summary
+
+    # 2. Human open during off-hours with full language header
+    human_open = inspector.inspect(
+        email_id=6,
+        sent_at=sent_at,
+        open_time=off_hours_time,
+        ip_address="198.51.100.1",
+        user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+        accept_language="en-US,en;q=0.9",
+        past_events=[],
+        geo_data=("United Kingdom", "England", "London", "Virgin Media"),
+    )
+    assert human_open.is_valid_open is True
+    assert human_open.forwarding_note is not None
+    assert "off-hours" in human_open.forwarding_note.lower()

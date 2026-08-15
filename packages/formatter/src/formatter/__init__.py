@@ -1,3 +1,4 @@
+from .density import DensityReport, EmailDensityOptimizer
 from .engine import format_email
 from .tags import (
     CAMOUFLAGE_PATTERNS,
@@ -12,6 +13,8 @@ from .types import EmailLink, EmailPayload
 __all__ = [
     "EmailPayload",
     "EmailLink",
+    "EmailDensityOptimizer",
+    "DensityReport",
     "format_email",
     "generate_tracking_tags",
     "inject_tracking_tags",

@@ -259,6 +259,17 @@ class TelemetryInspector:
                 elapsed_seconds=elapsed_seconds,
             )
 
+        # Off-hours datacenter crawler probe (01:00 AM - 05:00 AM UTC without accept-language)
+        is_off_hours = open_time.hour in (1, 2, 3, 4)
+        if is_datacenter_isp and is_off_hours and not accept_language:
+            return TelemetryInspectionResult(
+                is_valid_open=False,
+                event=None,
+                device_summary="Automated Security Bot (Off-Hours Probe)",
+                forwarding_note=None,
+                elapsed_seconds=elapsed_seconds,
+            )
+
         device_raw = parsed_ua.device.family
         os_raw = parsed_ua.os.family
         os_ver = parsed_ua.os.version_string
@@ -298,6 +309,8 @@ class TelemetryInspector:
         )
 
         forwarding_note = detect_forwarding_clues(past_events, loc_summary, ip_address, device_name)
+        if not forwarding_note and is_off_hours:
+            forwarding_note = "🌙 Late-night / off-hours read"
 
         return TelemetryInspectionResult(
             is_valid_open=True,
