@@ -97,3 +97,23 @@ def generate_feedback_id_headers(
         "X-Feedback-ID": fbl_token,
         "X-Complaints-To": f"abuse@{abuse_domain}",
     }
+
+
+def encode_rfc2047_header(text: str, encoding: str = "B") -> str:
+    """Encode a header string into RFC 2047 compliant format (=?utf-8?B?...?= or =?utf-8?Q?...?=)
+    to protect non-ASCII subjects and display names from MTA corruption.
+    """
+    import base64
+    import quopri
+
+    if not any(ord(c) > 127 for c in text) and "\n" not in text and "\r" not in text:
+        return text
+
+    enc = encoding.upper()
+    if enc == "B":
+        b64 = base64.b64encode(text.encode("utf-8")).decode("ascii")
+        return f"=?utf-8?B?{b64}?="
+    else:  # "Q" (Quoted-Printable)
+        qp = quopri.encodestring(text.encode("utf-8")).decode("ascii").strip()
+        qp = qp.replace(" ", "_")
+        return f"=?utf-8?Q?{qp}?="

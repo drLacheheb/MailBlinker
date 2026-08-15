@@ -152,6 +152,8 @@ async def test_dns_deliverability_inspector():
     assert hasattr(res_gmail, "arc_status")
     assert hasattr(res_gmail, "dnsbl_listed")
     assert hasattr(res_gmail, "dnsbl_status")
+    assert hasattr(res_gmail, "crypto_discovery_valid")
+    assert hasattr(res_gmail, "crypto_discovery_status")
 
 
 def test_headless_probe_telemetry():
@@ -322,3 +324,15 @@ def test_tls_middlebox_downgrade_telemetry():
     )
     assert res.is_valid_open is False
     assert "Legacy TLS Downgrade" in res.device_summary
+
+
+def test_haversine_distance_telemetry():
+    from core.telemetry.inspector import calculate_haversine_distance
+
+    # Paris (48.8566, 2.3522) to London (51.5074, -0.1278) -> ~343 km
+    dist_km = calculate_haversine_distance(48.8566, 2.3522, 51.5074, -0.1278)
+    assert 340.0 <= dist_km <= 350.0
+
+    # Same location -> 0.0 km
+    dist_zero = calculate_haversine_distance(40.7128, -74.0060, 40.7128, -74.0060)
+    assert dist_zero == 0.0

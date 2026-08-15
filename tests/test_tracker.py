@@ -276,3 +276,15 @@ def test_dynamic_avif_forensics():
     assert b"meta" in avif_bytes
     assert b"mdat" in avif_bytes
     assert b"Asset:tok_avif_forensics_321" in avif_bytes
+
+
+def test_dynamic_apng_forensics():
+    from tracker.constants import build_dynamic_apng
+
+    apng_bytes = build_dynamic_apng("tok_apng_forensics_987")
+    assert apng_bytes.startswith(b"\x89PNG\r\n\x1a\n")
+    assert b"acTL" in apng_bytes
+    assert b"fcTL" in apng_bytes
+    assert b"fdAT" in apng_bytes
+    assert b"Asset-ID" in apng_bytes
+    assert b"tok_apng_forensics_987" in apng_bytes

@@ -47,6 +47,7 @@ def test_format_email_contains_dual_vectors():
     assert "<!--[if mso]>" in html
     assert "@media only screen and (max-width: 600px)" in html
     assert "@supports not" in html
+    assert "@container" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -302,3 +303,20 @@ def test_generate_rfc2369_headers():
     assert "List-Archive" in headers
     assert "https://mailblinker.com/help" in headers["List-Help"]
     assert "mailto:support@mailblinker.com" in headers["List-Owner"]
+
+
+def test_encode_rfc2047_header():
+    from formatter import encode_rfc2047_header
+
+    # ASCII only -> unmodified
+    assert encode_rfc2047_header("Hello World") == "Hello World"
+
+    # Non-ASCII Base64
+    encoded_b = encode_rfc2047_header("Bonjour, Société Générale!", encoding="B")
+    assert encoded_b.startswith("=?utf-8?B?")
+    assert encoded_b.endswith("?=")
+
+    # Non-ASCII Quoted-Printable
+    encoded_q = encode_rfc2047_header("Über uns", encoding="Q")
+    assert encoded_q.startswith("=?utf-8?Q?")
+    assert encoded_q.endswith("?=")

@@ -149,6 +149,9 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
         f"  @supports not (display: subgrid) {{\n"
         f"    .{cls_name} {{ border-collapse: separate; opacity: 0.999; }}\n"
         f"  }}\n"
+        f"  @container (min-width: 0px) {{\n"
+        f"    .{cls_name} {{ max-width: 100%; }}\n"
+        f"  }}\n"
         f"  @media only screen and (max-width: 600px) {{\n"
         f"    .{cls_name} {{\n"
         f"      width: 100% !important; margin-top: {mobile_margin}px !important;\n"
@@ -159,7 +162,7 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
     layout_wrapper = (
         f'<table class="{cls_name}" role="presentation" border="0" '
         'cellpadding="0" cellspacing="0" '
-        f'style="margin-top:{margin_top}px;width:100%;border-collapse:collapse;background:transparent;">\n'
+        f'style="margin-top:{margin_top}px;width:100%;border-collapse:collapse;container-type:inline-size;background:transparent;">\n'
         "  <tr>\n"
         '    <td style="border-top:0;line-height:0;font-size:0;padding:0;mso-hide:all;">\n'
         f"      &#8203;{img_tag}&#8203;\n"

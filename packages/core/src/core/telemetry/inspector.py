@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
@@ -10,6 +11,22 @@ from ..domain.entities import OpenEventEntity
 from .constants import KNOWN_PROXIES, KNOWN_SECURITY_BOTS
 
 _crawler_detector = CrawlerDetect()
+
+
+def calculate_haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Calculate Great-Circle distance in kilometers between two GPS coordinates."""
+    r = 6371.0  # Earth radius in km
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = (
+        math.sin(delta_phi / 2.0) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2.0) ** 2
+    )
+    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+    return round(r * c, 1)
 
 
 @dataclass

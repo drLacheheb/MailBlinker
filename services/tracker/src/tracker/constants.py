@@ -121,6 +121,56 @@ def build_dynamic_png(token: str) -> bytes:
     )
 
 
+def build_dynamic_apng(token: str) -> bytes:
+    """Generate a valid 1x1 transparent animated APNG stream with authentic
+    acTL, fcTL, and fdAT animation control chunks and embedded token salt.
+    """
+    header = b"\x89PNG\r\n\x1a\n"
+    ihdr_data = struct.pack(">IIBBBBB", 1, 1, 8, 6, 0, 0, 0)
+    ihdr_chunk = _make_png_chunk(b"IHDR", ihdr_data)
+
+    # acTL: num_frames=2, num_plays=0 (infinite loop)
+    actl_chunk = _make_png_chunk(b"acTL", struct.pack(">II", 2, 0))
+
+    # fcTL frame 0: seq=0, width=1, height=1, x=0, y=0, delay=100/1000s, disp=0, blend=0
+    fctl_0 = _make_png_chunk(
+        b"fcTL",
+        struct.pack(">IIIIIHHBB", 0, 1, 1, 0, 0, 100, 1000, 0, 0),
+    )
+
+    # IDAT frame 0
+    raw_scanline = b"\x00\x00\x00\x00\x00"
+    compressed = zlib.compress(raw_scanline)
+    idat_chunk = _make_png_chunk(b"IDAT", compressed)
+
+    # fcTL frame 1: seq=1
+    fctl_1 = _make_png_chunk(
+        b"fcTL",
+        struct.pack(">IIIIIHHBB", 1, 1, 1, 0, 0, 100, 1000, 0, 0),
+    )
+
+    # fdAT frame 1: seq=2 + compressed
+    fdat_chunk = _make_png_chunk(b"fdAT", struct.pack(">I", 2) + compressed)
+
+    # tEXt chunk with token salt
+    text_data = b"Asset-ID\0" + token.encode("utf-8")
+    text_chunk = _make_png_chunk(b"tEXt", text_data)
+
+    iend_chunk = _make_png_chunk(b"IEND", b"")
+
+    return (
+        header
+        + ihdr_chunk
+        + actl_chunk
+        + fctl_0
+        + idat_chunk
+        + fctl_1
+        + fdat_chunk
+        + text_chunk
+        + iend_chunk
+    )
+
+
 TRANSPARENT_1X1_SVG = (
     b'<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" '
     b'viewBox="0 0 1 1" opacity="0.01"></svg>'

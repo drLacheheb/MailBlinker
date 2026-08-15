@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from ..cdn import get_cdn_headers_for_token
 from ..constants import (
+    build_dynamic_apng,
     build_dynamic_avif,
     build_dynamic_gif,
     build_dynamic_png,
@@ -40,6 +41,9 @@ def _extract_token_and_format(
     elif filename.endswith(".avif") or path_lower.endswith(".avif"):
         ext = "avif"
         raw = filename[:-5] if filename.endswith(".avif") else filename
+    elif filename.endswith(".apng") or path_lower.endswith(".apng"):
+        ext = "apng"
+        raw = filename[:-5] if filename.endswith(".apng") else filename
     elif filename.endswith(".png") or path_lower.endswith(".png"):
         ext = "png"
         raw = filename[:-4] if filename.endswith(".png") else filename
@@ -74,6 +78,9 @@ def _extract_token_and_format(
     elif ext == "avif":
         media_type = "image/avif"
         content = build_dynamic_avif(clean_token)
+    elif ext == "apng":
+        media_type = "image/png"
+        content = build_dynamic_apng(clean_token)
     else:
         media_type = "image/png"
         content = build_dynamic_png(clean_token)

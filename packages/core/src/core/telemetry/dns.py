@@ -39,12 +39,15 @@ class DnsInspectionResult:
     dnsbl_listed: bool
     dnsbl_listings: List[str]
     dnsbl_status: str
+    crypto_discovery_valid: bool
+    crypto_discovery_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
 class DnsDeliverabilityInspector:
     """Async DNS over HTTPS (DoH) inspector with Multi-Provider Failover (Google, Cloudflare, Quad9)
-    for SPF, DMARC, DKIM, MX, PTR, BIMI, MTA-STS, TLS-RPT, DANE, ARC, and DNSBL health.
+    for SPF, DMARC, DKIM, MX, PTR, BIMI, MTA-STS, TLS-RPT, DANE, ARC, DNSBL,
+    and S/MIME & OpenPGP health.
     """
 
     COMMON_DKIM_SELECTORS = [
@@ -161,6 +164,8 @@ class DnsDeliverabilityInspector:
                 dnsbl_listed=False,
                 dnsbl_listings=[],
                 dnsbl_status="Invalid domain format",
+                crypto_discovery_valid=False,
+                crypto_discovery_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -369,6 +374,22 @@ class DnsDeliverabilityInspector:
             dnsbl_listed = False
             dnsbl_status = "Clean (Not listed on major DNSBLs)"
 
+        # 12. Inspect S/MIME & OpenPGP End-to-End Cryptographic Discovery
+        smimea_records = await self._query_doh(f"_smimecert.{clean_d}", "TXT")
+        openpgp_records = await self._query_doh(f"_openpgpkey.{clean_d}", "TXT")
+        if smimea_records or openpgp_records:
+            crypto_discovery_valid = True
+            kinds: List[str] = []
+            if smimea_records:
+                kinds.append("S/MIME")
+            if openpgp_records:
+                kinds.append("OpenPGP")
+            crypto_discovery_status = f"Active ({', '.join(kinds)} published)"
+            score += 5
+        else:
+            crypto_discovery_valid = False
+            crypto_discovery_status = "No S/MIME or OpenPGP discovery published"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -405,5 +426,7 @@ class DnsDeliverabilityInspector:
             dnsbl_listed=dnsbl_listed,
             dnsbl_listings=dnsbl_listings,
             dnsbl_status=dnsbl_status,
+            crypto_discovery_valid=crypto_discovery_valid,
+            crypto_discovery_status=crypto_discovery_status,
             recommendations=recommendations,
         )
