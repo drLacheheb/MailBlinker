@@ -79,13 +79,15 @@ Configure your `.env` variables:
 BASE_URL=http://localhost:8000
 DATABASE_URL=sqlite+aiosqlite:///tracker.db
 TELEGRAM_BOT_TOKEN=your_token_from_botfather
-TELEGRAM_CHAT_ID=your_chat_id_from_userinfobot
+TELEGRAM_BOT_MODE=auto
 API_KEY=your_optional_secret_key
 RATE_LIMIT_ENABLED=true
 LOG_FILE=logs/app.log
 PORT=8000
 HOST=0.0.0.0
 ```
+
+> **Multi-User Ready**: `TELEGRAM_CHAT_ID` is no longer needed! MailBlinker automatically captures each user's Telegram ID dynamically, delivering private open alerts and personal `/stats` to every user independently.
 
 ### 3. Install Dependencies
 ```bash
@@ -96,36 +98,38 @@ uv sync --all-packages
 ```bash
 uv run alembic upgrade head
 ```
+*(Supports SQLite, PostgreSQL, and CockroachDB Serverless)*
 
 ### 5. Run the Project
 ```bash
 uv run python run.py
 ```
 
-This starts both the FastAPI server on port 8000 and the Telegram bot polling process.
+This starts both the FastAPI tracker on port 8000 and the Telegram bot process.
 
 ### 6. Run with Docker (Alternative)
 ```bash
 docker compose up -d --build
 ```
-This builds and runs MailBlinker in the background with persistent SQLite storage in `./data/`.
+This builds and runs MailBlinker in the background with persistent storage in `./data/`.
 
 
 ---
 
 ## Telegram Bot Usage
 
-* `/start` - Displays available commands.
+* `/start` - Starts the bot and displays the commands guide.
 * `/new <Title> | <RecipientEmail>` - Quickly creates a tracked email link (e.g. `/new Proposal | client@example.com`).
 * `/format` - Interactive 5-step wizard to compose a formatted email with links.
-* `/stats` - Lists recent emails and their open count.
-* `/help` - Helpful tips on pasting formatted HTML into Gmail.
+* `/stats` - View telemetry and open history for your personal tracked emails.
+* `/cancel` - Abort the active `/format` composer at any time.
+* `/help` - Helpful tips on pasting formatted HTML into Gmail and Outlook.
 
 ### Sending Your Email
 1. Run `/new` or `/format` in Telegram to generate your tracked email.
 2. Open the generated `.html` attachment in a browser.
-3. Select All (`Ctrl+A` / `Cmd+A`), Copy (`Ctrl+C` / `Cmd+C`), and Paste (`Ctrl+V` / `Cmd+V`) into your Gmail compose box.
-4. Send your email. When opened, the bot will notify you with the timestamp and detected device.
+3. Select All (`Ctrl+A` / `Cmd+A`), Copy (`Ctrl+C` / `Cmd+C`), and Paste (`Ctrl+V` / `Cmd+V`) into your Gmail or Outlook compose box.
+4. Send your email. When opened, the bot pings you instantly with rich telemetry (device, network, reading delay, location).
 
 ---
 
