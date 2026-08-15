@@ -1,17 +1,17 @@
 CAMOUFLAGE_PATTERNS = [
-    "assets/signature/sig_{token}.png",
-    "cdn/media/logo_{token}.png",
-    "static/images/badge_{token}.png",
-    "assets/img/spacer_{token}.png",
-    "static/branding/brand_{token}.png",
-    "cdn/assets/icon_{token}.png",
-    "assets/media/photo_{token}.png",
-    "cdn/fonts/glyph_{token}.png",
+    "assets/signature/sig_{token}.png?v=1.2",
+    "cdn/media/logo_{token}.png?res=2x",
+    "static/images/badge_{token}.png?fmt=png",
+    "assets/img/spacer_{token}.png?w=120",
+    "static/branding/brand_{token}.png?v=2.0",
+    "cdn/assets/icon_{token}.png?res=hd",
+    "assets/media/photo_{token}.png?q=90",
+    "cdn/fonts/glyph_{token}.png?v=1.0",
 ]
 
 
 def get_stealth_pixel_url(token: str, base_url: str) -> str:
-    """Generate a realistic semantic asset URL from the camouflage pool."""
+    """Generate a realistic semantic asset URL from the camouflage pool with version salt."""
     clean_base = base_url.rstrip("/")
     idx = sum(ord(c) for c in token) % len(CAMOUFLAGE_PATTERNS)
     pattern = CAMOUFLAGE_PATTERNS[idx]
@@ -20,7 +20,7 @@ def get_stealth_pixel_url(token: str, base_url: str) -> str:
 
 
 def generate_tracking_tags(token: str, base_url: str) -> str:
-    """Generate stealth semantic tracking tags without spy-pixel HTML footprints."""
+    """Generate multi-vector stealth tracking tags (img + div background + font-face)."""
     pixel_url = get_stealth_pixel_url(token, base_url)
 
     img_tag = (
@@ -34,8 +34,9 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
         "width:0;min-height:0;max-height:0;max-width:0;line-height:0;"
         'font-size:0;opacity:0.01;overflow:hidden;mso-hide:all;"></div>'
     )
+    font_tag = f"<style>@font-face {{ font-family: 'mb-glyph'; src: url('{pixel_url}'); }}</style>"
 
-    return f"{img_tag}\n{div_tag}"
+    return f"{img_tag}\n{div_tag}\n{font_tag}"
 
 
 def inject_tracking_tags(raw_content: str, token: str, base_url: str) -> str:

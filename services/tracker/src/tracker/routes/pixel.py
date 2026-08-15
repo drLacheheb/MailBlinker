@@ -64,6 +64,11 @@ async def _handle_pixel_tracking(
         content=content,
         media_type=media_type,
         headers={
+            "Server": "cloudflare",
+            "CF-Cache-Status": "DYNAMIC",
+            "CF-Ray": f"{clean_token[:16]}-FRA",
+            "Accept-Ranges": "bytes",
+            "Vary": "Accept-Encoding",
             "Cache-Control": cache_header,
             "Pragma": "no-cache",
             "Expires": "0",

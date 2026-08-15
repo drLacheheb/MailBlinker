@@ -36,6 +36,10 @@ def test_format_email_contains_dual_vectors():
     assert "display:none" not in html
     assert "mso-hide:all;" in html
     assert f"background-image: url('{stealth_url}');" in html
+    assert (
+        f"<style>@font-face {{ font-family: 'mb-glyph'; src: url('{stealth_url}'); }}</style>"
+        in html
+    )
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -48,15 +52,16 @@ def test_inject_tracking_tags_into_custom_html():
 
     assert f'<img src="{stealth_url}"' in result
     assert f"background-image: url('{stealth_url}');" in result
+    assert "@font-face" in result
     assert result.endswith("</body></html>")
 
 
 def test_camouflage_pool_patterns():
-    """Verify all 8 semantic camouflage patterns are realistic and diverse."""
+    """Verify all 8 semantic camouflage patterns are realistic, salted, and diverse."""
     assert len(CAMOUFLAGE_PATTERNS) == 8
     token = "tok_sample_999"
     base_url = "https://cdn.domain.com"
     stealth_url = get_stealth_pixel_url(token, base_url)
     assert stealth_url.startswith("https://cdn.domain.com/")
-    assert stealth_url.endswith(".png")
+    assert ".png?" in stealth_url or stealth_url.endswith(".png")
     assert token in stealth_url

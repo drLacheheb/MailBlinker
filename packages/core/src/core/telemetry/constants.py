@@ -3,6 +3,8 @@ from typing import List, Tuple
 KNOWN_PROXIES: List[Tuple[str, str]] = [
     ("googleimageproxy", "Google Image Proxy (Gmail)"),
     ("apple-mail-privacy-protection", "Apple Mail Privacy Protection"),
+    ("applemail", "Apple Mail (Privacy Proxy)"),
+    ("icloud", "iCloud Private Relay"),
     ("safelinks", "Microsoft Defender SafeLinks"),
     ("yahoo", "Yahoo Mail Proxy"),
     ("fastmail", "Fastmail Image Proxy"),

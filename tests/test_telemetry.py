@@ -58,3 +58,41 @@ def test_detect_forwarding_clues():
     clue = detect_forwarding_clues([ev1], "New York, United States", "198.51.100.1", "Windows PC")
     assert clue is not None
     assert "New location" in clue or "New device" in clue
+
+
+def test_apple_mail_privacy_protection_detection():
+    from core.telemetry.inspector import TelemetryInspector
+
+    inspector = TelemetryInspector()
+    now = datetime.now(timezone.utc)
+    sent_at = datetime.fromtimestamp(now.timestamp() - 60, tz=timezone.utc)
+
+    # 1. Test Apple 17.x.x.x subnet detection
+    res1 = inspector.inspect(
+        email_id=1,
+        sent_at=sent_at,
+        open_time=now,
+        ip_address="17.248.1.5",
+        user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        accept_language="en-US",
+        past_events=[],
+        geo_data=("United States", "California", "Cupertino", "Apple Inc."),
+    )
+    assert res1.is_valid_open is True
+    assert res1.device_summary == "Apple Mail (Privacy Proxy)"
+    assert res1.event is not None
+    assert res1.event.browser_name == "Apple Mail (Privacy Proxy)"
+
+    # 2. Test Apple Mail UA token detection
+    res2 = inspector.inspect(
+        email_id=2,
+        sent_at=sent_at,
+        open_time=now,
+        ip_address="198.51.100.2",
+        user_agent="Mozilla/5.0 Apple-Mail-Privacy-Protection/1.0",
+        accept_language="en-US",
+        past_events=[],
+        geo_data=("United States", "Texas", "Dallas", "Cloudflare"),
+    )
+    assert res2.is_valid_open is True
+    assert "Apple Mail" in res2.device_summary

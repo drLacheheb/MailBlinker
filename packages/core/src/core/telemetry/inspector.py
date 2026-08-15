@@ -153,6 +153,40 @@ class TelemetryInspector:
                     elapsed_seconds=elapsed_seconds,
                 )
 
+        # Check IP or ISP for Apple Privacy Relay / Apple Mail Privacy Protection
+        is_apple_mpp = (ip_address is not None and ip_address.startswith("17.")) or (
+            isp is not None and ("apple" in isp.lower() or "icloud" in isp.lower())
+        )
+        if is_apple_mpp:
+            proxy_label = "Apple Mail (Privacy Proxy)"
+            lang = parse_accept_language(accept_language)
+            event = OpenEventEntity(
+                id=None,
+                email_id=email_id,
+                timestamp=open_time,
+                ip_address=ip_address,
+                country=country,
+                region=region,
+                city=city,
+                isp=isp or proxy_label,
+                device_model=proxy_label,
+                os_name="Apple Mail",
+                browser_name=proxy_label,
+                language=lang,
+                user_agent=user_agent,
+                elapsed_seconds=elapsed_seconds,
+            )
+            forwarding_note = detect_forwarding_clues(
+                past_events, loc_summary, ip_address, proxy_label
+            )
+            return TelemetryInspectionResult(
+                is_valid_open=True,
+                event=event,
+                device_summary=proxy_label,
+                forwarding_note=forwarding_note,
+                elapsed_seconds=elapsed_seconds,
+            )
+
         if elapsed_seconds < 3.0:
             return TelemetryInspectionResult(
                 is_valid_open=False,

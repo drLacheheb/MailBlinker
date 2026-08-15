@@ -35,6 +35,10 @@ async def test_tracker_api_flow():
         assert stealth_res.status_code == 200
         assert stealth_res.headers["content-type"] == "image/png"
         assert len(stealth_res.content) == 67
+        assert stealth_res.headers["server"] == "cloudflare"
+        assert stealth_res.headers["cf-cache-status"] == "DYNAMIC"
+        assert "cf-ray" in stealth_res.headers
+        assert stealth_res.headers["accept-ranges"] == "bytes"
         assert "no-cache" in stealth_res.headers["cache-control"]
         assert "etag" in stealth_res.headers
 
