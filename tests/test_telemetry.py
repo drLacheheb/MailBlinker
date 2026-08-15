@@ -156,6 +156,8 @@ async def test_dns_deliverability_inspector():
     assert hasattr(res_gmail, "crypto_discovery_status")
     assert hasattr(res_gmail, "spf_lookup_count")
     assert hasattr(res_gmail, "null_mx_declared")
+    assert hasattr(res_gmail, "caa_valid")
+    assert hasattr(res_gmail, "dmarc_forensic_valid")
 
 
 def test_headless_probe_telemetry():
@@ -362,3 +364,24 @@ def test_datacenter_asn_telemetry():
     )
     assert res.is_valid_open is True
     assert "[Datacenter ASN]" in res.device_summary
+
+
+def test_software_renderer_telemetry():
+    from core.telemetry.inspector import TelemetryInspector
+
+    inspector = TelemetryInspector()
+    sent_at = datetime(2026, 8, 15, 12, 0, 0, tzinfo=timezone.utc)
+    open_time = datetime(2026, 8, 15, 12, 5, 0, tzinfo=timezone.utc)
+
+    res = inspector.inspect(
+        email_id=16,
+        sent_at=sent_at,
+        open_time=open_time,
+        ip_address="198.51.100.12",
+        user_agent="Mozilla/5.0 (X11; Linux x86_64) SwiftShader/4.0 Chrome/120.0.0.0",
+        accept_language="en-US,en;q=0.9",
+        past_events=[],
+        geo_data=("United States", "California", "San Jose", "Residential Comcast"),
+    )
+    assert res.is_valid_open is True
+    assert "[Software Renderer Sandbox]" in res.device_summary

@@ -389,8 +389,20 @@ class TelemetryInspector:
         else:
             device_summary = browser_full
 
+        is_software_renderer = any(
+            sr in ua_lower
+            for sr in (
+                "swiftshader",
+                "llvmpipe",
+                "mesa offscreen",
+                "software rasterizer",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
+        if is_software_renderer:
+            device_summary += " [Software Renderer Sandbox]"
 
         lang = parse_accept_language(accept_language)
 

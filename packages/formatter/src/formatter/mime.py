@@ -163,3 +163,19 @@ def generate_reply_thread_headers(
         "In-Reply-To": f"<{clean_parent}>",
         "References": " ".join(ref_list),
     }
+
+
+def generate_internationalized_headers(
+    lang_code: str = "en",
+    script_direction: str = "ltr",
+) -> dict[str, str]:
+    """Generate RFC 6532 SMTPUTF8 internationalization and language localization headers
+    to establish natural linguistic deliverability signals across multilingual mail exchangers.
+    """
+    clean_lang = lang_code.strip().lower() or "en"
+    clean_dir = script_direction.strip().lower() or "ltr"
+    return {
+        "Content-Language": clean_lang,
+        "Accept-Language": f"{clean_lang}, *;q=0.5",
+        "X-Mailer-Script-Direction": clean_dir,
+    }

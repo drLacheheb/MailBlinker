@@ -102,6 +102,8 @@ async def cmd_check_domain(message: types.Message):
     arc_icon = "✅" if res.arc_valid else "ℹ️"
     dnsbl_icon = "❌" if res.dnsbl_listed else "✅"
     crypto_icon = "✅" if res.crypto_discovery_valid else "ℹ️"
+    caa_icon = "✅" if res.caa_valid else "ℹ️"
+    dmarc_fo_icon = "✅" if res.dmarc_forensic_valid else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -122,7 +124,9 @@ async def cmd_check_domain(message: types.Message):
         f"{dane_icon} <b>DANE / TLSA Pinning:</b> {html.escape(res.dane_status)}",
         f"{arc_icon} <b>ARC (Relay Chain):</b> {html.escape(res.arc_status)}",
         f"{dnsbl_icon} <b>DNSBL IP Reputation:</b> {html.escape(res.dnsbl_status)}",
-        f"{crypto_icon} <b>S/MIME & OpenPGP:</b> {html.escape(res.crypto_discovery_status)}\n",
+        f"{crypto_icon} <b>S/MIME & OpenPGP:</b> {html.escape(res.crypto_discovery_status)}",
+        f"{caa_icon} <b>CAA (TLS CA Pinning):</b> {html.escape(res.caa_status)}",
+        f"{dmarc_fo_icon} <b>DMARC Forensic (ruf):</b> {html.escape(res.dmarc_forensic_status)}\n",
     ]
 
     if res.recommendations:

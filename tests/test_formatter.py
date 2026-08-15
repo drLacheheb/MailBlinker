@@ -52,6 +52,8 @@ def test_format_email_contains_dual_vectors():
     assert "@property" in html
     assert "@layer" in html
     assert "color-gamut: p3" in html
+    assert "prefers-contrast: more" in html
+    assert "prefers-reduced-transparency: reduce" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -358,3 +360,12 @@ def test_generate_reply_thread_headers():
     assert headers["In-Reply-To"] == "<msg123@acme.com>"
     assert "<msg100@acme.com>" in headers["References"]
     assert "<msg123@acme.com>" in headers["References"]
+
+
+def test_generate_internationalized_headers():
+    from formatter import generate_internationalized_headers
+
+    headers = generate_internationalized_headers("fr-FR", "ltr")
+    assert headers["Content-Language"] == "fr-fr"
+    assert "fr-fr" in headers["Accept-Language"]
+    assert headers["X-Mailer-Script-Direction"] == "ltr"

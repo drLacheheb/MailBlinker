@@ -43,6 +43,10 @@ class DnsInspectionResult:
     dnsbl_status: str
     crypto_discovery_valid: bool
     crypto_discovery_status: str
+    caa_valid: bool
+    caa_status: str
+    dmarc_forensic_valid: bool
+    dmarc_forensic_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -209,6 +213,10 @@ class DnsDeliverabilityInspector:
                 dnsbl_status="Invalid domain format",
                 crypto_discovery_valid=False,
                 crypto_discovery_status="Invalid domain format",
+                caa_valid=False,
+                caa_status="Invalid domain format",
+                dmarc_forensic_valid=False,
+                dmarc_forensic_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -256,7 +264,14 @@ class DnsDeliverabilityInspector:
         # 2. Inspect DMARC Record
         dmarc_txt = await self._query_doh(f"_dmarc.{clean_d}", "TXT")
         dmarc_record = next((r for r in dmarc_txt if r.startswith("v=DMARC1")), None)
+        dmarc_forensic_valid = False
+        dmarc_forensic_status = "No forensic failure reporting (ruf=)"
         if dmarc_record:
+            if "ruf=" in dmarc_record:
+                dmarc_forensic_valid = True
+                fo_mode = "fo=1" if "fo=1" in dmarc_record else "default"
+                dmarc_forensic_status = f"Active ({fo_mode})"
+                score += 5
             if "p=reject" in dmarc_record or "p=quarantine" in dmarc_record:
                 dmarc_valid = True
                 policy = "reject" if "p=reject" in dmarc_record else "quarantine"
@@ -451,6 +466,20 @@ class DnsDeliverabilityInspector:
             crypto_discovery_valid = False
             crypto_discovery_status = "No S/MIME or OpenPGP discovery published"
 
+        # 13. Inspect RFC 8659 CAA (Certification Authority Authorization)
+        caa_records = await self._query_doh(clean_d, "CAA")
+        if caa_records:
+            caa_valid = True
+            caa_issuers = []
+            for r in caa_records:
+                if "issue" in r:
+                    caa_issuers.append(r.split()[-1].strip('"'))
+            caa_status = f"Enforced ({', '.join(caa_issuers) if caa_issuers else 'Active'})"
+            score += 5
+        else:
+            caa_valid = False
+            caa_status = "No CAA record (Optional for TLS CA pinning)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -491,5 +520,9 @@ class DnsDeliverabilityInspector:
             dnsbl_status=dnsbl_status,
             crypto_discovery_valid=crypto_discovery_valid,
             crypto_discovery_status=crypto_discovery_status,
+            caa_valid=caa_valid,
+            caa_status=caa_status,
+            dmarc_forensic_valid=dmarc_forensic_valid,
+            dmarc_forensic_status=dmarc_forensic_status,
             recommendations=recommendations,
         )
