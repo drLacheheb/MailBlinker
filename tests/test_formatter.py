@@ -3,6 +3,7 @@ from formatter import (
     EmailLink,
     EmailPayload,
     format_email,
+    generate_tracking_tags,
     get_stealth_pixel_url,
     inject_tracking_tags,
 )
@@ -66,3 +67,12 @@ def test_camouflage_pool_patterns():
     assert stealth_url.startswith("https://cdn.domain.com/")
     assert ".png?" in stealth_url or stealth_url.endswith(".png")
     assert token in stealth_url
+
+
+def test_css_property_jitter_uniqueness():
+    """Verify different tokens generate structurally permuted CSS properties."""
+    tags1 = generate_tracking_tags("token_alpha_111", "https://cdn.com")
+    tags2 = generate_tracking_tags("token_beta_222", "https://cdn.com")
+    assert tags1 != tags2
+    assert "opacity:0.01" in tags1 and "opacity:0.01" in tags2
+    assert "pointer-events:none" in tags1 and "pointer-events:none" in tags2

@@ -1,3 +1,5 @@
+import asyncio
+import random
 import re
 from datetime import datetime, timezone
 
@@ -94,6 +96,9 @@ async def _handle_pixel_tracking(
         "Expires": "0",
         "ETag": etag_val,
     }
+
+    # Humanized CDN edge propagation micro-jitter (10-25ms)
+    await asyncio.sleep(random.uniform(0.010, 0.025))
 
     # HTTP 304 Not Modified support for ETag re-validation
     if_none_match = request.headers.get("if-none-match")

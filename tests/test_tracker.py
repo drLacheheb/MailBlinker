@@ -104,3 +104,21 @@ async def test_tracker_api_flow():
         health_res = await ac.get("/")
         assert health_res.status_code == 200
         assert health_res.json()["service"] == "MailBlinker API"
+
+        # 7. Test CDN Decoy Endpoints
+        robots_res = await ac.get("/robots.txt")
+        assert robots_res.status_code == 200
+        assert "Disallow: /api/" in robots_res.text
+        assert robots_res.headers["server"] == "cloudflare"
+
+        favicon_res = await ac.get("/favicon.ico")
+        assert favicon_res.status_code == 200
+        assert favicon_res.headers["content-type"] == "image/x-icon"
+
+        security_res = await ac.get("/.well-known/security.txt")
+        assert security_res.status_code == 200
+        assert "Contact:" in security_res.text
+
+        sitemap_res = await ac.get("/sitemap.xml")
+        assert sitemap_res.status_code == 200
+        assert "<urlset" in sitemap_res.text
