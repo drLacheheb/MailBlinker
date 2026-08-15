@@ -20,6 +20,7 @@ class RecordOpenDTO:
     accept_language: Optional[str] = None
     purpose: Optional[str] = None
     client_hints: Optional[dict[str, str]] = None
+    tls_version: Optional[str] = None
 
 
 @dataclass
@@ -75,6 +76,7 @@ class RecordOpenUseCase:
             geo_data=geo_data,
             purpose=dto.purpose,
             client_hints=dto.client_hints,
+            tls_version=dto.tls_version,
         )
 
         if not inspection.is_valid_open or not inspection.event:

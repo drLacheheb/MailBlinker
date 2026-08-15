@@ -100,6 +100,7 @@ async def cmd_check_domain(message: types.Message):
     tls_rpt_icon = "✅" if res.tls_rpt_valid else "ℹ️"
     dane_icon = "✅" if res.dane_valid else "ℹ️"
     arc_icon = "✅" if res.arc_valid else "ℹ️"
+    dnsbl_icon = "❌" if res.dnsbl_listed else "✅"
 
     lines = [
         f"{status_icon} <b>Deliverability Score: {res.score}/100</b>",
@@ -113,7 +114,8 @@ async def cmd_check_domain(message: types.Message):
         f"{mta_icon} <b>MTA-STS (SMTP TLS):</b> {html.escape(res.mta_sts_status)}",
         f"{tls_rpt_icon} <b>TLS-RPT (Reporting):</b> {html.escape(res.tls_rpt_status)}",
         f"{dane_icon} <b>DANE / TLSA Pinning:</b> {html.escape(res.dane_status)}",
-        f"{arc_icon} <b>ARC (Relay Chain):</b> {html.escape(res.arc_status)}\n",
+        f"{arc_icon} <b>ARC (Relay Chain):</b> {html.escape(res.arc_status)}",
+        f"{dnsbl_icon} <b>DNSBL IP Reputation:</b> {html.escape(res.dnsbl_status)}\n",
     ]
 
     if res.recommendations:

@@ -36,12 +36,15 @@ class DnsInspectionResult:
     dane_status: str
     arc_valid: bool
     arc_status: str
+    dnsbl_listed: bool
+    dnsbl_listings: List[str]
+    dnsbl_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
 class DnsDeliverabilityInspector:
     """Async DNS over HTTPS (DoH) inspector with Multi-Provider Failover (Google, Cloudflare, Quad9)
-    for SPF, DMARC, DKIM, MX, PTR, BIMI, MTA-STS, TLS-RPT, DANE, and ARC health.
+    for SPF, DMARC, DKIM, MX, PTR, BIMI, MTA-STS, TLS-RPT, DANE, ARC, and DNSBL health.
     """
 
     COMMON_DKIM_SELECTORS = [
@@ -61,6 +64,12 @@ class DnsDeliverabilityInspector:
         "google",
         "default",
         "s1",
+    ]
+
+    DNSBL_ZONES = [
+        "zen.spamhaus.org",
+        "b.barracudacentral.org",
+        "bl.spamcop.net",
     ]
 
     DOH_PROVIDERS = [
@@ -149,6 +158,9 @@ class DnsDeliverabilityInspector:
                 dane_status="Invalid domain format",
                 arc_valid=False,
                 arc_status="Invalid domain format",
+                dnsbl_listed=False,
+                dnsbl_listings=[],
+                dnsbl_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -330,6 +342,33 @@ class DnsDeliverabilityInspector:
             arc_valid = False
             arc_status = "No ARC selector found (Optional for relay authentication)"
 
+        # 11. Inspect Real-Time DNSBL Reputation (Spamhaus, Barracuda, SpamCop)
+        dnsbl_listings: List[str] = []
+        probe_ips: List[str] = []
+        if a_records:
+            probe_ips.append(a_records[0])
+
+        for p_ip in probe_ips:
+            octs = p_ip.split(".")
+            if len(octs) == 4:
+                rev_ip = f"{octs[3]}.{octs[2]}.{octs[1]}.{octs[0]}"
+                for zone in self.DNSBL_ZONES:
+                    dnsbl_query = f"{rev_ip}.{zone}"
+                    bl_res = await self._query_doh(dnsbl_query, "A")
+                    if bl_res and any(r.startswith("127.0.0.") for r in bl_res):
+                        dnsbl_listings.append(zone.split(".")[0].capitalize())
+
+        if dnsbl_listings:
+            dnsbl_listed = True
+            dnsbl_status = f"LISTED on {', '.join(dnsbl_listings)} (Immediate spam risk)"
+            score = max(0, score - 30)
+            recommendations.append(
+                f"Your IP is blacklisted on {', '.join(dnsbl_listings)}. Request delisting."
+            )
+        else:
+            dnsbl_listed = False
+            dnsbl_status = "Clean (Not listed on major DNSBLs)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -363,5 +402,8 @@ class DnsDeliverabilityInspector:
             dane_status=dane_status,
             arc_valid=arc_valid,
             arc_status=arc_status,
+            dnsbl_listed=dnsbl_listed,
+            dnsbl_listings=dnsbl_listings,
+            dnsbl_status=dnsbl_status,
             recommendations=recommendations,
         )

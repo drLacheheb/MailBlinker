@@ -265,3 +265,14 @@ def test_canary_subnet_blacklist():
     assert bl.is_blacklisted("198.51.100.99") is True
     # Different subnet is not blacklisted
     assert bl.is_blacklisted("203.0.113.1") is False
+
+
+def test_dynamic_avif_forensics():
+    from tracker.constants import build_dynamic_avif
+
+    avif_bytes = build_dynamic_avif("tok_avif_forensics_321")
+    assert b"ftyp" in avif_bytes
+    assert b"avif" in avif_bytes
+    assert b"meta" in avif_bytes
+    assert b"mdat" in avif_bytes
+    assert b"Asset:tok_avif_forensics_321" in avif_bytes

@@ -46,6 +46,7 @@ def test_format_email_contains_dual_vectors():
     assert "font-" in html
     assert "<!--[if mso]>" in html
     assert "@media only screen and (max-width: 600px)" in html
+    assert "@supports not" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -284,3 +285,20 @@ def test_generate_plaintext_mirror():
     assert "Hello Sarah," in plain
     assert "Enterprise Proposal [https://example.com/proposal]" in plain
     assert "Alex Dupont" in plain
+
+
+def test_generate_rfc2369_headers():
+    from formatter import generate_rfc2369_headers
+
+    headers = generate_rfc2369_headers(
+        token="tok_rfc2369_123",
+        base_url="https://mailblinker.com",
+        mailto="support@mailblinker.com",
+    )
+    assert "List-Unsubscribe" in headers
+    assert "List-Help" in headers
+    assert "List-Owner" in headers
+    assert "List-Subscribe" in headers
+    assert "List-Archive" in headers
+    assert "https://mailblinker.com/help" in headers["List-Help"]
+    assert "mailto:support@mailblinker.com" in headers["List-Owner"]

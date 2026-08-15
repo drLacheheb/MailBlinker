@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from ..cdn import get_cdn_headers_for_token
 from ..constants import (
+    build_dynamic_avif,
     build_dynamic_gif,
     build_dynamic_png,
     build_dynamic_svg,
@@ -36,9 +37,15 @@ def _extract_token_and_format(
     elif filename.endswith(".webp") or path_lower.endswith(".webp"):
         ext = "webp"
         raw = filename[:-5] if filename.endswith(".webp") else filename
+    elif filename.endswith(".avif") or path_lower.endswith(".avif"):
+        ext = "avif"
+        raw = filename[:-5] if filename.endswith(".avif") else filename
     elif filename.endswith(".png") or path_lower.endswith(".png"):
         ext = "png"
         raw = filename[:-4] if filename.endswith(".png") else filename
+    elif "image/avif" in accept_header.lower():
+        ext = "avif"
+        raw = filename
     elif "image/webp" in accept_header.lower():
         ext = "webp"
         raw = filename
@@ -64,6 +71,9 @@ def _extract_token_and_format(
     elif ext == "webp":
         media_type = "image/webp"
         content = build_dynamic_webp(clean_token)
+    elif ext == "avif":
+        media_type = "image/avif"
+        content = build_dynamic_avif(clean_token)
     else:
         media_type = "image/png"
         content = build_dynamic_png(clean_token)
@@ -96,6 +106,12 @@ async def _handle_pixel_tracking(
     client_hints = {
         k.lower(): v for k, v in request.headers.items() if k.lower().startswith("sec-ch-ua")
     }
+    tls_version = (
+        request.headers.get("x-tls-version")
+        or request.headers.get("ssl-protocol")
+        or str(request.scope.get("tls_version") or "")
+        or None
+    )
 
     # Autonomous Canary Subnet Blacklist & Anti-replay rate limiting
     if not canary_blacklist.is_blacklisted(client_ip) and not token_burst_shield.is_bursting(
@@ -109,6 +125,7 @@ async def _handle_pixel_tracking(
             accept_language=accept_language,
             purpose=purpose,
             client_hints=client_hints,
+            tls_version=tls_version,
         )
         await use_case.execute(dto)
 

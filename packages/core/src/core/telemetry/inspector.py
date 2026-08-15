@@ -112,6 +112,7 @@ class TelemetryInspector:
         geo_data: Tuple[Optional[str], Optional[str], Optional[str], Optional[str]],
         purpose: Optional[str] = None,
         client_hints: Optional[dict[str, str]] = None,
+        tls_version: Optional[str] = None,
     ) -> TelemetryInspectionResult:
         if sent_at.tzinfo is None:
             sent_at = sent_at.replace(tzinfo=timezone.utc)
@@ -160,6 +161,21 @@ class TelemetryInspector:
                         forwarding_note=None,
                         elapsed_seconds=elapsed_seconds,
                     )
+
+        # 3. Inspect TLS Protocol & Middlebox Downgrade
+        if tls_version:
+            tls_lower = tls_version.lower()
+            if any(
+                legacy in tls_lower
+                for legacy in ("tls 1.0", "tls 1.1", "tls1.0", "tls1.1", "sslv3")
+            ):
+                return TelemetryInspectionResult(
+                    is_valid_open=False,
+                    event=None,
+                    device_summary="Security Middlebox Proxy (Legacy TLS Downgrade)",
+                    forwarding_note=None,
+                    elapsed_seconds=elapsed_seconds,
+                )
 
         country, region, city, isp = geo_data
         loc_summary = f"{city}, {country}".strip(", ") if city else None

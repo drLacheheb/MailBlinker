@@ -21,7 +21,10 @@ from .tags import (
     wrap_link_for_tracking,
 )
 from .types import EmailLink, EmailPayload
-from .unsubscribe import generate_unsubscribe_headers
+from .unsubscribe import (
+    generate_rfc2369_headers,
+    generate_unsubscribe_headers,
+)
 
 __all__ = [
     "EmailPayload",
@@ -35,6 +38,7 @@ __all__ = [
     "generate_feedback_id_headers",
     "naturalize_text_entropy",
     "generate_unsubscribe_headers",
+    "generate_rfc2369_headers",
     "format_email",
     "generate_plaintext_mirror",
     "generate_document_preview_card",

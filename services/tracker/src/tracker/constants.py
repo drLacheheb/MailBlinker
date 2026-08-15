@@ -45,6 +45,34 @@ def build_dynamic_gif(token: str) -> bytes:
     return header + lsd + gct + comment_ext + gce + img_desc + img_data + trailer
 
 
+def build_dynamic_avif(token: str) -> bytes:
+    """Generate a valid 1x1 transparent AVIF (AV1 Image File Format) stream with authentic
+    ftyp (avif/mif1), meta, and mdat boxes with embedded token comment metadata.
+    """
+    # 1. ftyp box
+    ftyp_payload = b"avif\x00\x00\x00\x00avifmif1miafMA1B"
+    ftyp_box = struct.pack(">I", len(ftyp_payload) + 8) + b"ftyp" + ftyp_payload
+
+    # 2. meta box (Handler pict, primary item, comment)
+    meta_content = (
+        b"\x00\x00\x00\x00"  # FullBox version 0, flags 0
+        b"\x00\x00\x00\x21hdlr\x00\x00\x00\x00\x00\x00\x00\x00pict"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Image Handler\x00"
+        b"\x00\x00\x00\x0epitm\x00\x00\x00\x00\x00\x01"
+    )
+    meta_box = struct.pack(">I", len(meta_content) + 8) + b"meta" + meta_content
+
+    # 3. mdat box (AV1 OBU payload with token salt)
+    token_comment = f"Asset:{token}".encode("utf-8")
+    mdat_payload = (
+        b"\x12\x00\x0a\x0a\x00\x00\x00\x41\x56\x31"  # AV1 Sequence Header OBU
+        b"\x00\x00\x00" + token_comment
+    )
+    mdat_box = struct.pack(">I", len(mdat_payload) + 8) + b"mdat" + mdat_payload
+
+    return ftyp_box + meta_box + mdat_box
+
+
 def _make_png_chunk(chunk_type: bytes, data: bytes) -> bytes:
     length = struct.pack(">I", len(data))
     crc = struct.pack(">I", zlib.crc32(chunk_type + data) & 0xFFFFFFFF)
