@@ -72,6 +72,10 @@ class DnsInspectionResult:
     https_svcb_status: str
     acme_challenge_found: bool
     acme_challenge_status: str
+    spf_exp_valid: bool
+    spf_exp_target: Optional[str]
+    spf_exp_status: str
+    dane_tlsa_params: Optional[str]
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -285,6 +289,10 @@ class DnsDeliverabilityInspector:
                 https_svcb_status="Invalid domain format",
                 acme_challenge_found=False,
                 acme_challenge_status="Invalid domain format",
+                spf_exp_valid=False,
+                spf_exp_target=None,
+                spf_exp_status="Invalid domain format",
+                dane_tlsa_params=None,
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -328,6 +336,22 @@ class DnsDeliverabilityInspector:
                 f"Add a TXT record for '{clean_d}' with value: "
                 "'v=spf1 include:_spf.google.com ~all'"
             )
+
+        # Check RFC 7208 exp= explanation modifier
+        spf_exp_valid = False
+        spf_exp_target = None
+        spf_exp_status = "No exp= modifier"
+        if spf_record and "exp=" in spf_record:
+            for term in spf_record.split():
+                if term.startswith("exp="):
+                    spf_exp_target = term.split("=", 1)[1]
+                    exp_txt = await self._query_doh(spf_exp_target, "TXT")
+                    if exp_txt:
+                        spf_exp_valid = True
+                        spf_exp_status = f"Active ({spf_exp_target})"
+                        score += 5
+                    else:
+                        spf_exp_status = f"Target missing ({spf_exp_target})"
 
         # 2. Inspect DMARC Record & RFC 7489 Subdomain Tree-Walk Fallback
         dmarc_txt = await self._query_doh(f"_dmarc.{clean_d}", "TXT")
@@ -507,6 +531,7 @@ class DnsDeliverabilityInspector:
         dane_record = None
         dane_smtp_valid = False
         dane_smtp_status = "No DANE SMTP TLSA record"
+        dane_tlsa_params = None
         tlsa_host = f"_25._tcp.{clean_d}"
         if mx_records:
             first_mx = mx_records[0].split()[-1].rstrip(".")
@@ -518,7 +543,18 @@ class DnsDeliverabilityInspector:
             dane_smtp_valid = True
             dane_record = tlsa_records[0]
             dane_status = f"Active ({dane_record[:20]}...)"
-            dane_smtp_status = f"Enforced on {tlsa_host}"
+            parts = dane_record.split()
+            if len(parts) >= 3:
+                usage, selector, mtype = parts[0], parts[1], parts[2]
+                dane_tlsa_params = f"{usage}-{selector}-{mtype}"
+                usage_label = (
+                    "DANE-EE 3-1-1"
+                    if usage == "3" and selector == "1" and mtype == "1"
+                    else f"Usage {usage}"
+                )
+                dane_smtp_status = f"Enforced ({usage_label}) on {tlsa_host}"
+            else:
+                dane_smtp_status = f"Enforced on {tlsa_host}"
             score += 5
         else:
             dane_status = "No DANE TLSA record (Optional for high-security pinning)"
@@ -760,5 +796,9 @@ class DnsDeliverabilityInspector:
             https_svcb_status=https_svcb_status,
             acme_challenge_found=acme_challenge_found,
             acme_challenge_status=acme_challenge_status,
+            spf_exp_valid=spf_exp_valid,
+            spf_exp_target=spf_exp_target,
+            spf_exp_status=spf_exp_status,
+            dane_tlsa_params=dane_tlsa_params,
             recommendations=recommendations,
         )

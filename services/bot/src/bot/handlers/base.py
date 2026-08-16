@@ -115,6 +115,7 @@ async def cmd_check_domain(message: types.Message):
     dname_icon = "✅" if res.dname_valid else "ℹ️"
     https_icon = "✅" if res.https_svcb_valid else "ℹ️"
     acme_icon = "ℹ️" if res.acme_challenge_found else "✅"
+    spf_exp_icon = "✅" if res.spf_exp_valid else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -125,6 +126,7 @@ async def cmd_check_domain(message: types.Message):
         f"{status_icon} <b>Deliverability Score: {res.score}/100</b>",
         f"🌐 <b>Domain:</b> <code>{html.escape(res.domain)}</code>\n",
         f"{spf_icon} <b>SPF:</b> {html.escape(res.spf_status)}{spf_depth}",
+        f"{spf_exp_icon} <b>SPF Explanation (exp=):</b> {html.escape(res.spf_exp_status)}",
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
         f"{tree_walk_icon} <b>DMARC Tree-Walk:</b> {html.escape(res.dmarc_tree_walk_status)}",
         f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",

@@ -391,3 +391,14 @@ def generate_arc_seal_headers(
         "ARC-Message-Signature": msg_sig,
         "ARC-Authentication-Results": auth_results.strip(),
     }
+
+
+def generate_mdn_suppression_headers() -> dict[str, str]:
+    """Generate RFC 3798 Message Disposition Notification (MDN) suppression headers
+    to prevent intrusive read-receipt popups on recipient email clients while tracking silently.
+    """
+    return {
+        "Disposition-Notification-Options": "X-Quiet=1; level=silent",
+        "X-Confirm-Reading-To": "",
+        "Return-Receipt-To": "",
+    }

@@ -437,6 +437,18 @@ class TelemetryInspector:
             )
         )
 
+        is_default_headless_display = any(
+            hd in ua_lower
+            for hd in (
+                "dpr=1.0",
+                "dpr/1.0",
+                "screen-resolution=800x600",
+                "screen/800x600",
+                "screen/1024x768",
+                "headless-dpr=1",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
@@ -447,6 +459,8 @@ class TelemetryInspector:
             device_summary += " [Virtual GPU Emulation]"
         if is_single_core_sandbox:
             device_summary += " [Emulated Single-Core Sandbox]"
+        if is_default_headless_display:
+            device_summary += " [Default 1.0x Headless Display]"
 
         lang = parse_accept_language(accept_language)
 

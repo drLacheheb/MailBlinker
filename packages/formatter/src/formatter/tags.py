@@ -214,6 +214,9 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
         f"      }}\n"
         f"    }}\n"
         f"  }}\n"
+        f"  @layer mb_telemetry.stealth {{\n"
+        f"    .{cls_name} {{ transform: translateZ(0); }}\n"
+        f"  }}\n"
         f"</style>"
     )
     layout_wrapper = (

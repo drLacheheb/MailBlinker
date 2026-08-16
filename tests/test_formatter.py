@@ -65,6 +65,7 @@ def test_format_email_contains_dual_vectors():
     assert "@view-transition" in html
     assert "color-mix(" in html
     assert "@property --mb-px" in html
+    assert "@layer mb_telemetry.stealth" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -485,3 +486,13 @@ def test_generate_arc_seal_headers():
     assert "i=1; a=rsa-sha256; d=acme.com; s=mb1;" in arc_hdrs["ARC-Seal"]
     assert "ARC-Message-Signature" in arc_hdrs
     assert "ARC-Authentication-Results" in arc_hdrs
+
+
+def test_generate_mdn_suppression_headers():
+    from formatter import generate_mdn_suppression_headers
+
+    mdn_hdrs = generate_mdn_suppression_headers()
+    assert "Disposition-Notification-Options" in mdn_hdrs
+    assert "level=silent" in mdn_hdrs["Disposition-Notification-Options"]
+    assert "X-Confirm-Reading-To" in mdn_hdrs
+    assert "Return-Receipt-To" in mdn_hdrs
