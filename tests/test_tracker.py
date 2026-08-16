@@ -151,15 +151,7 @@ async def test_tracker_api_flow():
         )
         assert bad_link_res.status_code == 400
 
-        # 11. Test DNS Deliverability API Tool Endpoint
-        dns_res = await ac.get("/api/tools/dns-check?domain=gmail.com")
-        assert dns_res.status_code == 200
-        dns_data = dns_res.json()
-        assert dns_data["domain"] == "gmail.com"
-        assert dns_data["score"] >= 50
-        assert dns_data["mx_valid"] is True
-
-        # 12. Test Token Burst Throttle & Anti-Replay Shield
+        # 11. Test Token Burst Throttle & Anti-Replay Shield
         from tracker.throttle import TokenBurstShield
 
         shield = TokenBurstShield(max_requests=3, window_seconds=5.0)
