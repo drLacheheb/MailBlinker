@@ -96,6 +96,10 @@ class DnsInspectionResult:
     dmarc_sp_status: str
     edns0_valid: bool
     edns0_status: str
+    spf_ip6_valid: bool
+    spf_ip6_status: str
+    uri_rr_valid: bool
+    uri_rr_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -333,6 +337,10 @@ class DnsDeliverabilityInspector:
                 dmarc_sp_status="Invalid domain format",
                 edns0_valid=False,
                 edns0_status="Invalid domain format",
+                spf_ip6_valid=False,
+                spf_ip6_status="Invalid domain format",
+                uri_rr_valid=False,
+                uri_rr_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -408,6 +416,17 @@ class DnsDeliverabilityInspector:
                         recommendations.append(
                             f"SPF redirect target '{spf_redirect_target}' is missing a valid TXT record."
                         )
+
+        # Check RFC 7208 ip6: mechanisms
+        spf_ip6_valid = False
+        spf_ip6_status = "No ip6: mechanisms defined"
+        if spf_record and "ip6:" in spf_record:
+            ip6_terms = [
+                t for t in spf_record.split() if t.startswith("ip6:") or t.startswith("+ip6:")
+            ]
+            if ip6_terms:
+                spf_ip6_valid = True
+                spf_ip6_status = f"Defined ({len(ip6_terms)} CIDR block(s))"
 
         # 2. Inspect DMARC Record & RFC 7489 Subdomain Tree-Walk Fallback
         dmarc_txt = await self._query_doh(f"_dmarc.{clean_d}", "TXT")
@@ -879,6 +898,19 @@ class DnsDeliverabilityInspector:
             edns0_valid = False
             edns0_status = "Truncated / Non-compliant (Upstream TC flag encountered)"
 
+        # 25. Inspect RFC 7553 / RFC 8005 URI DNS Resource Record
+        uri_records = await self._query_doh(f"_webmail.{clean_d}", "URI")
+        if not uri_records:
+            uri_records = await self._query_doh(clean_d, "URI")
+
+        if uri_records:
+            uri_rr_valid = True
+            uri_rr_status = f"Published ({len(uri_records)} URI entry(ies))"
+            score += 5
+        else:
+            uri_rr_valid = False
+            uri_rr_status = "No URI record (Optional for DNS service endpoints)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -888,6 +920,8 @@ class DnsDeliverabilityInspector:
             spf_record=spf_record,
             spf_status=spf_status,
             spf_lookup_count=spf_lookup_count,
+            spf_ip6_valid=spf_ip6_valid,
+            spf_ip6_status=spf_ip6_status,
             dmarc_valid=dmarc_valid,
             dmarc_record=dmarc_record,
             dmarc_status=dmarc_status,
@@ -972,5 +1006,7 @@ class DnsDeliverabilityInspector:
             nat64_ipv6_status=nat64_ipv6_status,
             edns0_valid=edns0_valid,
             edns0_status=edns0_status,
+            uri_rr_valid=uri_rr_valid,
+            uri_rr_status=uri_rr_status,
             recommendations=recommendations,
         )

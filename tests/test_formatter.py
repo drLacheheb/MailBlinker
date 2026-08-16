@@ -71,6 +71,7 @@ def test_format_email_contains_dual_vectors():
     assert "width: min(100%, 100vw)" in html
     assert "overflow: clip" in html
     assert "contain-intrinsic-size: 1px 1px" in html
+    assert "margin-block-start: 0" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -565,3 +566,14 @@ def test_generate_envelope_routing_headers():
     assert "<bounce@mailer.com>" in env_hdrs["X-Envelope-From"]
     assert "X-Envelope-To" in env_hdrs
     assert "<user@dest.com>" in env_hdrs["X-Envelope-To"]
+
+
+def test_generate_message_structure_metrics_headers():
+    from formatter import generate_message_structure_metrics_headers
+
+    body_text = "Line 1\nLine 2\nLine 3"
+    metric_hdrs = generate_message_structure_metrics_headers(body_text)
+    assert "Lines" in metric_hdrs
+    assert metric_hdrs["Lines"] == "3"
+    assert "Bytes" in metric_hdrs
+    assert metric_hdrs["Bytes"] == str(len(body_text.encode("utf-8")))

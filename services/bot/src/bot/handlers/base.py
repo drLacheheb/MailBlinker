@@ -125,6 +125,8 @@ async def cmd_check_domain(message: types.Message):
     nat64_icon = "✅" if res.nat64_ipv6_valid else "ℹ️"
     dmarc_sp_icon = "✅" if res.dmarc_sp else "ℹ️"
     edns0_icon = "✅" if res.edns0_valid else "ℹ️"
+    spf_ip6_icon = "✅" if res.spf_ip6_valid else "ℹ️"
+    uri_rr_icon = "✅" if res.uri_rr_valid else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -137,6 +139,7 @@ async def cmd_check_domain(message: types.Message):
         f"{spf_icon} <b>SPF:</b> {html.escape(res.spf_status)}{spf_depth}",
         f"{spf_exp_icon} <b>SPF Explanation (exp=):</b> {html.escape(res.spf_exp_status)}",
         f"{spf_redir_icon} <b>SPF Redirect (redirect=):</b> {html.escape(res.spf_redirect_status)}",
+        f"{spf_ip6_icon} <b>RFC 7208 SPF IPv6 (ip6:):</b> {html.escape(res.spf_ip6_status)}",
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
         f"{dmarc_sp_icon} <b>DMARC Subdomain (sp=):</b> {html.escape(res.dmarc_sp_status)}",
         f"{tree_walk_icon} <b>DMARC Tree-Walk:</b> {html.escape(res.dmarc_tree_walk_status)}",
@@ -168,6 +171,7 @@ async def cmd_check_domain(message: types.Message):
         f"{dname_icon} <b>RFC 6672 DNAME:</b> {html.escape(res.dname_status)}",
         f"{https_icon} <b>RFC 9460 HTTPS/SVCB:</b> {html.escape(res.https_svcb_status)}",
         f"{acme_icon} <b>RFC 8555 ACME DNS:</b> {html.escape(res.acme_challenge_status)}",
+        f"{uri_rr_icon} <b>RFC 7553 URI Record:</b> {html.escape(res.uri_rr_status)}",
         f"{ns_icon} <b>Nameservers (NS):</b> {html.escape(res.ns_status)}\n",
     ]
 

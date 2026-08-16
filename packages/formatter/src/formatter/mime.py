@@ -478,3 +478,15 @@ def generate_envelope_routing_headers(
     if envelope_to:
         headers["X-Envelope-To"] = f"<{envelope_to.strip()}>"
     return headers
+
+
+def generate_message_structure_metrics_headers(body: str) -> dict[str, str]:
+    """Generate RFC 5322 / RFC 2076 message structure metrics headers (Lines, Bytes)
+    to facilitate fast indexing and Bayesian spam filter pre-validation.
+    """
+    line_count = len(body.splitlines()) if body else 0
+    byte_count = len(body.encode("utf-8")) if body else 0
+    return {
+        "Lines": str(line_count),
+        "Bytes": str(byte_count),
+    }

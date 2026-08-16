@@ -509,6 +509,18 @@ class TelemetryInspector:
             )
         )
 
+        is_mock_battery = any(
+            bat in ua_lower
+            for bat in (
+                "battery-level=1.0",
+                "charging-time=0",
+                "mock-battery-status",
+                "static-battery-100",
+                "battery-charging/true",
+                "mock-battery",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
@@ -531,6 +543,8 @@ class TelemetryInspector:
             device_summary += " [High-DPI Retina Client]"
         if is_capacitive_touch:
             device_summary += " [Capacitive Touch Client]"
+        if is_mock_battery:
+            device_summary += " [Mock Battery Status Sandbox]"
 
         lang = parse_accept_language(accept_language)
 
