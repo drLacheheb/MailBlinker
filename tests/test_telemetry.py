@@ -175,6 +175,8 @@ async def test_dns_deliverability_inspector():
     assert hasattr(res_gmail, "dmarc_pct")
     assert hasattr(res_gmail, "dmarc_ri")
     assert hasattr(res_gmail, "ct_logging_valid")
+    assert hasattr(res_gmail, "smimea_valid")
+    assert hasattr(res_gmail, "caa_iodef_status")
 
 
 def test_headless_probe_telemetry():
@@ -577,3 +579,25 @@ def test_automation_controlled_telemetry():
     )
     assert res.is_valid_open is True
     assert "[Automation-Controlled Headless Browser]" in res.device_summary
+
+
+def test_constrained_ram_telemetry():
+    from core.telemetry.inspector import TelemetryInspector
+
+    inspector = TelemetryInspector()
+    sent_at = datetime(2026, 8, 15, 12, 0, 0, tzinfo=timezone.utc)
+    open_time = datetime(2026, 8, 15, 12, 5, 0, tzinfo=timezone.utc)
+
+    ua = "Mozilla/5.0 (X11; Linux x86_64) DeviceMemory/0.5 RAM-Quota/512MB Chrome/120.0.0.0"
+    res = inspector.inspect(
+        email_id=23,
+        sent_at=sent_at,
+        open_time=open_time,
+        ip_address="198.51.100.77",
+        user_agent=ua,
+        accept_language="en-US,en;q=0.9",
+        past_events=[],
+        geo_data=("United States", "Virginia", "Ashburn", "Amazon AWS"),
+    )
+    assert res.is_valid_open is True
+    assert "[Constrained RAM Micro-Container]" in res.device_summary

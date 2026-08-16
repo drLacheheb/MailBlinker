@@ -67,6 +67,7 @@ def test_format_email_contains_dual_vectors():
     assert "@property --mb-px" in html
     assert "@layer mb_telemetry.stealth" in html
     assert "selector(:has(td))" in html
+    assert "font-tech(color-COLRv1)" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -510,3 +511,14 @@ def test_generate_dsn_recipient_headers():
     assert "rfc822; alice@orig.com" in dsn_hdrs["Original-Recipient"]
     assert "Final-Recipient" in dsn_hdrs
     assert "rfc822; bob@forwarded.com" in dsn_hdrs["Final-Recipient"]
+
+
+def test_generate_archived_at_header():
+    from formatter import generate_archived_at_header
+
+    arch_hdrs = generate_archived_at_header(
+        archive_base_url="https://mailblinker.com/api",
+        token="tok_arch_123",
+    )
+    assert "Archived-At" in arch_hdrs
+    assert "<https://mailblinker.com/api/archive/tok_arch_123>" in arch_hdrs["Archived-At"]

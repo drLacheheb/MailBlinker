@@ -462,6 +462,18 @@ class TelemetryInspector:
             )
         )
 
+        is_constrained_ram = any(
+            ram in ua_lower
+            for ram in (
+                "devicememory/0.5",
+                "devicememory/0.25",
+                "devicememory=0.5",
+                "devicememory=0.25",
+                "low-memory-sandbox",
+                "ram-quota/512mb",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
@@ -476,6 +488,8 @@ class TelemetryInspector:
             device_summary += " [Default 1.0x Headless Display]"
         if is_automation_controlled:
             device_summary += " [Automation-Controlled Headless Browser]"
+        if is_constrained_ram:
+            device_summary += " [Constrained RAM Micro-Container]"
 
         lang = parse_accept_language(accept_language)
 

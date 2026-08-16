@@ -80,6 +80,10 @@ class DnsInspectionResult:
     dmarc_ri: int
     ct_logging_valid: bool
     ct_logging_status: str
+    smimea_valid: bool
+    smimea_status: str
+    caa_iodef_target: Optional[str]
+    caa_iodef_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -301,6 +305,10 @@ class DnsDeliverabilityInspector:
                 dmarc_ri=86400,
                 ct_logging_valid=False,
                 ct_logging_status="Invalid domain format",
+                smimea_valid=False,
+                smimea_status="Invalid domain format",
+                caa_iodef_target=None,
+                caa_iodef_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -649,12 +657,17 @@ class DnsDeliverabilityInspector:
 
         # 13. Inspect RFC 8659 CAA (Certification Authority Authorization)
         caa_records = await self._query_doh(clean_d, "CAA")
+        caa_iodef_target = None
+        caa_iodef_status = "No iodef incident endpoint"
         if caa_records:
             caa_valid = True
             caa_issuers = []
             for r in caa_records:
                 if "issue" in r:
                     caa_issuers.append(r.split()[-1].strip('"'))
+                elif "iodef" in r:
+                    caa_iodef_target = r.split()[-1].strip('"')
+                    caa_iodef_status = f"Enforced ({caa_iodef_target})"
             caa_status = f"Enforced ({', '.join(caa_issuers) if caa_issuers else 'Active'})"
             score += 5
         else:
@@ -770,6 +783,19 @@ class DnsDeliverabilityInspector:
             ct_logging_valid = False
             ct_logging_status = "Standard TLS (No explicit CT pinning)"
 
+        # 22. Inspect RFC 8162 SMIMEA DNS Record
+        smimea_rrs = await self._query_doh(f"_smimecert.{clean_d}", "SMIMEA")
+        if not smimea_rrs:
+            smimea_rrs = await self._query_doh(f"_smimecert.{clean_d}", "TXT")
+
+        if smimea_rrs:
+            smimea_valid = True
+            smimea_status = f"Published ({len(smimea_rrs)} cert association(s))"
+            score += 5
+        else:
+            smimea_valid = False
+            smimea_status = "No SMIMEA record (Optional for DNSSEC S/MIME)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -847,5 +873,9 @@ class DnsDeliverabilityInspector:
             dmarc_ri=dmarc_ri,
             ct_logging_valid=ct_logging_valid,
             ct_logging_status=ct_logging_status,
+            smimea_valid=smimea_valid,
+            smimea_status=smimea_status,
+            caa_iodef_target=caa_iodef_target,
+            caa_iodef_status=caa_iodef_status,
             recommendations=recommendations,
         )

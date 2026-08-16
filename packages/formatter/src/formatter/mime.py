@@ -418,3 +418,17 @@ def generate_dsn_recipient_headers(
         "Original-Recipient": f"rfc822; {clean_orig}",
         "Final-Recipient": f"rfc822; {clean_final}",
     }
+
+
+def generate_archived_at_header(
+    archive_base_url: str,
+    token: str,
+) -> dict[str, str]:
+    """Generate RFC 5064 Archived-At header to provide a direct, standardized
+    permalink pointer to the archived email message copy for listservs and compliance vaults.
+    """
+    clean_base = archive_base_url.rstrip("/")
+    clean_tok = token.strip()
+    return {
+        "Archived-At": f"<{clean_base}/archive/{clean_tok}>",
+    }
