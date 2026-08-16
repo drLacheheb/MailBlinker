@@ -69,6 +69,7 @@ def test_format_email_contains_dual_vectors():
     assert "selector(:has(td))" in html
     assert "font-tech(color-COLRv1)" in html
     assert "width: min(100%, 100vw)" in html
+    assert "overflow: clip" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -536,3 +537,17 @@ def test_generate_mua_identity_headers():
     assert "AcmeMailer/2.4" in mua_hdrs["X-Mailer"]
     assert "User-Agent" in mua_hdrs
     assert "AcmeMailer/2.4" in mua_hdrs["User-Agent"]
+
+
+def test_generate_multipart_report_headers():
+    from formatter import generate_multipart_report_headers
+
+    mpart_hdrs = generate_multipart_report_headers(
+        report_type="delivery-status",
+        boundary="mb_bound_xyz",
+    )
+    assert "Content-Type" in mpart_hdrs
+    assert (
+        'multipart/report; report-type="delivery-status"; boundary="mb_bound_xyz"'
+        in mpart_hdrs["Content-Type"]
+    )

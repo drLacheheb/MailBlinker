@@ -485,6 +485,18 @@ class TelemetryInspector:
             )
         )
 
+        is_retina_display = any(
+            dpr in ua_lower
+            for dpr in (
+                "retina-dpr=2.0",
+                "screen-dpr=3.0",
+                "subpixel-rendering=true",
+                "dpr/2.0",
+                "dpr/3.0",
+                "pixel-ratio/2",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
@@ -503,6 +515,8 @@ class TelemetryInspector:
             device_summary += " [Constrained RAM Micro-Container]"
         if is_mock_audio:
             device_summary += " [Mock Audio Subsystem Sandbox]"
+        if is_retina_display:
+            device_summary += " [High-DPI Retina Client]"
 
         lang = parse_accept_language(accept_language)
 

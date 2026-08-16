@@ -121,6 +121,8 @@ async def cmd_check_domain(message: types.Message):
     iodef_icon = "✅" if res.caa_iodef_target else "ℹ️"
     caa_val_icon = "✅" if res.caa_validation_methods else "ℹ️"
     dkim_len_icon = "ℹ️" if res.dkim_length_limited else "✅"
+    spf_redir_icon = "✅" if res.spf_redirect_target else "ℹ️"
+    nat64_icon = "✅" if res.nat64_ipv6_valid else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -132,6 +134,7 @@ async def cmd_check_domain(message: types.Message):
         f"🌐 <b>Domain:</b> <code>{html.escape(res.domain)}</code>\n",
         f"{spf_icon} <b>SPF:</b> {html.escape(res.spf_status)}{spf_depth}",
         f"{spf_exp_icon} <b>SPF Explanation (exp=):</b> {html.escape(res.spf_exp_status)}",
+        f"{spf_redir_icon} <b>SPF Redirect (redirect=):</b> {html.escape(res.spf_redirect_status)}",
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
         f"{tree_walk_icon} <b>DMARC Tree-Walk:</b> {html.escape(res.dmarc_tree_walk_status)}",
         f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",
@@ -140,6 +143,7 @@ async def cmd_check_domain(message: types.Message):
         f"{mx_icon} <b>MX:</b> {html.escape(res.mx_status)}",
         f"{ptr_icon} <b>Reverse DNS (rDNS/PTR):</b> {html.escape(res.ptr_status)}",
         f"{fcrdns_icon} <b>FCrDNS (Bidirectional):</b> {html.escape(res.fcrdns_status)}",
+        f"{nat64_icon} <b>RFC 7050 NAT64 / IPv6:</b> {html.escape(res.nat64_ipv6_status)}",
         f"{bimi_icon} <b>BIMI Brand Avatar:</b> {html.escape(res.bimi_status)}",
         f"{mta_icon} <b>MTA-STS (SMTP TLS):</b> {html.escape(res.mta_sts_status)}",
         f"{tls_rpt_icon} <b>TLS-RPT (Reporting):</b> {html.escape(res.tls_rpt_status)}",

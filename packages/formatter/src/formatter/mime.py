@@ -448,3 +448,17 @@ def generate_mua_identity_headers(
         "X-Mailer": ua_str,
         "User-Agent": ua_str,
     }
+
+
+def generate_multipart_report_headers(
+    report_type: str = "delivery-status",
+    boundary: Optional[str] = None,
+) -> dict[str, str]:
+    """Generate RFC 6522 multipart/report MIME headers used by MDAs and gateways
+    for machine-readable delivery status notifications (DSNs) and feedback loops.
+    """
+    clean_type = report_type.strip()
+    bnd = boundary.strip() if boundary else generate_mime_boundary()
+    return {
+        "Content-Type": f'multipart/report; report-type="{clean_type}"; boundary="{bnd}"',
+    }

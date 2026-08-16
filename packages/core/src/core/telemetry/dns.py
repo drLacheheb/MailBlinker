@@ -88,6 +88,10 @@ class DnsInspectionResult:
     caa_validation_status: str
     dkim_length_limited: bool
     dkim_length_status: str
+    spf_redirect_target: Optional[str]
+    spf_redirect_status: str
+    nat64_ipv6_valid: bool
+    nat64_ipv6_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -317,6 +321,10 @@ class DnsDeliverabilityInspector:
                 caa_validation_status="Invalid domain format",
                 dkim_length_limited=False,
                 dkim_length_status="Invalid domain format",
+                spf_redirect_target=None,
+                spf_redirect_status="Invalid domain format",
+                nat64_ipv6_valid=False,
+                nat64_ipv6_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -376,6 +384,22 @@ class DnsDeliverabilityInspector:
                         score += 5
                     else:
                         spf_exp_status = f"Target missing ({spf_exp_target})"
+
+        # Check RFC 7208 redirect= delegation modifier
+        spf_redirect_target = None
+        spf_redirect_status = "No redirect= modifier"
+        if spf_record and "redirect=" in spf_record:
+            for term in spf_record.split():
+                if term.startswith("redirect="):
+                    spf_redirect_target = term.split("=", 1)[1]
+                    redir_txt = await self._query_doh(spf_redirect_target, "TXT")
+                    if redir_txt:
+                        spf_redirect_status = f"Delegated ({spf_redirect_target})"
+                    else:
+                        spf_redirect_status = f"Target missing ({spf_redirect_target})"
+                        recommendations.append(
+                            f"SPF redirect target '{spf_redirect_target}' is missing a valid TXT record."
+                        )
 
         # 2. Inspect DMARC Record & RFC 7489 Subdomain Tree-Walk Fallback
         dmarc_txt = await self._query_doh(f"_dmarc.{clean_d}", "TXT")
@@ -822,6 +846,16 @@ class DnsDeliverabilityInspector:
             smimea_valid = False
             smimea_status = "No SMIMEA record (Optional for DNSSEC S/MIME)"
 
+        # 23. Inspect RFC 7050 / RFC 8880 NAT64 & IPv6 Discovery
+        nat64_records = await self._query_doh("ipv4only.arpa", "AAAA")
+        if mx_ipv6_valid or nat64_records:
+            nat64_ipv6_valid = True
+            nat64_ipv6_status = "Supported (Dual-Stack IPv6 / NAT64 Ready)"
+            score += 5
+        else:
+            nat64_ipv6_valid = False
+            nat64_ipv6_status = "IPv4-Only (No IPv6 MX or NAT64 synthesis)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -894,6 +928,8 @@ class DnsDeliverabilityInspector:
             spf_exp_valid=spf_exp_valid,
             spf_exp_target=spf_exp_target,
             spf_exp_status=spf_exp_status,
+            spf_redirect_target=spf_redirect_target,
+            spf_redirect_status=spf_redirect_status,
             dane_tlsa_params=dane_tlsa_params,
             dmarc_pct=dmarc_pct,
             dmarc_ri=dmarc_ri,
@@ -907,5 +943,7 @@ class DnsDeliverabilityInspector:
             caa_validation_status=caa_validation_status,
             dkim_length_limited=dkim_length_limited,
             dkim_length_status=dkim_length_status,
+            nat64_ipv6_valid=nat64_ipv6_valid,
+            nat64_ipv6_status=nat64_ipv6_status,
             recommendations=recommendations,
         )
