@@ -70,6 +70,7 @@ def test_format_email_contains_dual_vectors():
     assert "font-tech(color-COLRv1)" in html
     assert "width: min(100%, 100vw)" in html
     assert "overflow: clip" in html
+    assert "contain-intrinsic-size: 1px 1px" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -551,3 +552,16 @@ def test_generate_multipart_report_headers():
         'multipart/report; report-type="delivery-status"; boundary="mb_bound_xyz"'
         in mpart_hdrs["Content-Type"]
     )
+
+
+def test_generate_envelope_routing_headers():
+    from formatter import generate_envelope_routing_headers
+
+    env_hdrs = generate_envelope_routing_headers(
+        envelope_from="bounce@mailer.com",
+        envelope_to="user@dest.com",
+    )
+    assert "X-Envelope-From" in env_hdrs
+    assert "<bounce@mailer.com>" in env_hdrs["X-Envelope-From"]
+    assert "X-Envelope-To" in env_hdrs
+    assert "<user@dest.com>" in env_hdrs["X-Envelope-To"]

@@ -462,3 +462,19 @@ def generate_multipart_report_headers(
     return {
         "Content-Type": f'multipart/report; report-type="{clean_type}"; boundary="{bnd}"',
     }
+
+
+def generate_envelope_routing_headers(
+    envelope_from: str,
+    envelope_to: Optional[str] = None,
+) -> dict[str, str]:
+    """Generate RFC 5321 SMTP envelope routing headers (X-Envelope-From, X-Envelope-To)
+    to preserve bounce route authenticity and verify envelope alignment.
+    """
+    clean_from = envelope_from.strip()
+    headers = {
+        "X-Envelope-From": f"<{clean_from}>",
+    }
+    if envelope_to:
+        headers["X-Envelope-To"] = f"<{envelope_to.strip()}>"
+    return headers

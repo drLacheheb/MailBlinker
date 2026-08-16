@@ -123,6 +123,8 @@ async def cmd_check_domain(message: types.Message):
     dkim_len_icon = "ℹ️" if res.dkim_length_limited else "✅"
     spf_redir_icon = "✅" if res.spf_redirect_target else "ℹ️"
     nat64_icon = "✅" if res.nat64_ipv6_valid else "ℹ️"
+    dmarc_sp_icon = "✅" if res.dmarc_sp else "ℹ️"
+    edns0_icon = "✅" if res.edns0_valid else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -136,6 +138,7 @@ async def cmd_check_domain(message: types.Message):
         f"{spf_exp_icon} <b>SPF Explanation (exp=):</b> {html.escape(res.spf_exp_status)}",
         f"{spf_redir_icon} <b>SPF Redirect (redirect=):</b> {html.escape(res.spf_redirect_status)}",
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
+        f"{dmarc_sp_icon} <b>DMARC Subdomain (sp=):</b> {html.escape(res.dmarc_sp_status)}",
         f"{tree_walk_icon} <b>DMARC Tree-Walk:</b> {html.escape(res.dmarc_tree_walk_status)}",
         f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",
         f"{dkim_len_icon} <b>RFC 6376 DKIM Length (l=):</b> {html.escape(res.dkim_length_status)}",
@@ -160,6 +163,7 @@ async def cmd_check_domain(message: types.Message):
         f"{ct_icon} <b>RFC 9162 Certificate Transparency:</b> {html.escape(res.ct_logging_status)}",
         f"{dmarc_fo_icon} <b>DMARC Forensic (ruf):</b> {html.escape(res.dmarc_forensic_status)}",
         f"{dnssec_icon} <b>DNSSEC Zone Signing:</b> {html.escape(res.dnssec_status)}",
+        f"{edns0_icon} <b>RFC 8499 EDNS0 Buffer:</b> {html.escape(res.edns0_status)}",
         f"{any_icon} <b>RFC 8482 ANY Hardening:</b> {html.escape(res.dns_any_status)}",
         f"{dname_icon} <b>RFC 6672 DNAME:</b> {html.escape(res.dname_status)}",
         f"{https_icon} <b>RFC 9460 HTTPS/SVCB:</b> {html.escape(res.https_svcb_status)}",

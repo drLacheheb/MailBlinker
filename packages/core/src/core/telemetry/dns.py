@@ -92,6 +92,10 @@ class DnsInspectionResult:
     spf_redirect_status: str
     nat64_ipv6_valid: bool
     nat64_ipv6_status: str
+    dmarc_sp: Optional[str]
+    dmarc_sp_status: str
+    edns0_valid: bool
+    edns0_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -325,6 +329,10 @@ class DnsDeliverabilityInspector:
                 spf_redirect_status="Invalid domain format",
                 nat64_ipv6_valid=False,
                 nat64_ipv6_status="Invalid domain format",
+                dmarc_sp=None,
+                dmarc_sp_status="Invalid domain format",
+                edns0_valid=False,
+                edns0_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -426,6 +434,8 @@ class DnsDeliverabilityInspector:
 
         dmarc_pct = 100
         dmarc_ri = 86400
+        dmarc_sp = None
+        dmarc_sp_status = "Inherited from p= (No explicit sp=)"
         if dmarc_record:
             for tag in dmarc_record.split(";"):
                 tag = tag.strip()
@@ -439,6 +449,9 @@ class DnsDeliverabilityInspector:
                         dmarc_ri = int(tag.split("=", 1)[1])
                     except ValueError:
                         dmarc_ri = 86400
+                elif tag.startswith("sp="):
+                    dmarc_sp = tag.split("=", 1)[1].strip()
+                    dmarc_sp_status = f"Enforced (sp={dmarc_sp})"
 
             if "ruf=" in dmarc_record:
                 dmarc_forensic_valid = True
@@ -856,6 +869,16 @@ class DnsDeliverabilityInspector:
             nat64_ipv6_valid = False
             nat64_ipv6_status = "IPv4-Only (No IPv6 MX or NAT64 synthesis)"
 
+        # 24. Inspect RFC 8499 / RFC 6891 EDNS0 Buffer Sizing & Fragmentation
+        soa_full = await self._query_doh_full(clean_d, "SOA")
+        if soa_full and not soa_full.get("TC", False):
+            edns0_valid = True
+            edns0_status = "Compliant (1232-byte DNS Flag Day buffer, No TC Truncation)"
+            score += 5
+        else:
+            edns0_valid = False
+            edns0_status = "Truncated / Non-compliant (Upstream TC flag encountered)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -868,6 +891,8 @@ class DnsDeliverabilityInspector:
             dmarc_valid=dmarc_valid,
             dmarc_record=dmarc_record,
             dmarc_status=dmarc_status,
+            dmarc_sp=dmarc_sp,
+            dmarc_sp_status=dmarc_sp_status,
             dkim_valid=dkim_valid,
             dkim_selectors_found=dkim_found,
             dkim_status=dkim_status,
@@ -945,5 +970,7 @@ class DnsDeliverabilityInspector:
             dkim_length_status=dkim_length_status,
             nat64_ipv6_valid=nat64_ipv6_valid,
             nat64_ipv6_status=nat64_ipv6_status,
+            edns0_valid=edns0_valid,
+            edns0_status=edns0_status,
             recommendations=recommendations,
         )

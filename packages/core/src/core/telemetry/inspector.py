@@ -497,6 +497,18 @@ class TelemetryInspector:
             )
         )
 
+        is_capacitive_touch = any(
+            tp in ua_lower
+            for tp in (
+                "max-touch-points=5",
+                "max-touch-points=10",
+                "touch-points/1",
+                "touch-points/5",
+                "pointer-coarse",
+                "maxtouchpoints/5",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
@@ -517,6 +529,8 @@ class TelemetryInspector:
             device_summary += " [Mock Audio Subsystem Sandbox]"
         if is_retina_display:
             device_summary += " [High-DPI Retina Client]"
+        if is_capacitive_touch:
+            device_summary += " [Capacitive Touch Client]"
 
         lang = parse_accept_language(accept_language)
 
