@@ -1,5 +1,6 @@
 from .density import DensityReport, EmailDensityOptimizer
 from .engine import (
+    detect_text_direction,
     format_email,
     generate_bimi_svg_ps,
     generate_document_preview_card,
@@ -84,6 +85,7 @@ __all__ = [
     "naturalize_text_entropy",
     "generate_unsubscribe_headers",
     "generate_rfc2369_headers",
+    "detect_text_direction",
     "format_email",
     "generate_plaintext_mirror",
     "generate_bimi_svg_ps",

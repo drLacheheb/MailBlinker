@@ -6,7 +6,7 @@ from aiogram.enums import ChatAction
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from core import CreateEmailDTO
-from formatter import EmailLink
+from formatter import EmailLink, detect_text_direction
 
 from ..dependencies import get_create_email_use_case
 from ..keyboards import email_created_inline_keyboard, main_menu_keyboard, wizard_step_keyboard
@@ -138,8 +138,11 @@ async def process_body(message: types.Message, state: FSMContext):
     safe_email = html.escape(result.email.recipient_email)
     safe_pixel = html.escape(result.pixel_url)
 
+    direction, _ = detect_text_direction(f"{title} {body_text}")
+    dir_tag = " [RTL]" if direction == "rtl" else ""
+
     response_text = (
-        f"🎉 <b>Template Ready</b>\n\n"
+        f"🎉 <b>Template Ready{dir_tag}</b>\n\n"
         f"📧 <b>{safe_title}</b>\n"
         f"👤 <code>{safe_email}</code>\n\n"
         f"<code>{safe_pixel}</code>"

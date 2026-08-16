@@ -589,3 +589,63 @@ def test_generate_list_id_header():
     )
     assert "List-Id" in list_hdrs
     assert '"Acme Product Updates" <updates.acme.com>' in list_hdrs["List-Id"]
+
+
+def test_rtl_detection_arabic_and_hebrew():
+    from formatter import detect_text_direction
+
+    # Arabic detection
+    dir_ar, lang_ar = detect_text_direction("السلام عليكم ورحمة الله وبركاته")
+    assert dir_ar == "rtl"
+    assert lang_ar == "ar"
+
+    # Hebrew detection
+    dir_he, lang_he = detect_text_direction("שלום וברכה, מה שלומך?")
+    assert dir_he == "rtl"
+    assert lang_he == "he"
+
+    # English / Latin detection
+    dir_en, lang_en = detect_text_direction("Hello there, this is a business proposal.")
+    assert dir_en == "ltr"
+    assert lang_en == "en"
+
+
+def test_rtl_email_formatting_arabic():
+    from formatter import EmailLink, EmailPayload, format_email
+
+    payload = EmailPayload(
+        title="عرض شراكة تجارية",
+        recipient_name="أحمد",
+        sender_name="ياسين",
+        body_text="يسرنا تقديم هذا العرض الخاص بكم.",
+        links=[EmailLink(text="رابط المنصة", url="https://mailblinker.com")],
+    )
+    html = format_email(payload, token="tok_rtl_123", base_url="https://mailblinker.com")
+
+    assert 'dir="rtl"' in html
+    assert 'lang="ar"' in html
+    assert "text-align: right" in html
+    assert "مرحباً أحمد،" in html
+    assert "مع أطيب التحيات،" in html
+    assert "ياسين" in html
+    assert "رابط المنصة" in html
+
+
+def test_ltr_email_formatting_english():
+    from formatter import EmailLink, EmailPayload, format_email
+
+    payload = EmailPayload(
+        title="Q3 Strategy Update",
+        recipient_name="Sarah",
+        sender_name="Alex",
+        body_text="Here is the strategy document for review.",
+        links=[EmailLink(text="View Deck", url="https://example.com/deck")],
+    )
+    html = format_email(payload, token="tok_ltr_456", base_url="https://mailblinker.com")
+
+    assert 'dir="ltr"' in html
+    assert 'lang="en"' in html
+    assert "text-align: left" in html
+    assert "Hi Sarah," in html
+    assert "Best regards," in html
+    assert "Alex" in html
