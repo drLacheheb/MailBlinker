@@ -16,7 +16,7 @@ from ..constants import (
     build_dynamic_webp,
 )
 from ..dependencies import get_record_open_use_case
-from ..throttle import canary_blacklist, token_burst_shield
+from ..throttle import token_burst_shield
 
 router = APIRouter()
 SAFE_TOKEN_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{8,64}$")
@@ -120,10 +120,8 @@ async def _handle_pixel_tracking(
         or None
     )
 
-    # Autonomous Canary Subnet Blacklist & Anti-replay rate limiting
-    if not canary_blacklist.is_blacklisted(client_ip) and not token_burst_shield.is_bursting(
-        clean_token
-    ):
+    # Anti-replay token burst rate limiting
+    if not token_burst_shield.is_bursting(clean_token):
         dto = RecordOpenDTO(
             token=clean_token,
             open_time=open_time,
@@ -175,22 +173,6 @@ async def _handle_pixel_tracking(
     return Response(
         content=content,
         media_type=media_type,
-        headers=headers,
-    )
-
-
-@router.api_route("/cdn/verify/{filename}", methods=["GET", "HEAD"], include_in_schema=False)
-@router.api_route("/assets/check/{filename}", methods=["GET", "HEAD"], include_in_schema=False)
-async def canary_honeypot_trap(filename: str, request: Request) -> Response:
-    """Canary trap endpoint hit exclusively by automated email crawlers/bots."""
-    clean_token, _, _ = _extract_token_and_format(filename, request.url.path)
-    client_ip = request.client.host if request.client else ""
-    if client_ip:
-        canary_blacklist.record_trap_hit(client_ip)
-
-    headers = get_cdn_headers_for_token(clean_token)
-    return Response(
-        status_code=204,
         headers=headers,
     )
 

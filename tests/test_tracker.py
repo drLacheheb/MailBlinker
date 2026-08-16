@@ -130,12 +130,7 @@ async def test_tracker_api_flow():
         assert sitemap_res.status_code == 200
         assert "<urlset" in sitemap_res.text
 
-        # 8. Test Honeypot Canary Trap
-        canary_res = await ac.get(f"/cdn/verify/chk_{token}.png")
-        assert canary_res.status_code == 204
-        assert canary_res.headers["server"].lower() in ("cloudflare", "cloudfront", "varnish")
-
-        # 9. Test Semantic Link Click Tracking & Safe Redirection
+        # 8. Test Semantic Link Click Tracking & Safe Redirection
         link_res = await ac.get(
             f"/l/{token}?dest=https%3A%2F%2Fexample.com%2Fproposal.pdf",
             follow_redirects=False,
@@ -232,21 +227,6 @@ def test_dynamic_gif_forensics():
     assert gif_bytes.startswith(b"GIF89a")
     assert gif_bytes.endswith(b"\x3b")
     assert b"Asset:tok_gif_forensics_789" in gif_bytes
-
-
-def test_canary_subnet_blacklist():
-    from tracker.throttle import CanarySubnetBlacklist
-
-    bl = CanarySubnetBlacklist(default_ttl=10.0)
-    assert bl.is_blacklisted("198.51.100.42") is False
-
-    bl.record_trap_hit("198.51.100.42")
-    # Same IP is blacklisted
-    assert bl.is_blacklisted("198.51.100.42") is True
-    # Same /24 subnet IP is also blacklisted
-    assert bl.is_blacklisted("198.51.100.99") is True
-    # Different subnet is not blacklisted
-    assert bl.is_blacklisted("203.0.113.1") is False
 
 
 def test_dynamic_avif_forensics():

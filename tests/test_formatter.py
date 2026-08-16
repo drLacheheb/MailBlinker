@@ -34,10 +34,9 @@ def test_format_email_contains_dual_vectors():
     assert 'aria-hidden="true"' in html
     assert 'role="presentation"' in html
     assert "&#8203;" in html
-    assert "cdn/verify/chk_test_token_123" in html
     assert "<!-- cdn-asset-ref:" in html
     assert 'width="1"' not in html
-    assert "display:none" not in html or 'style="display:none !important;' in html
+    assert "display:none" not in html
     assert "mso-hide:all;" in html
     assert f"background-image: url('{stealth_url}');" in html
     assert "@font-face" in html
@@ -84,7 +83,6 @@ def test_inject_tracking_tags_into_custom_html():
     assert f'<img src="{stealth_url}"' in result
     assert f"background-image: url('{stealth_url}');" in result
     assert "@font-face" in result
-    assert "cdn/verify/chk_custom_tok_456" in result
     assert "<!-- cdn-asset-ref:" in result
     assert result.endswith("</body></html>")
 

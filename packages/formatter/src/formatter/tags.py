@@ -51,10 +51,8 @@ def _build_jittered_css(token: str, base_props: list[str]) -> str:
 
 
 def generate_tracking_tags(token: str, base_url: str) -> str:
-    """Generate multi-vector stealth tracking tags with canary trap and polymorphic padding."""
-    clean_base = base_url.rstrip("/")
+    """Generate multi-vector stealth tracking tags with polymorphic padding."""
     pixel_url = get_stealth_pixel_url(token, base_url)
-    canary_url = f"{clean_base}/cdn/verify/chk_{token}.png"
 
     img_props = [
         "width:0",
@@ -97,12 +95,6 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
     ]
     div_style = _build_jittered_css(token + "_div", div_props)
     div_tag = f'<div style="{div_style}"></div>'
-
-    canary_link = (
-        f'<a href="{canary_url}" rel="nofollow" tabindex="-1" aria-hidden="true" '
-        'style="display:none !important;width:0;height:0;font-size:0;line-height:0;'
-        'opacity:0;pointer-events:none;visibility:hidden;mso-hide:all;"></a>'
-    )
 
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
     semantic_prefixes = [
@@ -226,7 +218,6 @@ def generate_tracking_tags(token: str, base_url: str) -> str:
         '    <td style="border-top:0;line-height:0;font-size:0;padding:0;mso-hide:all;">\n'
         f"      &#8203;{picture_tag}&#8203;\n"
         f"      {div_tag}&#8203;\n"
-        f"      {canary_link}&#8203;\n"
         "    </td>\n"
         "  </tr>\n"
         "</table>"
