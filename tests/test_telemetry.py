@@ -523,7 +523,10 @@ def test_retina_telemetry():
     sent_at = datetime(2026, 8, 15, 12, 0, 0, tzinfo=timezone.utc)
     open_time = datetime(2026, 8, 15, 12, 5, 0, tzinfo=timezone.utc)
 
-    ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Retina-DPR=2.0 Subpixel-Rendering=true Chrome/120.0.0.0"
+    ua = (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "Retina-DPR=2.0 Subpixel-Rendering=true Chrome/120.0.0.0"
+    )
     res = inspector.inspect(
         email_id=25,
         sent_at=sent_at,
@@ -545,7 +548,10 @@ def test_touch_telemetry():
     sent_at = datetime(2026, 8, 15, 12, 0, 0, tzinfo=timezone.utc)
     open_time = datetime(2026, 8, 15, 12, 5, 0, tzinfo=timezone.utc)
 
-    ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Max-Touch-Points=5 Pointer-Coarse Mobile/15E148"
+    ua = (
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
+        "Max-Touch-Points=5 Pointer-Coarse Mobile/15E148"
+    )
     res = inspector.inspect(
         email_id=26,
         sent_at=sent_at,
@@ -567,7 +573,10 @@ def test_mock_battery_telemetry():
     sent_at = datetime(2026, 8, 15, 12, 0, 0, tzinfo=timezone.utc)
     open_time = datetime(2026, 8, 15, 12, 5, 0, tzinfo=timezone.utc)
 
-    ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Battery-Level=1.0 Charging-Time=0 Chrome/122.0.0.0"
+    ua = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "Battery-Level=1.0 Charging-Time=0 Chrome/122.0.0.0"
+    )
     res = inspector.inspect(
         email_id=27,
         sent_at=sent_at,
