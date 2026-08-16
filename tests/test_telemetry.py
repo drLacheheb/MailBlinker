@@ -179,56 +179,6 @@ def test_off_hours_telemetry_heuristics():
     assert "off-hours" in human_open.forwarding_note.lower()
 
 
-def test_parse_dmarc_rua_xml():
-    from core import parse_dmarc_rua_xml
-
-    sample_xml = """<?xml version="1.0" encoding="UTF-8" ?>
-    <feedback>
-      <report_metadata>
-        <org_name>google.com</org_name>
-        <report_id>123456789</report_id>
-      </report_metadata>
-      <policy_published>
-        <domain>example.com</domain>
-      </policy_published>
-      <record>
-        <row>
-          <source_ip>209.85.220.41</source_ip>
-          <count>15</count>
-          <policy_evaluated>
-            <disposition>none</disposition>
-            <dkim>pass</dkim>
-            <spf>pass</spf>
-          </policy_evaluated>
-        </row>
-        <identifiers>
-          <header_from>example.com</header_from>
-        </identifiers>
-      </record>
-      <record>
-        <row>
-          <source_ip>198.51.100.99</source_ip>
-          <count>2</count>
-          <policy_evaluated>
-            <disposition>quarantine</disposition>
-            <dkim>fail</dkim>
-            <spf>fail</spf>
-          </policy_evaluated>
-        </row>
-      </record>
-    </feedback>
-    """
-    summary = parse_dmarc_rua_xml(sample_xml)
-    assert summary.org_name == "google.com"
-    assert summary.domain == "example.com"
-    assert summary.total_messages == 17
-    assert summary.passed_count == 15
-    assert summary.failed_count == 2
-    assert len(summary.records) == 2
-    assert summary.records[0].dkim_result == "pass"
-    assert summary.records[1].source_ip == "198.51.100.99"
-
-
 def test_prefetch_and_client_hints_telemetry():
     from core.telemetry.inspector import TelemetryInspector
 

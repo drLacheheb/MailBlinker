@@ -28,14 +28,11 @@ from .security import extract_raw_token, sign_token, verify_signed_token
 from .telemetry import (
     KNOWN_PROXIES,
     KNOWN_SECURITY_BOTS,
-    DmarcRecordEntry,
-    DmarcReportSummary,
     TelemetryInspectionResult,
     TelemetryInspector,
     detect_forwarding_clues,
     format_elapsed_time,
     parse_accept_language,
-    parse_dmarc_rua_xml,
 )
 from .use_cases import (
     CreateEmailDTO,
@@ -71,9 +68,6 @@ __all__ = [
     "GeoIpResolverInterface",
     "TelemetryInspector",
     "TelemetryInspectionResult",
-    "DmarcRecordEntry",
-    "DmarcReportSummary",
-    "parse_dmarc_rua_xml",
     "format_elapsed_time",
     "parse_accept_language",
     "detect_forwarding_clues",
