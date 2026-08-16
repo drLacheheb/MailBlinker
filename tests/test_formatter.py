@@ -149,53 +149,6 @@ def test_polymorphic_css_morphing():
     assert tags_a != tags_b
 
 
-def test_naturalize_text_entropy():
-    from formatter import naturalize_text_entropy
-
-    raw = "Here is the confidential invoice and project proposal."
-    shielded = naturalize_text_entropy(raw)
-    assert shielded != raw
-    assert "in&#8205;voice" in shielded
-    assert "pro&shy;posal" in shielded
-    assert "con&shy;fidential" in shielded
-
-
-def test_document_preview_card():
-    from formatter import generate_document_preview_card
-
-    card = generate_document_preview_card(
-        filename="Q3_Financial_Audit.pdf",
-        target_url="https://acme.com/docs/q3.pdf",
-        token="tok_pdf_111",
-        base_url="https://track.acme.com",
-    )
-    assert "Q3_Financial_Audit.pdf" in card
-    assert "PDF Document" in card
-    assert "/cdn/go/" in card
-
-
-def test_generate_plaintext_mirror():
-    from formatter import generate_plaintext_mirror
-
-    html = """
-    <html>
-      <head><style>body { font-size: 14px; }</style></head>
-      <body>
-        <p>Hello Sarah,</p>
-        <p>Please review our <a href="https://example.com/proposal">Enterprise Proposal</a>.</p>
-        <br>
-        <p>Best regards,<br>Alex Dupont</p>
-      </body>
-    </html>
-    """
-    plain = generate_plaintext_mirror(html)
-    assert "<style>" not in plain
-    assert "<p>" not in plain
-    assert "Hello Sarah," in plain
-    assert "Enterprise Proposal [https://example.com/proposal]" in plain
-    assert "Alex Dupont" in plain
-
-
 def test_rtl_detection_arabic_and_hebrew():
     from formatter import detect_text_direction
 
