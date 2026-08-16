@@ -76,6 +76,10 @@ class DnsInspectionResult:
     spf_exp_target: Optional[str]
     spf_exp_status: str
     dane_tlsa_params: Optional[str]
+    dmarc_pct: int
+    dmarc_ri: int
+    ct_logging_valid: bool
+    ct_logging_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -293,6 +297,10 @@ class DnsDeliverabilityInspector:
                 spf_exp_target=None,
                 spf_exp_status="Invalid domain format",
                 dane_tlsa_params=None,
+                dmarc_pct=100,
+                dmarc_ri=86400,
+                ct_logging_valid=False,
+                ct_logging_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -376,7 +384,22 @@ class DnsDeliverabilityInspector:
                     f"Inherited from {org_d} (sp={'enforced' if sp_match else 'default'})"
                 )
 
+        dmarc_pct = 100
+        dmarc_ri = 86400
         if dmarc_record:
+            for tag in dmarc_record.split(";"):
+                tag = tag.strip()
+                if tag.startswith("pct="):
+                    try:
+                        dmarc_pct = int(tag.split("=", 1)[1])
+                    except ValueError:
+                        dmarc_pct = 100
+                elif tag.startswith("ri="):
+                    try:
+                        dmarc_ri = int(tag.split("=", 1)[1])
+                    except ValueError:
+                        dmarc_ri = 86400
+
             if "ruf=" in dmarc_record:
                 dmarc_forensic_valid = True
                 fo_mode = "fo=1" if "fo=1" in dmarc_record else "default"
@@ -385,7 +408,8 @@ class DnsDeliverabilityInspector:
             if "p=reject" in dmarc_record or "p=quarantine" in dmarc_record:
                 dmarc_valid = True
                 policy = "reject" if "p=reject" in dmarc_record else "quarantine"
-                dmarc_status = f"Enforced ({policy})"
+                pct_str = f" (pct={dmarc_pct}%)" if dmarc_pct < 100 else ""
+                dmarc_status = f"Enforced ({policy}){pct_str}"
                 score += 25
             else:
                 dmarc_valid = True
@@ -394,6 +418,11 @@ class DnsDeliverabilityInspector:
                     "Strengthen DMARC policy from 'p=none' to 'p=quarantine' or 'p=reject'."
                 )
                 score += 15
+
+            if dmarc_pct < 100:
+                recommendations.append(
+                    f"Increase DMARC pct from {dmarc_pct}% to 100% for full domain protection."
+                )
         else:
             dmarc_valid = False
             dmarc_status = "Missing DMARC record"
@@ -727,6 +756,20 @@ class DnsDeliverabilityInspector:
             acme_challenge_found = False
             acme_challenge_status = "Clean (No stale _acme-challenge records)"
 
+        # 21. Inspect RFC 9162 Certificate Transparency (CT) Logging
+        ct_records = await self._query_doh(f"_ct.{clean_d}", "TXT")
+        if not ct_records:
+            ct_records = await self._query_doh(clean_d, "CAA")
+            ct_records = [r for r in ct_records if "issue" in r.lower()]
+
+        if ct_records:
+            ct_logging_valid = True
+            ct_logging_status = "Compliant (TLS CT policy pinned)"
+            score += 5
+        else:
+            ct_logging_valid = False
+            ct_logging_status = "Standard TLS (No explicit CT pinning)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -800,5 +843,9 @@ class DnsDeliverabilityInspector:
             spf_exp_target=spf_exp_target,
             spf_exp_status=spf_exp_status,
             dane_tlsa_params=dane_tlsa_params,
+            dmarc_pct=dmarc_pct,
+            dmarc_ri=dmarc_ri,
+            ct_logging_valid=ct_logging_valid,
+            ct_logging_status=ct_logging_status,
             recommendations=recommendations,
         )

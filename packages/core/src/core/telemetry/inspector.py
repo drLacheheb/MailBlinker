@@ -449,6 +449,19 @@ class TelemetryInspector:
             )
         )
 
+        is_automation_controlled = any(
+            ac in ua_lower
+            for ac in (
+                "automationcontrolled",
+                "playwright/",
+                "playwright-runner",
+                "puppeteer/",
+                "puppeteer-extra",
+                "selenium-webdriver",
+                "webdriver/true",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
@@ -461,6 +474,8 @@ class TelemetryInspector:
             device_summary += " [Emulated Single-Core Sandbox]"
         if is_default_headless_display:
             device_summary += " [Default 1.0x Headless Display]"
+        if is_automation_controlled:
+            device_summary += " [Automation-Controlled Headless Browser]"
 
         lang = parse_accept_language(accept_language)
 

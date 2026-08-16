@@ -172,6 +172,9 @@ async def test_dns_deliverability_inspector():
     assert hasattr(res_gmail, "acme_challenge_found")
     assert hasattr(res_gmail, "spf_exp_valid")
     assert hasattr(res_gmail, "dane_tlsa_params")
+    assert hasattr(res_gmail, "dmarc_pct")
+    assert hasattr(res_gmail, "dmarc_ri")
+    assert hasattr(res_gmail, "ct_logging_valid")
 
 
 def test_headless_probe_telemetry():
@@ -549,3 +552,28 @@ def test_default_headless_display_telemetry():
     )
     assert res.is_valid_open is True
     assert "[Default 1.0x Headless Display]" in res.device_summary
+
+
+def test_automation_controlled_telemetry():
+    from core.telemetry.inspector import TelemetryInspector
+
+    inspector = TelemetryInspector()
+    sent_at = datetime(2026, 8, 15, 12, 0, 0, tzinfo=timezone.utc)
+    open_time = datetime(2026, 8, 15, 12, 5, 0, tzinfo=timezone.utc)
+
+    ua = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "Playwright/1.40.0 AutomationControlled Chrome/120.0.0.0"
+    )
+    res = inspector.inspect(
+        email_id=22,
+        sent_at=sent_at,
+        open_time=open_time,
+        ip_address="198.51.100.66",
+        user_agent=ua,
+        accept_language="en-US,en;q=0.9",
+        past_events=[],
+        geo_data=("United States", "Washington", "Seattle", "Amazon AWS"),
+    )
+    assert res.is_valid_open is True
+    assert "[Automation-Controlled Headless Browser]" in res.device_summary

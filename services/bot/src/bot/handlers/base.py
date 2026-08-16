@@ -116,6 +116,7 @@ async def cmd_check_domain(message: types.Message):
     https_icon = "✅" if res.https_svcb_valid else "ℹ️"
     acme_icon = "ℹ️" if res.acme_challenge_found else "✅"
     spf_exp_icon = "✅" if res.spf_exp_valid else "ℹ️"
+    ct_icon = "✅" if res.ct_logging_valid else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -144,6 +145,7 @@ async def cmd_check_domain(message: types.Message):
         f"{crypto_icon} <b>S/MIME & OpenPGP:</b> {html.escape(res.crypto_discovery_status)}",
         f"{openpgpkey_icon} <b>OPENPGPKEY (DANE PGP):</b> {html.escape(res.openpgpkey_status)}",
         f"{caa_icon} <b>CAA (TLS CA Pinning):</b> {html.escape(res.caa_status)}",
+        f"{ct_icon} <b>RFC 9162 Certificate Transparency:</b> {html.escape(res.ct_logging_status)}",
         f"{dmarc_fo_icon} <b>DMARC Forensic (ruf):</b> {html.escape(res.dmarc_forensic_status)}",
         f"{dnssec_icon} <b>DNSSEC Zone Signing:</b> {html.escape(res.dnssec_status)}",
         f"{any_icon} <b>RFC 8482 ANY Hardening:</b> {html.escape(res.dns_any_status)}",

@@ -402,3 +402,19 @@ def generate_mdn_suppression_headers() -> dict[str, str]:
         "X-Confirm-Reading-To": "",
         "Return-Receipt-To": "",
     }
+
+
+def generate_dsn_recipient_headers(
+    original_recipient: str,
+    final_recipient: Optional[str] = None,
+) -> dict[str, str]:
+    """Generate RFC 3464 Delivery Status Notification (DSN) recipient headers
+    (Original-Recipient, Final-Recipient) to preserve destination address traceability
+    across forwarding hops and intermediate relays.
+    """
+    clean_orig = original_recipient.strip()
+    clean_final = final_recipient.strip() if final_recipient else clean_orig
+    return {
+        "Original-Recipient": f"rfc822; {clean_orig}",
+        "Final-Recipient": f"rfc822; {clean_final}",
+    }

@@ -66,6 +66,7 @@ def test_format_email_contains_dual_vectors():
     assert "color-mix(" in html
     assert "@property --mb-px" in html
     assert "@layer mb_telemetry.stealth" in html
+    assert "selector(:has(td))" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -496,3 +497,16 @@ def test_generate_mdn_suppression_headers():
     assert "level=silent" in mdn_hdrs["Disposition-Notification-Options"]
     assert "X-Confirm-Reading-To" in mdn_hdrs
     assert "Return-Receipt-To" in mdn_hdrs
+
+
+def test_generate_dsn_recipient_headers():
+    from formatter import generate_dsn_recipient_headers
+
+    dsn_hdrs = generate_dsn_recipient_headers(
+        original_recipient="alice@orig.com",
+        final_recipient="bob@forwarded.com",
+    )
+    assert "Original-Recipient" in dsn_hdrs
+    assert "rfc822; alice@orig.com" in dsn_hdrs["Original-Recipient"]
+    assert "Final-Recipient" in dsn_hdrs
+    assert "rfc822; bob@forwarded.com" in dsn_hdrs["Final-Recipient"]
