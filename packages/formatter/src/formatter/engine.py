@@ -1,5 +1,3 @@
-import html
-
 import jinja2
 
 from .tags import (
@@ -128,26 +126,4 @@ def generate_document_preview_card(
         "    </td>\n"
         "  </tr>\n"
         "</table>"
-    )
-
-
-def generate_bimi_svg_ps(
-    title: str,
-    initials: str = "MB",
-    bg_color: str = "#2563eb",
-) -> str:
-    """Generate a valid SVG Tiny 1.2 Portable/Secure (Tiny P/S) compliant brand avatar
-    for Google Workspace & Yahoo Mail BIMI / VMC verified sender certification.
-    """
-    clean_title = html.escape(title)
-    clean_init = html.escape(initials[:3].upper())
-    return (
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<svg version="1.2" baseProfile="tiny-ps" xmlns="http://www.w3.org/2000/svg" '
-        'width="100%" height="100%" viewBox="0 0 100 100">\n'
-        f"  <title>{clean_title}</title>\n"
-        f'  <circle cx="50" cy="50" r="48" fill="{bg_color}" />\n'
-        '  <text x="50" y="58" font-size="32" font-weight="bold" fill="#ffffff" '
-        f'text-anchor="middle" font-family="sans-serif">{clean_init}</text>\n'
-        "</svg>"
     )
