@@ -185,6 +185,8 @@ async def test_dns_deliverability_inspector():
     assert hasattr(res_gmail, "edns0_status")
     assert hasattr(res_gmail, "spf_ip6_status")
     assert hasattr(res_gmail, "uri_rr_status")
+    assert hasattr(res_gmail, "spf_ptr_status")
+    assert hasattr(res_gmail, "dmarc_rf_status")
 
 
 def test_headless_probe_telemetry():
@@ -697,3 +699,25 @@ def test_mock_battery_telemetry():
     )
     assert res.is_valid_open is True
     assert "[Mock Battery Status Sandbox]" in res.device_summary
+
+
+def test_mock_gamepad_telemetry():
+    from core.telemetry.inspector import TelemetryInspector
+
+    inspector = TelemetryInspector()
+    sent_at = datetime(2026, 8, 15, 12, 0, 0, tzinfo=timezone.utc)
+    open_time = datetime(2026, 8, 15, 12, 5, 0, tzinfo=timezone.utc)
+
+    ua = "Mozilla/5.0 (X11; Linux x86_64) Mock-Gamepad-Device Gamepad-Count=0 Chrome/124.0.0.0"
+    res = inspector.inspect(
+        email_id=28,
+        sent_at=sent_at,
+        open_time=open_time,
+        ip_address="198.51.100.133",
+        user_agent=ua,
+        accept_language="en-US,en;q=0.9",
+        past_events=[],
+        geo_data=("United States", "Oregon", "Boardman", "Amazon AWS"),
+    )
+    assert res.is_valid_open is True
+    assert "[Mock Gamepad Subsystem Sandbox]" in res.device_summary

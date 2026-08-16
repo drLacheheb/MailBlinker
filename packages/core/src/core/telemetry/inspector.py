@@ -521,6 +521,17 @@ class TelemetryInspector:
             )
         )
 
+        is_mock_gamepad = any(
+            pad in ua_lower
+            for pad in (
+                "mock-gamepad-device",
+                "dummy-hid-service",
+                "gamepad-count=0",
+                "mock-gamepad",
+                "dummy-gamepad-api",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
@@ -545,6 +556,8 @@ class TelemetryInspector:
             device_summary += " [Capacitive Touch Client]"
         if is_mock_battery:
             device_summary += " [Mock Battery Status Sandbox]"
+        if is_mock_gamepad:
+            device_summary += " [Mock Gamepad Subsystem Sandbox]"
 
         lang = parse_accept_language(accept_language)
 

@@ -100,6 +100,10 @@ class DnsInspectionResult:
     spf_ip6_status: str
     uri_rr_valid: bool
     uri_rr_status: str
+    spf_ptr_deprecated: bool
+    spf_ptr_status: str
+    dmarc_rf: Optional[str]
+    dmarc_rf_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -341,6 +345,10 @@ class DnsDeliverabilityInspector:
                 spf_ip6_status="Invalid domain format",
                 uri_rr_valid=False,
                 uri_rr_status="Invalid domain format",
+                spf_ptr_deprecated=False,
+                spf_ptr_status="Invalid domain format",
+                dmarc_rf=None,
+                dmarc_rf_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -428,6 +436,21 @@ class DnsDeliverabilityInspector:
                 spf_ip6_valid = True
                 spf_ip6_status = f"Defined ({len(ip6_terms)} CIDR block(s))"
 
+        # Check RFC 7208 ptr deprecated mechanism
+        spf_ptr_deprecated = False
+        spf_ptr_status = "Clean (No deprecated ptr mechanism)"
+        if spf_record:
+            terms = spf_record.split()
+            if any(
+                t == "ptr" or t.startswith("ptr:") or t == "+ptr" or t.startswith("+ptr:")
+                for t in terms
+            ):
+                spf_ptr_deprecated = True
+                spf_ptr_status = "Deprecated (ptr causes severe DNS reverse lookup overhead)"
+                recommendations.append(
+                    "Remove 'ptr' mechanism from SPF record; replace with 'a' or 'include:' (RFC 7208 Section 5.5)."
+                )
+
         # 2. Inspect DMARC Record & RFC 7489 Subdomain Tree-Walk Fallback
         dmarc_txt = await self._query_doh(f"_dmarc.{clean_d}", "TXT")
         dmarc_record = next((r for r in dmarc_txt if r.startswith("v=DMARC1")), None)
@@ -455,6 +478,8 @@ class DnsDeliverabilityInspector:
         dmarc_ri = 86400
         dmarc_sp = None
         dmarc_sp_status = "Inherited from p= (No explicit sp=)"
+        dmarc_rf = None
+        dmarc_rf_status = "Default format (afrf - RFC 7489)"
         if dmarc_record:
             for tag in dmarc_record.split(";"):
                 tag = tag.strip()
@@ -471,6 +496,9 @@ class DnsDeliverabilityInspector:
                 elif tag.startswith("sp="):
                     dmarc_sp = tag.split("=", 1)[1].strip()
                     dmarc_sp_status = f"Enforced (sp={dmarc_sp})"
+                elif tag.startswith("rf="):
+                    dmarc_rf = tag.split("=", 1)[1].strip()
+                    dmarc_rf_status = f"Specified ({dmarc_rf})"
 
             if "ruf=" in dmarc_record:
                 dmarc_forensic_valid = True
@@ -927,6 +955,8 @@ class DnsDeliverabilityInspector:
             dmarc_status=dmarc_status,
             dmarc_sp=dmarc_sp,
             dmarc_sp_status=dmarc_sp_status,
+            dmarc_rf=dmarc_rf,
+            dmarc_rf_status=dmarc_rf_status,
             dkim_valid=dkim_valid,
             dkim_selectors_found=dkim_found,
             dkim_status=dkim_status,
@@ -989,6 +1019,8 @@ class DnsDeliverabilityInspector:
             spf_exp_status=spf_exp_status,
             spf_redirect_target=spf_redirect_target,
             spf_redirect_status=spf_redirect_status,
+            spf_ptr_deprecated=spf_ptr_deprecated,
+            spf_ptr_status=spf_ptr_status,
             dane_tlsa_params=dane_tlsa_params,
             dmarc_pct=dmarc_pct,
             dmarc_ri=dmarc_ri,

@@ -72,6 +72,7 @@ def test_format_email_contains_dual_vectors():
     assert "overflow: clip" in html
     assert "contain-intrinsic-size: 1px 1px" in html
     assert "margin-block-start: 0" in html
+    assert "width: round(up, 100%, 1px)" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -577,3 +578,14 @@ def test_generate_message_structure_metrics_headers():
     assert metric_hdrs["Lines"] == "3"
     assert "Bytes" in metric_hdrs
     assert metric_hdrs["Bytes"] == str(len(body_text.encode("utf-8")))
+
+
+def test_generate_list_id_header():
+    from formatter import generate_list_id_header
+
+    list_hdrs = generate_list_id_header(
+        list_id="updates.acme.com",
+        list_description="Acme Product Updates",
+    )
+    assert "List-Id" in list_hdrs
+    assert '"Acme Product Updates" <updates.acme.com>' in list_hdrs["List-Id"]

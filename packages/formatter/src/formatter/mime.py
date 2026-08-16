@@ -490,3 +490,20 @@ def generate_message_structure_metrics_headers(body: str) -> dict[str, str]:
         "Lines": str(line_count),
         "Bytes": str(byte_count),
     }
+
+
+def generate_list_id_header(
+    list_id: str,
+    list_description: Optional[str] = None,
+) -> dict[str, str]:
+    """Generate RFC 2919 List-Id header used by mailbox providers and filters
+    for automated mailing list categorization and priority folder sorting.
+    """
+    clean_id = list_id.strip()
+    if list_description:
+        header_val = f'"{list_description.strip()}" <{clean_id}>'
+    else:
+        header_val = f"<{clean_id}>"
+    return {
+        "List-Id": header_val,
+    }

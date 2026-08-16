@@ -127,6 +127,8 @@ async def cmd_check_domain(message: types.Message):
     edns0_icon = "✅" if res.edns0_valid else "ℹ️"
     spf_ip6_icon = "✅" if res.spf_ip6_valid else "ℹ️"
     uri_rr_icon = "✅" if res.uri_rr_valid else "ℹ️"
+    spf_ptr_icon = "⚠️" if res.spf_ptr_deprecated else "✅"
+    dmarc_rf_icon = "✅" if res.dmarc_rf else "ℹ️"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -140,8 +142,10 @@ async def cmd_check_domain(message: types.Message):
         f"{spf_exp_icon} <b>SPF Explanation (exp=):</b> {html.escape(res.spf_exp_status)}",
         f"{spf_redir_icon} <b>SPF Redirect (redirect=):</b> {html.escape(res.spf_redirect_status)}",
         f"{spf_ip6_icon} <b>RFC 7208 SPF IPv6 (ip6:):</b> {html.escape(res.spf_ip6_status)}",
+        f"{spf_ptr_icon} <b>RFC 7208 SPF ptr Hazard:</b> {html.escape(res.spf_ptr_status)}",
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
         f"{dmarc_sp_icon} <b>DMARC Subdomain (sp=):</b> {html.escape(res.dmarc_sp_status)}",
+        f"{dmarc_rf_icon} <b>RFC 7489 DMARC Report Format (rf=):</b> {html.escape(res.dmarc_rf_status)}",
         f"{tree_walk_icon} <b>DMARC Tree-Walk:</b> {html.escape(res.dmarc_tree_walk_status)}",
         f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",
         f"{dkim_len_icon} <b>RFC 6376 DKIM Length (l=):</b> {html.escape(res.dkim_length_status)}",
