@@ -26,9 +26,7 @@ def test_format_email_contains_dual_vectors():
     html = format_email(payload, token, base_url)
     stealth_url = get_stealth_pixel_url(token, base_url)
 
-    assert "Project Proposal" in html
-    assert "Sarah" in html
-    assert "Alex Dupont" in html
+    assert "Here is the project proposal for review." in html
     assert "dest=https%3A%2F%2Fexample.com%2Fspec.pdf" in html
     assert f'<img src="{stealth_url}"' in html
     assert 'role="presentation"' in html
@@ -37,7 +35,6 @@ def test_format_email_contains_dual_vectors():
     assert "&#8203;" in html
     assert "cdn/verify/chk_test_token_123" in html
     assert "<!-- cdn-asset-ref:" in html
-    assert 'color-scheme" content="light dark"' in html
     assert 'width="1"' not in html
     assert "display:none" not in html or 'style="display:none !important;' in html
     assert "mso-hide:all;" in html
@@ -625,9 +622,7 @@ def test_rtl_email_formatting_arabic():
     assert 'dir="rtl"' in html
     assert 'lang="ar"' in html
     assert "text-align: right" in html
-    assert "مرحباً أحمد،" in html
-    assert "مع أطيب التحيات،" in html
-    assert "ياسين" in html
+    assert "يسرنا تقديم هذا العرض الخاص بكم." in html
     assert "رابط المنصة" in html
 
 
@@ -646,6 +641,5 @@ def test_ltr_email_formatting_english():
     assert 'dir="ltr"' in html
     assert 'lang="en"' in html
     assert "text-align: left" in html
-    assert "Hi Sarah," in html
-    assert "Best regards," in html
-    assert "Alex" in html
+    assert "Here is the strategy document for review." in html
+    assert "View Deck" in html

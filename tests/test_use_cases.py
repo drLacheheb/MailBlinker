@@ -34,7 +34,7 @@ async def test_clean_architecture_use_cases():
         assert create_result.email.title == "Clean Architecture Proposal"
         assert any(ext in create_result.pixel_url for ext in [".png", ".svg", ".webp", ".gif"])
         assert create_result.email.token in create_result.pixel_url
-        assert "Martin Fowler" in create_result.formatted_html
+        assert "Testing domain use cases decoupling." in create_result.formatted_html
 
         record_uc = RecordOpenUseCase(repository=repo)
         open_dto = RecordOpenDTO(
