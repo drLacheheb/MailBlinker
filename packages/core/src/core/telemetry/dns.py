@@ -84,6 +84,10 @@ class DnsInspectionResult:
     smimea_status: str
     caa_iodef_target: Optional[str]
     caa_iodef_status: str
+    caa_validation_methods: Optional[str]
+    caa_validation_status: str
+    dkim_length_limited: bool
+    dkim_length_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -309,6 +313,10 @@ class DnsDeliverabilityInspector:
                 smimea_status="Invalid domain format",
                 caa_iodef_target=None,
                 caa_iodef_status="Invalid domain format",
+                caa_validation_methods=None,
+                caa_validation_status="Invalid domain format",
+                dkim_length_limited=False,
+                dkim_length_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -442,6 +450,7 @@ class DnsDeliverabilityInspector:
         # 3. Inspect DKIM Records (Probe common selectors & RFC 8463 Ed25519)
         dkim_found: List[str] = []
         dkim_ed25519_valid = False
+        dkim_length_limited = False
         for sel in self.COMMON_DKIM_SELECTORS:
             dkim_res = await self._query_doh(f"{sel}._domainkey.{clean_d}", "TXT")
             if any("k=ed25519" in r.lower() for r in dkim_res):
@@ -449,6 +458,8 @@ class DnsDeliverabilityInspector:
                 dkim_found.append(f"{sel} (Ed25519)")
             elif any("k=rsa" in r or "p=" in r or "v=DKIM1" in r for r in dkim_res):
                 dkim_found.append(sel)
+            if any("l=" in r.lower() for r in dkim_res):
+                dkim_length_limited = True
 
         if dkim_found:
             dkim_valid = True
@@ -460,6 +471,14 @@ class DnsDeliverabilityInspector:
             recommendations.append(
                 "Ensure your email provider DKIM selector (e.g. google._domainkey) is published."
             )
+
+        if dkim_length_limited:
+            dkim_length_status = "Vulnerable (RFC 6376 l= body length limit declared)"
+            recommendations.append(
+                "Remove 'l=' body length limit in DKIM record to prevent trailer injection attacks."
+            )
+        else:
+            dkim_length_status = "Secure (Full body integrity / unbounded)"
 
         if dkim_ed25519_valid:
             dkim_ed25519_status = "RFC 8463 Ed25519 Active (Edwards-Curve Public Key)"
@@ -659,6 +678,8 @@ class DnsDeliverabilityInspector:
         caa_records = await self._query_doh(clean_d, "CAA")
         caa_iodef_target = None
         caa_iodef_status = "No iodef incident endpoint"
+        caa_validation_methods = None
+        caa_validation_status = "Standard (No method restriction)"
         if caa_records:
             caa_valid = True
             caa_issuers = []
@@ -668,6 +689,11 @@ class DnsDeliverabilityInspector:
                 elif "iodef" in r:
                     caa_iodef_target = r.split()[-1].strip('"')
                     caa_iodef_status = f"Enforced ({caa_iodef_target})"
+                if "validationmethods" in r.lower():
+                    for part in r.split(";"):
+                        if "validationmethods" in part.lower():
+                            caa_validation_methods = part.split("=")[-1].strip(' "')
+                            caa_validation_status = f"Restricted ({caa_validation_methods})"
             caa_status = f"Enforced ({', '.join(caa_issuers) if caa_issuers else 'Active'})"
             score += 5
         else:
@@ -877,5 +903,9 @@ class DnsDeliverabilityInspector:
             smimea_status=smimea_status,
             caa_iodef_target=caa_iodef_target,
             caa_iodef_status=caa_iodef_status,
+            caa_validation_methods=caa_validation_methods,
+            caa_validation_status=caa_validation_status,
+            dkim_length_limited=dkim_length_limited,
+            dkim_length_status=dkim_length_status,
             recommendations=recommendations,
         )

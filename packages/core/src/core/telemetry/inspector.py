@@ -474,6 +474,17 @@ class TelemetryInspector:
             )
         )
 
+        is_mock_audio = any(
+            aud in ua_lower
+            for aud in (
+                "audio-latency=0",
+                "mock-audio-context",
+                "dummy-audio-device",
+                "audiosamplerate/0",
+                "mute-audio",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
@@ -490,6 +501,8 @@ class TelemetryInspector:
             device_summary += " [Automation-Controlled Headless Browser]"
         if is_constrained_ram:
             device_summary += " [Constrained RAM Micro-Container]"
+        if is_mock_audio:
+            device_summary += " [Mock Audio Subsystem Sandbox]"
 
         lang = parse_accept_language(accept_language)
 

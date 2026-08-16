@@ -119,6 +119,8 @@ async def cmd_check_domain(message: types.Message):
     ct_icon = "✅" if res.ct_logging_valid else "ℹ️"
     smimea_icon = "✅" if res.smimea_valid else "ℹ️"
     iodef_icon = "✅" if res.caa_iodef_target else "ℹ️"
+    caa_val_icon = "✅" if res.caa_validation_methods else "ℹ️"
+    dkim_len_icon = "ℹ️" if res.dkim_length_limited else "✅"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -133,6 +135,7 @@ async def cmd_check_domain(message: types.Message):
         f"{dmarc_icon} <b>DMARC:</b> {html.escape(res.dmarc_status)}",
         f"{tree_walk_icon} <b>DMARC Tree-Walk:</b> {html.escape(res.dmarc_tree_walk_status)}",
         f"{dkim_icon} <b>DKIM:</b> {html.escape(res.dkim_status)}",
+        f"{dkim_len_icon} <b>RFC 6376 DKIM Length (l=):</b> {html.escape(res.dkim_length_status)}",
         f"{ed25519_icon} <b>Ed25519 DKIM:</b> {html.escape(res.dkim_ed25519_status)}",
         f"{mx_icon} <b>MX:</b> {html.escape(res.mx_status)}",
         f"{ptr_icon} <b>Reverse DNS (rDNS/PTR):</b> {html.escape(res.ptr_status)}",
@@ -149,6 +152,7 @@ async def cmd_check_domain(message: types.Message):
         f"{smimea_icon} <b>RFC 8162 SMIMEA:</b> {html.escape(res.smimea_status)}",
         f"{caa_icon} <b>CAA (TLS CA Pinning):</b> {html.escape(res.caa_status)}",
         f"{iodef_icon} <b>CAA Incident (iodef):</b> {html.escape(res.caa_iodef_status)}",
+        f"{caa_val_icon} <b>RFC 8657 CAA Validation:</b> {html.escape(res.caa_validation_status)}",
         f"{ct_icon} <b>RFC 9162 Certificate Transparency:</b> {html.escape(res.ct_logging_status)}",
         f"{dmarc_fo_icon} <b>DMARC Forensic (ruf):</b> {html.escape(res.dmarc_forensic_status)}",
         f"{dnssec_icon} <b>DNSSEC Zone Signing:</b> {html.escape(res.dnssec_status)}",

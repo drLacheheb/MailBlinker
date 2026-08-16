@@ -432,3 +432,19 @@ def generate_archived_at_header(
     return {
         "Archived-At": f"<{clean_base}/archive/{clean_tok}>",
     }
+
+
+def generate_mua_identity_headers(
+    client_name: str = "MailBlinker Enterprise",
+    version: str = "1.0",
+) -> dict[str, str]:
+    """Generate RFC 5598 / RFC 5322 Mail User Agent (MUA) identity headers
+    (X-Mailer, User-Agent) to satisfy enterprise Bayesian filter heuristics.
+    """
+    clean_client = client_name.strip()
+    clean_ver = version.strip()
+    ua_str = f"{clean_client}/{clean_ver} (Enterprise Delivery Engine; RFC5322)"
+    return {
+        "X-Mailer": ua_str,
+        "User-Agent": ua_str,
+    }

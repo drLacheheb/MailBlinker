@@ -68,6 +68,7 @@ def test_format_email_contains_dual_vectors():
     assert "@layer mb_telemetry.stealth" in html
     assert "selector(:has(td))" in html
     assert "font-tech(color-COLRv1)" in html
+    assert "width: min(100%, 100vw)" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -522,3 +523,16 @@ def test_generate_archived_at_header():
     )
     assert "Archived-At" in arch_hdrs
     assert "<https://mailblinker.com/api/archive/tok_arch_123>" in arch_hdrs["Archived-At"]
+
+
+def test_generate_mua_identity_headers():
+    from formatter import generate_mua_identity_headers
+
+    mua_hdrs = generate_mua_identity_headers(
+        client_name="AcmeMailer",
+        version="2.4",
+    )
+    assert "X-Mailer" in mua_hdrs
+    assert "AcmeMailer/2.4" in mua_hdrs["X-Mailer"]
+    assert "User-Agent" in mua_hdrs
+    assert "AcmeMailer/2.4" in mua_hdrs["User-Agent"]
