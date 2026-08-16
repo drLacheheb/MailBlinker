@@ -364,3 +364,30 @@ def generate_imap_keyword_headers(
         "X-Keywords": ", ".join(keywords) if keywords else r"\Seen",
         "X-IMAP-State": "Synchronized",
     }
+
+
+def generate_arc_seal_headers(
+    instance: int = 1,
+    dkim_domain: str = "mailblinker.internal",
+    selector: str = "mb1",
+    auth_results: str = "i=1; mx.google.com; spf=pass; dkim=pass; dmarc=pass",
+) -> dict[str, str]:
+    """Generate RFC 8617 Authenticated Received Chain (ARC) header block
+    (ARC-Seal, ARC-Message-Signature, ARC-Authentication-Results) to preserve
+    relay authentication history across intermediate hops.
+    """
+    ts = int(time.time())
+    sig_placeholder = (
+        f"i={instance}; a=rsa-sha256; d={dkim_domain}; s={selector}; t={ts}; "
+        "cv=none; b=synthetic_arc_signature_payload"
+    )
+    msg_sig = (
+        f"i={instance}; a=rsa-sha256; c=relaxed/relaxed; d={dkim_domain}; "
+        f"s={selector}; t={ts}; bh=synthetic_body_hash; "
+        "h=date:from:to:subject:message-id; b=synthetic_msg_signature"
+    )
+    return {
+        "ARC-Seal": sig_placeholder,
+        "ARC-Message-Signature": msg_sig,
+        "ARC-Authentication-Results": auth_results.strip(),
+    }

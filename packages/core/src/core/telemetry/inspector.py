@@ -426,6 +426,17 @@ class TelemetryInspector:
             )
         )
 
+        is_single_core_sandbox = any(
+            sc in ua_lower
+            for sc in (
+                "hardwareconcurrency/1",
+                "concurrency=1",
+                "cpu-quota/1",
+                "single-core sandbox",
+                "lambda-runner",
+            )
+        )
+
         if is_datacenter_isp:
             device_summary += " [Datacenter ASN]"
         if is_software_renderer:
@@ -434,6 +445,8 @@ class TelemetryInspector:
             device_summary += " [Virtual MicroVM Sandbox]"
         if is_virtual_gpu:
             device_summary += " [Virtual GPU Emulation]"
+        if is_single_core_sandbox:
+            device_summary += " [Emulated Single-Core Sandbox]"
 
         lang = parse_accept_language(accept_language)
 

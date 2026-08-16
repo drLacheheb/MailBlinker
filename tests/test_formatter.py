@@ -64,6 +64,7 @@ def test_format_email_contains_dual_vectors():
     assert "forced-colors: active" in html
     assert "@view-transition" in html
     assert "color-mix(" in html
+    assert "@property --mb-px" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -469,3 +470,18 @@ def test_generate_authentication_results_and_imap_keyword_headers():
     assert r"\Flagged" in imap_hdrs["X-Keywords"]
     assert "$Forwarded" in imap_hdrs["X-Keywords"]
     assert imap_hdrs["X-IMAP-State"] == "Synchronized"
+
+
+def test_generate_arc_seal_headers():
+    from formatter import generate_arc_seal_headers
+
+    arc_hdrs = generate_arc_seal_headers(
+        instance=1,
+        dkim_domain="acme.com",
+        selector="mb1",
+        auth_results="i=1; mx.google.com; spf=pass; dkim=pass",
+    )
+    assert "ARC-Seal" in arc_hdrs
+    assert "i=1; a=rsa-sha256; d=acme.com; s=mb1;" in arc_hdrs["ARC-Seal"]
+    assert "ARC-Message-Signature" in arc_hdrs
+    assert "ARC-Authentication-Results" in arc_hdrs

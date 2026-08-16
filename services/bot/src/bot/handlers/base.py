@@ -113,6 +113,8 @@ async def cmd_check_domain(message: types.Message):
     tree_walk_icon = "✅" if res.dmarc_tree_walk_valid else "ℹ️"
     any_icon = "✅" if res.dns_any_hardened else "ℹ️"
     dname_icon = "✅" if res.dname_valid else "ℹ️"
+    https_icon = "✅" if res.https_svcb_valid else "ℹ️"
+    acme_icon = "ℹ️" if res.acme_challenge_found else "✅"
     spf_depth = (
         f" ({res.spf_lookup_count}/10 DNS lookups)"
         if res.spf_valid and res.spf_lookup_count > 0
@@ -144,6 +146,8 @@ async def cmd_check_domain(message: types.Message):
         f"{dnssec_icon} <b>DNSSEC Zone Signing:</b> {html.escape(res.dnssec_status)}",
         f"{any_icon} <b>RFC 8482 ANY Hardening:</b> {html.escape(res.dns_any_status)}",
         f"{dname_icon} <b>RFC 6672 DNAME:</b> {html.escape(res.dname_status)}",
+        f"{https_icon} <b>RFC 9460 HTTPS/SVCB:</b> {html.escape(res.https_svcb_status)}",
+        f"{acme_icon} <b>RFC 8555 ACME DNS:</b> {html.escape(res.acme_challenge_status)}",
         f"{ns_icon} <b>Nameservers (NS):</b> {html.escape(res.ns_status)}\n",
     ]
 

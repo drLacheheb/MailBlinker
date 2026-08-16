@@ -68,6 +68,10 @@ class DnsInspectionResult:
     dname_valid: bool
     dname_target: Optional[str]
     dname_status: str
+    https_svcb_valid: bool
+    https_svcb_status: str
+    acme_challenge_found: bool
+    acme_challenge_status: str
     recommendations: List[str] = field(default_factory=list)
 
 
@@ -277,6 +281,10 @@ class DnsDeliverabilityInspector:
                 dname_valid=False,
                 dname_target=None,
                 dname_status="Invalid domain format",
+                https_svcb_valid=False,
+                https_svcb_status="Invalid domain format",
+                acme_challenge_found=False,
+                acme_challenge_status="Invalid domain format",
                 recommendations=["Please provide a valid domain (e.g. acme.com or user@acme.com)"],
             )
 
@@ -656,6 +664,33 @@ class DnsDeliverabilityInspector:
             dname_target = None
             dname_status = "No DNAME delegation"
 
+        # 19. Inspect RFC 9460 HTTPS & SVCB Protocol Records
+        https_records = await self._query_doh(clean_d, "HTTPS")
+        if not https_records:
+            https_records = await self._query_doh(clean_d, "SVCB")
+
+        if https_records:
+            https_svcb_valid = True
+            alpn_hints = [r for r in https_records if "alpn=" in r.lower()]
+            https_svcb_status = (
+                f"Active ({len(https_records)} RRs)"
+                if not alpn_hints
+                else f"Active ({alpn_hints[0][:30]}...)"
+            )
+            score += 5
+        else:
+            https_svcb_valid = False
+            https_svcb_status = "No RFC 9460 HTTPS/SVCB record"
+
+        # 20. Inspect RFC 8555 ACME Challenge DNS Hygiene
+        acme_records = await self._query_doh(f"_acme-challenge.{clean_d}", "TXT")
+        if acme_records:
+            acme_challenge_found = True
+            acme_challenge_status = f"Active ({len(acme_records)} challenge token(s) present)"
+        else:
+            acme_challenge_found = False
+            acme_challenge_status = "Clean (No stale _acme-challenge records)"
+
         score = min(100, score)
 
         return DnsInspectionResult(
@@ -721,5 +756,9 @@ class DnsDeliverabilityInspector:
             dname_valid=dname_valid,
             dname_target=dname_target,
             dname_status=dname_status,
+            https_svcb_valid=https_svcb_valid,
+            https_svcb_status=https_svcb_status,
+            acme_challenge_found=acme_challenge_found,
+            acme_challenge_status=acme_challenge_status,
             recommendations=recommendations,
         )
