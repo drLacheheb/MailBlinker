@@ -38,7 +38,7 @@ async def setup_bot_profile(bot: Bot) -> None:
         commands = [
             BotCommand(command="start", description="🚀 Open main menu & quick actions"),
             BotCommand(command="new", description="⚡ Fast track: /new Title | email"),
-            BotCommand(command="format", description="📝 4-step interactive email composer"),
+            BotCommand(command="format", description="📝 3-step email composer with auto-links"),
             BotCommand(command="stats", description="📊 Live email analytics dashboard"),
             BotCommand(command="cancel", description="❌ Cancel active composer"),
             BotCommand(command="help", description="❓ How to copy-paste into Gmail/Outlook"),
