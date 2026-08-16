@@ -19,7 +19,7 @@ router = Router()
 @router.message(F.text == "📝 Compose Email")
 async def cmd_format(message: types.Message, state: FSMContext):
     await state.set_state(FormatEmailStates.waiting_for_title)
-    prompt = "📝 <b>Step 1/4:</b> Enter email Subject / Title:"
+    prompt = "📝 <b>Step 1/3:</b> Enter email Subject / Title:"
     await message.answer(
         prompt, parse_mode="HTML", reply_markup=wizard_step_keyboard(can_skip=False)
     )
@@ -42,7 +42,7 @@ async def process_title(message: types.Message, state: FSMContext):
     title = (message.text or "").strip()
     await state.update_data(title=title)
     await state.set_state(FormatEmailStates.waiting_for_email)
-    prompt = "👤 <b>Step 2/4:</b> Enter Recipient Email:"
+    prompt = "👤 <b>Step 2/3:</b> Enter Recipient Email:"
     await message.answer(
         prompt, parse_mode="HTML", reply_markup=wizard_step_keyboard(can_skip=False)
     )
@@ -52,53 +52,8 @@ async def process_title(message: types.Message, state: FSMContext):
 async def process_email(message: types.Message, state: FSMContext):
     email = (message.text or "").strip()
     await state.update_data(email=email)
-    await state.set_state(FormatEmailStates.waiting_for_links)
-    prompt = (
-        "🔗 <b>Step 3/4:</b> Add Links (or tap Skip):\n"
-        "<code>Portfolio: https://site.com | Resume: https://site.com/cv.pdf</code>"
-    )
-    await message.answer(
-        prompt, parse_mode="HTML", reply_markup=wizard_step_keyboard(can_skip=True)
-    )
-
-
-@router.callback_query(F.data == "wizard:skip", FormatEmailStates.waiting_for_links)
-async def callback_skip_links(callback: types.CallbackQuery, state: FSMContext):
-    await callback.answer("Step skipped")
-    await state.update_data(links=[])
     await state.set_state(FormatEmailStates.waiting_for_body)
-    prompt = "✉️ <b>Step 4/4:</b> Enter Message Body (or send <code>default</code>):"
-    if isinstance(callback.message, types.Message):
-        await callback.message.answer(
-            prompt,
-            parse_mode="HTML",
-            reply_markup=wizard_step_keyboard(can_skip=False),
-        )
-
-
-@router.message(FormatEmailStates.waiting_for_links)
-async def process_links(message: types.Message, state: FSMContext):
-    text = (message.text or "").strip()
-    links_list = []
-
-    if text.lower() != "skip":
-        items = [i.strip() for i in text.split("|")]
-        for item in items:
-            if ":" in item:
-                parts = item.split(":", 1)
-                label = parts[0].strip()
-                url = parts[1].strip()
-                if url.startswith("//"):
-                    url = "https:" + url
-                elif not url.startswith("http://") and not url.startswith("https://"):
-                    url = "https://" + url
-                links_list.append({"text": label, "url": url})
-            elif item:
-                links_list.append({"text": item, "url": item})
-
-    await state.update_data(links=links_list)
-    await state.set_state(FormatEmailStates.waiting_for_body)
-    prompt = "✉️ <b>Step 4/4:</b> Enter Message Body (or send <code>default</code>):"
+    prompt = "✉️ <b>Step 3/3:</b> Enter Message Body (any URLs will be automatically click-tracked):"
     await message.answer(
         prompt, parse_mode="HTML", reply_markup=wizard_step_keyboard(can_skip=False)
     )

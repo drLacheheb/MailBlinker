@@ -204,3 +204,20 @@ def test_ltr_email_formatting_english():
     assert "text-align: left" in html
     assert "Here is the strategy document for review." in html
     assert "View Deck" in html
+
+
+def test_auto_inline_link_scanning():
+    payload = EmailPayload(
+        title="Check out our tools",
+        recipient_name="Sarah",
+        sender_name="Alex",
+        body_text="Hi Sarah, please see our demo at https://example.com/demo and review https://example.com/spec.pdf!",
+    )
+    html = format_email(payload, token="tok_scan_999", base_url="https://mailblinker.com")
+
+    assert "/l/tok_scan_999?dest=https%3A%2F%2Fexample.com%2Fdemo" in html
+    assert "/l/tok_scan_999?dest=https%3A%2F%2Fexample.com%2Fspec.pdf" in html
+    assert "https://example.com/demo" in html
+    assert "https://example.com/spec.pdf" in html
+    # Verify punctuation like '!' was preserved outside the link
+    assert "</a>!" in html

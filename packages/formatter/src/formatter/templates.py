@@ -17,7 +17,7 @@ GENERAL_EMAIL_TEMPLATE = """<!DOCTYPE html>
              direction: {{ direction|default('ltr') }};">
   <div style="direction: {{ direction|default('ltr') }};
               text-align: {{ text_align|default('left') }}; white-space: pre-line;">
-{{ payload.body_text }}
+{{ body_html|default(payload.body_text)|safe }}
   </div>
   {% if payload.links %}
   <div style="margin-top: 12px; direction: {{ direction|default('ltr') }};

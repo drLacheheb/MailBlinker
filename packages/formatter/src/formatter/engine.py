@@ -1,3 +1,6 @@
+import html
+import re
+
 import jinja2
 
 from .tags import (
@@ -6,6 +9,35 @@ from .tags import (
 )
 from .templates import GENERAL_EMAIL_TEMPLATE
 from .types import EmailLink, EmailPayload
+
+URL_REGEX = re.compile(r"https?://[^\s<>\"'()]+", re.IGNORECASE)
+
+
+def _scan_and_wrap_inline_urls(text: str, token: str, base_url: str) -> str:
+    """Scan plain text for HTTP/HTTPS URLs, escape surrounding text safely,
+    and replace URLs inline with tracked <a> hyperlinks.
+    """
+    if not text:
+        return ""
+
+    escaped = html.escape(text)
+
+    def _replace_url(match: re.Match[str]) -> str:
+        raw_url = match.group(0)
+        trailing_punc = ""
+        while raw_url and raw_url[-1] in (",", ".", ";", ":", ")", ">", "]"):
+            trailing_punc = raw_url[-1] + trailing_punc
+            raw_url = raw_url[:-1]
+
+        unescaped_target = html.unescape(raw_url)
+        tracked_url = wrap_link_for_tracking(unescaped_target, token, base_url)
+        safe_tracked_url = html.escape(tracked_url)
+        safe_display_url = raw_url
+        link_style = "color: #1a73e8; text-decoration: underline;"
+
+        return f'<a href="{safe_tracked_url}" style="{link_style}">{safe_display_url}</a>{trailing_punc}'
+
+    return URL_REGEX.sub(_replace_url, escaped)
 
 
 def detect_text_direction(text: str) -> tuple[str, str]:
@@ -46,6 +78,8 @@ def format_email(payload: EmailPayload, token: str, base_url: str) -> str:
     direction, lang_code = detect_text_direction(combined_text)
     text_align = "right" if direction == "rtl" else "left"
 
+    body_html = _scan_and_wrap_inline_urls(payload.body_text, token, base_url)
+
     tracking_tags = generate_tracking_tags(token, base_url)
     tracked_links = [
         EmailLink(text=link.text, url=wrap_link_for_tracking(link.url, token, base_url))
@@ -61,6 +95,7 @@ def format_email(payload: EmailPayload, token: str, base_url: str) -> str:
     template = jinja2.Template(GENERAL_EMAIL_TEMPLATE)
     return template.render(
         payload=formatted_payload,
+        body_html=body_html,
         tracking_tags=tracking_tags,
         direction=direction,
         lang_code=lang_code,
