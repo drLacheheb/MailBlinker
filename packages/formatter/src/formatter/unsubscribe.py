@@ -42,6 +42,7 @@ def generate_rfc2369_headers(
 
     return {
         **unsub_headers,
+        "List-Id": f"<{list_name}-{token[:8]}.{domain}>",
         "List-Help": f"<{clean_base}/help>, <mailto:{contact_mail}?subject=help>",
         "List-Owner": f"<mailto:{contact_mail}>",
         "List-Subscribe": f"<{clean_base}/subscribe>, <mailto:{contact_mail}?subject=subscribe>",

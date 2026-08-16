@@ -199,7 +199,7 @@ async def canary_honeypot_trap(filename: str, request: Request) -> Response:
 @router.api_route("/cdn/{category}/{filename}", methods=["GET", "HEAD"])
 @router.api_route("/static/{category}/{filename}", methods=["GET", "HEAD"])
 async def track_stealth_pixel(
-    category: str,
+    _category: str,
     filename: str,
     request: Request,
     use_case: RecordOpenUseCase = Depends(get_record_open_use_case),

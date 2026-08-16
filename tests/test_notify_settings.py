@@ -32,6 +32,8 @@ class MockNotifier(NotificationServiceInterface):
             {
                 "email_id": email.id,
                 "open_count": email.open_count,
+                "event": event,
+                "device": device,
                 "forwarding_note": forwarding_note,
             }
         )

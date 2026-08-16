@@ -11,7 +11,7 @@ logger = get_logger("tracker.main")
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     await init_db()
     logger.success(f"Tracker API ready on {settings.BASE_URL}")
 

@@ -101,6 +101,9 @@ def email_detail_keyboard(
     else:
         limit_text = f"🔔 Alerts: Max {notify_limit}x"
 
+    if not notify_forwarding and notify_limit != 0:
+        limit_text += " [Fwd: Off]"
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
