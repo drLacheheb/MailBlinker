@@ -27,7 +27,6 @@ def test_format_email_contains_dual_vectors():
     stealth_url = get_stealth_pixel_url(token, base_url)
 
     assert "Here is the project proposal for review." in html
-    assert "<title>Project Proposal</title>" in html
     assert 'color-scheme" content="light dark"' in html
     assert "dest=https%3A%2F%2Fexample.com%2Fspec.pdf" in html
     assert f'<img src="{stealth_url}"' in html

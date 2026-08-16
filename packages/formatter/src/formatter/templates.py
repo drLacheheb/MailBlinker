@@ -5,7 +5,6 @@ GENERAL_EMAIL_TEMPLATE = """<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
-  <title>{{ payload.title }}</title>
   <style>
     :root { color-scheme: light dark; supported-color-schemes: light dark; }
     @media (prefers-color-scheme: dark) {
