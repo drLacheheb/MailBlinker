@@ -3,7 +3,7 @@ import random
 import re
 from datetime import datetime, timezone
 
-from core import RecordOpenDTO, RecordOpenUseCase
+from core import RecordOpenDTO, RecordOpenUseCase, get_logger
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from ..cdn import get_cdn_headers_for_token
@@ -18,6 +18,7 @@ from ..constants import (
 from ..dependencies import get_record_open_use_case
 from ..throttle import token_burst_shield
 
+logger = get_logger("tracker.pixel")
 router = APIRouter()
 SAFE_TOKEN_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{8,64}$")
 
@@ -92,6 +93,7 @@ async def _handle_pixel_tracking(
     filename: str,
     request: Request,
     use_case: RecordOpenUseCase,
+    category: str = "",
 ) -> Response:
     accept_hdr = request.headers.get("accept", "")
     clean_token, media_type, content = _extract_token_and_format(
@@ -100,6 +102,8 @@ async def _handle_pixel_tracking(
 
     if not SAFE_TOKEN_PATTERN.match(clean_token):
         raise HTTPException(status_code=400, detail="Invalid token format")
+
+    logger.debug(f"Stealth pixel hit: [{category or 'direct'}] {filename} -> token {clean_token}")
 
     open_time = datetime.now(timezone.utc)
     client_ip = request.client.host if request.client else "Unknown"
@@ -186,8 +190,7 @@ async def track_stealth_pixel(
     request: Request,
     use_case: RecordOpenUseCase = Depends(get_record_open_use_case),
 ):
-    del category  # Unused path parameter placeholder
-    return await _handle_pixel_tracking(filename, request, use_case)
+    return await _handle_pixel_tracking(filename, request, use_case, category=category)
 
 
 @router.api_route("/track/{token}", methods=["GET", "HEAD"])
