@@ -1,5 +1,6 @@
 from typing import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -33,6 +34,24 @@ AsyncSessionLocal = async_sessionmaker(
 async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Self-healing column synchronization for existing production databases
+        if not settings.DATABASE_URL.startswith("sqlite"):
+            try:
+                await conn.execute(
+                    text(
+                        "ALTER TABLE tracked_emails "
+                        "ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;"
+                    )
+                )
+            except Exception:
+                pass
+        else:
+            try:
+                await conn.execute(
+                    text("ALTER TABLE tracked_emails ADD COLUMN expires_at DATETIME;")
+                )
+            except Exception:
+                pass
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

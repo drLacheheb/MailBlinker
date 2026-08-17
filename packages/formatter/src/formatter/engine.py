@@ -34,8 +34,11 @@ def _scan_and_wrap_inline_urls(text: str, token: str, base_url: str) -> str:
         safe_tracked_url = html.escape(tracked_url)
         safe_display_url = raw_url
         link_style = "color: #1a73e8; text-decoration: underline;"
-
-        return f'<a href="{safe_tracked_url}" style="{link_style}">{safe_display_url}</a>{trailing_punc}'
+        link_tag = (
+            f'<a href="{safe_tracked_url}" style="{link_style}">'
+            f"{safe_display_url}</a>{trailing_punc}"
+        )
+        return link_tag
 
     return URL_REGEX.sub(_replace_url, escaped)
 
