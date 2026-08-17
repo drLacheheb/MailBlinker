@@ -9,7 +9,7 @@ from formatter import (
 )
 
 
-def test_format_email_contains_dual_vectors():
+def test_format_email_contains_clean_tracking_pixel():
     payload = EmailPayload(
         title="Project Proposal",
         recipient_name="Sarah",
@@ -27,49 +27,11 @@ def test_format_email_contains_dual_vectors():
     stealth_url = get_stealth_pixel_url(token, base_url)
 
     assert "Here is the project proposal for review." in html
-    assert 'color-scheme" content="light dark"' in html
     assert "dest=https%3A%2F%2Fexample.com%2Fspec.pdf" in html
     assert f'<img src="{stealth_url}"' in html
-    assert 'role="presentation"' in html
-    assert 'aria-hidden="true"' in html
-    assert 'role="presentation"' in html
-    assert "&#8203;" in html
-    assert "<!-- cdn-asset-ref:" in html
-    assert 'width="1"' not in html
+    assert 'width="1"' in html
+    assert 'height="1"' in html
     assert "display:none" not in html
-    assert "mso-hide:all;" in html
-    assert f"background-image: url('{stealth_url}');" in html
-    assert "@font-face" in html
-    assert "font-" in html
-    assert "<!--[if mso]>" in html
-    assert "@media only screen and (max-width: 600px)" in html
-    assert "@supports not" in html
-    assert "@container" in html
-    assert "<picture>" in html
-    assert "@property" in html
-    assert "@layer" in html
-    assert "color-gamut: p3" in html
-    assert "prefers-contrast: more" in html
-    assert "prefers-reduced-transparency: reduce" in html
-    assert "@scope" in html
-    assert "light-dark(" in html
-    assert "dynamic-range: high" in html
-    assert "inverted-colors: none" in html
-    assert "prefers-reduced-motion: reduce" in html
-    assert "@starting-style" in html
-    assert "grid-template-rows: subgrid" in html
-    assert "forced-colors: active" in html
-    assert "@view-transition" in html
-    assert "color-mix(" in html
-    assert "@property --mb-px" in html
-    assert "@layer mb_telemetry.stealth" in html
-    assert "selector(:has(td))" in html
-    assert "font-tech(color-COLRv1)" in html
-    assert "width: min(100%, 100vw)" in html
-    assert "overflow: clip" in html
-    assert "contain-intrinsic-size: 1px 1px" in html
-    assert "margin-block-start: 0" in html
-    assert "width: round(up, 100%, 1px)" in html
 
 
 def test_inject_tracking_tags_into_custom_html():
@@ -81,9 +43,7 @@ def test_inject_tracking_tags_into_custom_html():
     stealth_url = get_stealth_pixel_url(token, base_url)
 
     assert f'<img src="{stealth_url}"' in result
-    assert f"background-image: url('{stealth_url}');" in result
-    assert "@font-face" in result
-    assert "<!-- cdn-asset-ref:" in result
+    assert 'width="1"' in result
     assert result.endswith("</body></html>")
 
 
