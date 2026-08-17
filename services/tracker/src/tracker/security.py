@@ -10,6 +10,37 @@ from starlette.middleware.base import BaseHTTPMiddleware
 api_key_header_scheme = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
+def get_client_ip(request: Optional[Request]) -> str:
+    """Extract real client IP considering reverse proxy headers
+    (Cloudflare, Railway, X-Forwarded-For).
+    """
+    if not request:
+        return "Unknown"
+
+    # 1. Cloudflare
+    cf_ip = request.headers.get("cf-connecting-ip")
+    if cf_ip and cf_ip.strip():
+        return cf_ip.strip()
+
+    # 2. Standard X-Real-IP
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip and real_ip.strip():
+        return real_ip.strip()
+
+    # 3. Standard X-Forwarded-For (take the first client IP in comma-separated list)
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for and forwarded_for.strip():
+        first_ip = forwarded_for.split(",")[0].strip()
+        if first_ip:
+            return first_ip
+
+    # 4. Direct connection fallback
+    if request.client and request.client.host:
+        return request.client.host
+
+    return "Unknown"
+
+
 async def verify_api_key(
     api_key: Optional[str] = Security(api_key_header_scheme),
     header_key: Optional[str] = Header(None, alias="x-api-key"),
@@ -53,7 +84,7 @@ rate_limiter = InMemoryRateLimiter(requests_per_minute=120)
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        client_ip = request.client.host if request.client else "unknown"
+        client_ip = get_client_ip(request)
 
         if not rate_limiter.is_allowed(client_ip):
             from fastapi.responses import JSONResponse

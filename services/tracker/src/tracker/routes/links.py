@@ -10,6 +10,7 @@ from fastapi.responses import RedirectResponse
 
 from ..cdn import get_cdn_headers_for_token
 from ..dependencies import get_record_open_use_case
+from ..security import get_client_ip
 
 router = APIRouter()
 SAFE_TOKEN_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{8,64}$")
@@ -43,7 +44,7 @@ async def track_and_redirect_link(
         raise HTTPException(status_code=400, detail="Invalid or unsafe destination URL")
 
     open_time = datetime.now(timezone.utc)
-    client_ip = request.client.host if (request and request.client) else "Unknown"
+    client_ip = get_client_ip(request)
     user_agent = request.headers.get("user-agent", "Unknown") if request else "Unknown"
     accept_language = request.headers.get("accept-language") if request else None
 

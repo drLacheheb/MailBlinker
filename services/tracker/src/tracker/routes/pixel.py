@@ -16,6 +16,7 @@ from ..constants import (
     build_dynamic_webp,
 )
 from ..dependencies import get_record_open_use_case
+from ..security import get_client_ip
 from ..throttle import token_burst_shield
 
 logger = get_logger("tracker.pixel")
@@ -106,7 +107,7 @@ async def _handle_pixel_tracking(
     logger.debug(f"Stealth pixel hit: [{category or 'direct'}] {filename} -> token {clean_token}")
 
     open_time = datetime.now(timezone.utc)
-    client_ip = request.client.host if request.client else "Unknown"
+    client_ip = get_client_ip(request)
     user_agent = request.headers.get("user-agent", "Unknown")
     accept_language = request.headers.get("accept-language")
     purpose = (
